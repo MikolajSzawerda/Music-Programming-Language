@@ -555,5 +555,62 @@ JUnit5, Mockito, assertj
 - lombok
     - generacja `Builder'ow` i boilerplatu, oraz null checkow
 
+## Struktura i testowanie
+
+### Stream reader
+- odpowiedzialny za podawanie znaku z podanego pliku źródłowego
+- usuwanie komentarzy i zamiana wieloktroności białych znaków na pojedynczą spację
+- testy
+  - podawanie znaku wraz z jego pozycją
+  - obsługa różnych znaków białych
+  - obsługa komentarzy
+
+### Lexer
+- odpowiedzialny za zamianę reprezentacji tekstowej na tokenową
+- testy
+  - rozponawanie literałów liczbowych/tekstowych/nutowych
+  - rozpoznawanie słów kluczowych języka
+  - rozpoznawanie identyfikatorów
+
+### Parser
+- budowa tablicy symboli i budowa AST
+- testy
+  - budowa tablicy z odpowiednimi wartościami
+  - rozpoznawanie produkcji i odpowiednia struktura drzewa
+
+#### AST
+- drzewiasta reprezentacja kodu
+- przechowuje produkcje w postaci obiektów, w raz z dostępnym dla nich kontekstem 
+
+#### SemanticAnalyzer
+- sprawdzenie poprawności sekwencji produkcji oraz prosta optymalizacja kodu
+- testy
+  - wywołanie dla przypadków pozytywnych i negatywnych
+  - optymalizacja kodu nieosiągalnego, nieużywanego
+
+### Interpreter
+- wykonuje program poprzez przechodzenie AST
+- implementacja własnych typów 'Rythm/Pitch/Motive/Composer/Iter/Gen'
+- testy
+  - wykonanie przykładowych kodów źródłowych wraz z oczekiwanymi zmianami stanu
+  - obsługa wystąpienia "panic" i wypisanie komunikatu
+
+### MidiReader
+- konwertuje plik midi na reprezentacje użytą w AST/interpreterze
+- testy
+  - odczyt pliku midi i konwersja na podany typ `Rythm[]/Pitch[]/Motive`
+
+### Markov
+- moduł odpowiedzialny za reprezentację i operacje na łańcuchach markova
+- testy
+  - Inicjalizacja z podaną macierzą
+  - Przyjęcie listy `Rythm[]/Pitch[]/Motive`
+  - Generowanie kolejnych nut na podstawie aktualnego stanu i macierzy przejść(iterator markov)
+
+### MidiWriter
+- moduł odpowiedzialny za generowanie pliku midi z podanego obiektu `Song`
+- testy
+  - generacja midi z zachowaniem ustalonego tempa/długości
+  - ilość ścieżek odpowiadająca ilości generatorów
 
 
