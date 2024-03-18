@@ -213,8 +213,9 @@ fun buissnesLogic(Int age) -> Opt[Motive]{
 }
 
 Motive lick = buisnesLogic(29)
-  .map((Motive a)->{
+  .map(Motive (Motive a)->{
     a.transpose(1);
+    return a;
   })
   .or([{R_Q, D1}]);
 
@@ -264,11 +265,11 @@ Composer c = Composer
 
 Song d = c.gen(125, 60); //125BPM 60 seconds
 
-save d "song.mid";
+d.toFile("song.mid");
 
 b << [{R_Q, D1}, R_Q]; //next song gen will use new values
 
-save c.with([{R_Q, C1}, R_Q]).gen(60, 10) "song2.mid";
+c.with([{R_Q, C1}, R_Q]).gen(60, 10).toFile("song2.mid");
 ```
 
 ## Gramatyka
@@ -296,13 +297,7 @@ ArrayType       = type_name "[" "]";
 GenericType     = gen_type_name "[" type_name "]";
 FuncType        = "(" Type { "," Type } ")" "->" Type;
 
-TopLevelDecl    = StatementList | { FunctionDecl };
-
-Declaration     = ConstDecl |
-                  VarDecl;
-
-VarDecl         = Type identifier ("=" Expression) ";";
-ConstDecl       = "const" VarDecl;
+Program         = StatementList | { FunctionDecl };
 
 FunctionDecl    = "fun" FunctionName Parameters "->" (Type|"Void") Block;
 FunctionName    = identifier .
@@ -318,9 +313,13 @@ Statement       = Declaration |
                   BreakStmt |
                   ContinueStmt |
                   PanicStmt |
-	              Block |
                   IfStmt |
                   ForStmt;
+                  
+Declaration     = ConstDecl |
+                  VarDecl;
+VarDecl         = Type identifier ("=" Expression) ;
+ConstDecl       = "const" VarDecl;
 
 SimpleStmt      = ExpressionStmt |
                   IncDecStmt |
@@ -381,9 +380,6 @@ ForStmt         = "for" "(" type_name identifier "in" identifier ")" Block;
 ```
 
 
-
-
-
 ## Analiza wymagań
 
 ### Język typowany statycznie silnie
@@ -392,37 +388,37 @@ ForStmt         = "for" "(" type_name identifier "in" identifier ")" Block;
 
 #### Konwersja
 
-||Result|
-|-|-|
-|Motive(R_Q)|[{EMPTY, R_Q}]
-|Pitch({C1, R_Q})|C1|
-|Rythm(Note(C1, R_Q))|R_Q|
-|Int(2.0)|2|
-|Double(Int(1))|1.0|
-|Pitch[](Motive{[{C1, R_Q}, {C2, R_E}]})|[C1, C2]
+|                                         | Result         |
+|-----------------------------------------|----------------|
+| Motive(R_Q)                             | [{EMPTY, R_Q}] |
+| Pitch({C1, R_Q})                        | C1             |
+| Rythm(Note(C1, R_Q))                    | R_Q            |
+| Int(2.0)                                | 2              |
+| Double(Int(1))                          | 1.0            |
+| Pitch[](Motive{[{C1, R_Q}, {C2, R_E}]}) | [C1, C2]       |
 
 ### Język wspiera tylko wbudowane typy prymitywne oraz wbudowane typy złożone
 
-|Token|Typ|Opis|
-|-|-|-|
-|Int|p|int32
-|Double|p|IEEE 64b|
-|Bool|p|true,false
-|Unit|p|void - używany do procedur
-|Opt[T]|z|Optional - udostepnia lepsze API do wartości null
-|Iter[T]|z|iterator dla kolekcji typy T
-|T[]|z|mutowalna lista
-|Pitch|z|Wysokość nuty, tworzony z zastrzeżonych słów kluczowych
-|Rythm|z|Długość trwania nuty, tworzony z zastrzeżonych słów kluczowych
-|Note|z|Nuta - określona wysokość i długość
-|Motive|z|lista nut, generator deterministyczny i iterator
-|Markov|z|impl łańcucha markova, generator stochastyczny
-|Composer|z|builder, określa generatory z których zostanie stworzony Song
-|Song|z|wewnętrznie Motive[], umożliwia zapis do midi
-|Gen|z|Nieskończony Iter[Note]
-|()->T1|z|funkcja anonimowa bez argumentowa
-|(T1)->T2|z|funkcja anonimowa z jednym argumentem
-|(T1, T2)->T3|z|funkcja anonimowa z dwoma argumentami
+| Token        | Typ | Opis                                                           |
+|--------------|-----|----------------------------------------------------------------|
+| Int          | p   | int32                                                          |
+| Double       | p   | IEEE 64b                                                       |
+| Bool         | p   | true,false                                                     |
+| Unit         | p   | void - używany do procedur                                     |
+| Opt[T]       | z   | Optional - udostepnia lepsze API do wartości null              |
+| Iter[T]      | z   | iterator dla kolekcji typy T                                   |
+| T[]          | z   | mutowalna lista                                                |
+| Pitch        | z   | Wysokość nuty, tworzony z zastrzeżonych słów kluczowych        |
+| Rythm        | z   | Długość trwania nuty, tworzony z zastrzeżonych słów kluczowych |
+| Note         | z   | Nuta - określona wysokość i długość                            |
+| Motive       | z   | lista nut, generator deterministyczny i iterator               |
+| Markov       | z   | impl łańcucha markova, generator stochastyczny                 |
+| Composer     | z   | builder, określa generatory z których zostanie stworzony Song  |
+| Song         | z   | wewnętrznie Motive[], umożliwia zapis do midi                  |
+| Gen          | z   | Nieskończony Iter[Note]                                        |
+| ()->T1       | z   | funkcja anonimowa bez argumentowa                              |
+| (T1)->T2     | z   | funkcja anonimowa z jednym argumentem                          |
+| (T1, T2)->T3 | z   | funkcja anonimowa z dwoma argumentami                          |
 
 #### Opt
 - implementacja Optional'a
@@ -446,17 +442,17 @@ ForStmt         = "for" "(" type_name identifier "in" identifier ")" Block;
 #### Rythm
 - długość trwania nuty
 
-|Token|Długość
-|-|-|
-|R_DL|cztery takty
-|R_L|dwa takty
-|R_W|takt
-|R_H|pół taktu
-|R_Q|ćwierć taktu
-|R_E|1/8 taktu
-|R_S|1/16 taktu
-|X_T|1/3 X
-|X_D|3/2 X
+| Token | Długość      |
+|-------|--------------|
+| R_DL  | cztery takty |
+| R_L   | dwa takty    |
+| R_W   | takt         |
+| R_H   | pół taktu    |
+| R_Q   | ćwierć taktu |
+| R_E   | 1/8 taktu    |
+| R_S   | 1/16 taktu   |
+| X_T   | 1/3 X        |
+| X_D   | 3/2 X        |
 
 - `fun speed(Int a)->Rythm` - zmiana długości rytmu o `a`, `panic` gdy nie wspierany
 
@@ -494,22 +490,22 @@ ForStmt         = "for" "(" type_name identifier "in" identifier ")" Block;
 #### Operatory
 
 
-||Result|
-|-|-|
-|C1 + C2|[C1, C2]
-|R_Q + R_H|[R_Q, R_H]|
-|-[C1, C2]|[C2, C1]|
-|[C1, C2, C3]*[R_Q, R_H]|[{C1, R_Q}, {C2, R_H}]//Note
-|[C1]+[C2]|[C1, C2]|
-|[{C1, R_Q}]+[{C2, R_Q}]|[{C1, R_Q}, {C2, R_Q}]|
-|[{C1, R_Q}]*2|[{C1, R_Q}, {C1, R_Q}]|
-|"a"*2|"aa"
-|"a"+" "+"a"|"a a"|
-|Markov()<< [{C1, R_Q}, {C2, R_Q}]|Increase count for C1->C2, R_Q->R_Q
-|Markov()<< [{R_Q}, {C2, R_Q}]|Increase count for EMPTY->C2, R_Q->R_Q|
-|Markov()+Markov()|Sum count matricies|
-|[{R_Q}, {C2, R_Q}]==[{R_Q}, {C2, R_Q}]|true|
-|[{R_Q}]==[{R_Q}, {C2, R_Q}]|false|
+|                                        | Result                                 |
+|----------------------------------------|----------------------------------------|
+| C1 + C2                                | [C1, C2]                               |
+| R_Q + R_H                              | [R_Q, R_H]                             |
+| -[C1, C2]                              | [C2, C1]                               |
+| [C1, C2, C3]*[R_Q, R_H]                | [{C1, R_Q}, {C2, R_H}]//Note           |
+| [C1]+[C2]                              | [C1, C2]                               |
+| [{R_Q, C1}]+[{R_Q, C2}]                | [{R_Q, C1}, {R_Q, C2}]                 |
+| [{R_Q, C1}]*2                          | [{R_Q, C1}, {R_Q, C1}]                 |
+| "a"*2                                  | "aa"                                   |
+| "a"+" "+"a"                            | "a a"                                  |
+| Markov()<< [{R_Q, C1}, {R_Q, C2}]      | Increase count for C1->C2, R_Q->R_Q    |
+| Markov()<< [{R_Q}, {R_Q, C2}]          | Increase count for EMPTY->C2, R_Q->R_Q |
+| Markov()+Markov()                      | Sum count matricies                    |
+| [{R_Q}, {R_Q, C2}]==[{R_Q}, {R_Q, C2}] | true                                   |
+| [{R_Q}]==[{R_Q}, {R_Q, C2}]            | false                                  |
 
 ### Język wspiera deklarację funkcji:
 - typy prymitywne przekazywane przez wartość, złożone przez referencję
@@ -534,7 +530,6 @@ ForStmt         = "for" "(" type_name identifier "in" identifier ")" Block;
 |Motive|Utworzy listę nut o wskazanej wysokości i długości
 |Markov|Utworzy listę nut, a następnie przy użyciu `<<` załaduje dane do Markova
 
-## EBNF
 
 ## Technologie
 
