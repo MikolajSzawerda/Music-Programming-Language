@@ -80,10 +80,10 @@ Pitch a = C1;
 Pitch[] a1 = [C2, D4];
 Rythm b = R_Q;
 Rythm[] b1 = [R_Q, R_E];
-Note d = {C1, R_Q};
+Note d = {R_Q, C1};
 Note d1 = {R_Q}; //pause
-Motive d = [{a, b}, {D2, R_H}, {R_Q}];
-Markov e = Markov([{a, b}, {D2, R_H}, {R_Q}]);
+Motive d = [{b, a}, {R_H, D2}, {R_Q}];
+Markov e = Markov([{b, a}, {R_H, D2}, {R_Q}]);
 Markov e1 = Markov(d);
 Markov e2 = with "song.mid";
 Markov e3 = with ("song.mid", "song1.mid");
@@ -120,9 +120,9 @@ a.transpose(1); // D#1
 a.transpose(-2); //C#1
 Rythm b = R_Q;
 b.speed(2); //R_E
-Motive b = [{D1, R_Q}, R_Q];
-b.transpose(1); // {D#1, R_Q}, R_Q
-b.speed(2); //{D#1, R_E}, R_E
+Motive b = [{R_Q, D1}, R_Q];
+b.transpose(1); // {R_Q, D#1}, R_Q
+b.speed(2); //{R_E, D#1}, R_E
 ```
 
 - kontekst globalny
@@ -138,8 +138,8 @@ fun enrichWithLick(Motive b) -> Void{
   a << b;
 }
 
-a << [{C1, R_Q}];
-enrichWithLick([{Q}]);
+a << [{R_Q, C1}];
+enrichWithLick([{R_Q}]);
 print(a);
 ```
 
@@ -147,7 +147,7 @@ print(a);
 
 ```
 Range a = Range(3);
-Motive b = [{D1, Q}, Q, {C1, Q}];
+Motive b = [{R_Q, D1}, R_Q, {R_Q, C1}];
 Markov c = Markov(b);
 
 for(Int i in a){
@@ -156,19 +156,19 @@ for(Int i in a){
 
 for(Note n in b) {
   print(n);
-} //{D1, Q}, Q, {C1, Q}
+} //{R_Q, D1}, R_Q, {R_Q, D1}
 
 for(Note n in b.gen()) {
   print(n);
-} //{D1, Q}, Q, {C1, Q}, ... inf loop(b[i%len(b)])
+} //{R_Q, D1}, R_Q, {R_Q, C1}, ... inf loop(b[i%len(b)])
 
 for(Note n in c){
   print(n);
 }//compilation error
 
-for(Note n in c.gen({D1, Q})){
+for(Note n in c.gen({R_Q, C1})){
   print(n);
-} //{D1, Q}, {?}, ... inf loop
+} //{R_Q, C1}, {?}, ... inf loop
 ```
 
 - deklaracja funkcji
@@ -207,7 +207,7 @@ fun nwd(Int a, Int b) -> Int
 
 fun buissnesLogic(Int age) -> Opt[Motive]{
   if(age > 18){
-    return Opt.of([{C1, Q}, Q]);
+    return Opt.of([{R_Q, C1}, R_Q]);
   }
   return Opt.empty();
 }
@@ -216,7 +216,7 @@ Motive lick = buisnesLogic(29)
   .map((Motive a)->{
     a.transpose(1);
   })
-  .or([{D1, Q}]);
+  .or([{R_Q, D1}]);
 
 fun transformMelody(const Motive a, (Motive)->Motive transformation) -> Motive {
   Motive b = Motive(a);
@@ -246,7 +246,7 @@ print(a); //C1, C2, C3
 Rythm[] b = with "lick.mid";
 print(b); //Q E H
 Motive c = with "lick.mid";
-print(c); //{C1, Q}, {C2, E}, {C3, H}
+print(c); //{R_Q, C1}, {R_E, C2}, {R_H, C3}
 Markov d = with "lick.mid"; // d << c;
 print(d); //potentialy will print matrix line by line?
 ```
@@ -260,15 +260,15 @@ Markov b = Markov(a);
 
 Composer c = Composer
   .with(a)
-  .with(b, {C1, Q});
+  .with(b, {R_Q, C1});
 
 Song d = c.gen(125, 60); //125BPM 60 seconds
 
 save d "song.mid";
 
-b << [{D1, Q}, Q]; //next song gen will use new values
+b << [{R_Q, D1}, R_Q]; //next song gen will use new values
 
-save c.with([{C1, Q}, Q]).gen(60, 10) "song2.mid";
+save c.with([{R_Q, C1}, R_Q]).gen(60, 10) "song2.mid";
 ```
 
 ## Gramatyka
