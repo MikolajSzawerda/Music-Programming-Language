@@ -271,6 +271,114 @@ b << [{D1, Q}, Q]; //next song gen will use new values
 save c.with([{C1, Q}, Q]).gen(60, 10) "song2.mid";
 ```
 
+## Gramatyka
+
+```
+identifier      = letter { letter | unicode_digit } .
+decimal_digit   = "0" … "9" ;
+decimal_digits  = decimal_digit { decimal_digit };
+int_lit         = "0" |
+                  ( "1" … "9" ) [ decimal_digits ];
+float_lit       = decimal_digits "." [ decimal_digits ];
+string_lit      = \" {unicode_char} \";
+pitch_lit       = ([A-G](#)?[1-7]);
+rythm_lit       = R_((D|T)_)(DL|L|W|H|Q|E|S|T)
+type_name       = Int | Double | Bool |
+                  Pitch | Rythm | Note | Motive |
+                  Markov | Composer | Song | Gen;
+gen_type_name   = Opt |
+                  Iter;
+Type            = type_name |
+                  ArrayType |
+                  GenericType |
+                  FuncType;
+ArrayType       = type_name "[" "]";
+GenericType     = gen_type_name "[" type_name "]";
+FuncType        = "(" Type { "," Type } ")" "->" Type;
+
+TopLevelDecl    = StatementList | { FunctionDecl };
+
+Declaration     = ConstDecl |
+                  VarDecl;
+
+VarDecl         = Type identifier ("=" Expression) ";";
+ConstDecl       = "const" VarDecl;
+
+FunctionDecl    = "fun" FunctionName Parameters "->" (Type|"Void") Block;
+FunctionName    = identifier .
+Parameters      = "(" [ ParameterList ] ")";
+ParameterList   = ParameterDecl { "," ParameterDecl };
+ParameterDecl   = [ "val" |  "const" ] Type identifier;
+
+Block           = "{" StatementList "}";
+StatementList   = { Statement ";" };
+Statement       = Declaration |
+                  SimpleStmt |
+	              ReturnStmt |
+                  BreakStmt |
+                  ContinueStmt |
+                  PanicStmt |
+	              Block |
+                  IfStmt |
+                  ForStmt;
+
+SimpleStmt      = ExpressionStmt |
+                  IncDecStmt |
+                  Assignment;
+
+ExpressionStmt  = Expression;
+
+Expression      = UnaryExpr |
+                  Expression binary_op Expression |
+                  MidiReadExpr;
+
+MidiReadExpr    = "with" (string_lit | "("string_lit {"," string_lit} ")");
+UnaryExpr       = PrimaryExpr |
+                  unary_op UnaryExpr;
+
+binary_op       = "||" | "&&" | rel_op | add_op | mul_op;
+rel_op          = "==" | "!=" | "<" | "<=" | ">" | ">=";
+add_op          = "+" | "-";
+mul_op          = "*" | "/" | "%" | "<<";
+unary_op        = "+" | "-";
+
+PrimaryExpr     = Operand |
+                  PrimaryExpr Selector |
+                  PrimaryExpr Index |
+                  PrimaryExpr Arguments;
+
+Operand         = PrimitLit | ObjectLit | NoteLit | ArrayLit | LambdaLit;
+PrimitLit       = int_lit | float_lit | string_lit | pitch_lit | rythm_lit;
+ObjectLit       = Type Arguments;
+NoteLit         = "{" rythm_lit ["," pitch_lit] "}";
+ArrayLit        = "[" [ ArrayLitList ]  "]";
+ArrayLitList    =  ArrayElem {"," ArrayElem};
+ArrayElem       = PrimitLit | ObjectLit | NoteLit;
+
+LambdaLit       = Type "fun" Parameters "->" Block;
+
+
+Selector        = "." identifier;
+Index           = "[" Expression "]";
+Arguments       = "(" [ ExpressionList ] ")";
+ExpressionList  = Expression { "," Expression };
+
+IncDecStmt      = Expression ( "++" | "--" );
+
+Assignment      = identifier [ add_op | mul_op ] "=" Expression;
+
+ReturnStmt      = "return" [ Expression ];
+
+BreakStmt       = "break";
+
+ContinueStmt    = "continue";
+
+PanicStmt       = "panic" string_lit;
+
+IfStmt          = "if" "(" ExpressionStmt ")" Block [ "else" ( IfStmt | Block ) ];
+
+ForStmt         = "for" "(" type_name identifier "in" identifier ")" Block;
+```
 
 
 
@@ -433,6 +541,9 @@ save c.with([{C1, Q}, Q]).gen(60, 10) "song2.mid";
 ### Język
 Java 21
 
+### Budowanie
+Gradle
+
 ### Testowanie
 JUnit5, Mockito, assertj
 
@@ -443,4 +554,6 @@ JUnit5, Mockito, assertj
     - bardziej przejrzyste logowanie niż `System.out.println()`
 - lombok
     - generacja `Builder'ow` i boilerplatu, oraz null checkow
+
+
 
