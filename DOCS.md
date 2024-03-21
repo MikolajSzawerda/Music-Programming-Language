@@ -67,7 +67,7 @@ ForStmt             := "for" "(" Type identifier "in" Expression ")" Block;
 ValueExpression     := MathExpr [ModifierExpr]; 
 
 ModifierExpr        := "{" modifier_item {"," modifier_item } "}"; 
-modifier_item       := identifier "=" ValueExpression; 
+modifier_item       := identifier "=" Expression; 
 
 MathExpr            := term {add_op term};
 term                := factor {mul_op factor};
@@ -88,7 +88,7 @@ ComprExpr           := "<|" identifier Expression;
 Type                := LitType |
                        CpxType |
                        FuncType;
-FuncType            := "(" [type_list] ")" "->" Type;
+FuncType            := "(" [type_list] ")" "->" (Type|"Void");
 type_list           := Type {"," Type};
 
 LitType             := Int | 
