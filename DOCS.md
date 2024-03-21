@@ -89,4 +89,20 @@ Pitch               := "(" pitch_name "," int_lit ")" | pitch_name;
 Duration            := rythm_lit;
 ArrayExpr           := "[" ValueExpression ({"," ValueExpression} | ComprExpr) ]";          
 ComprExpr           := "<|" identifier ValueExpression;
+
+Type                := LitType |
+                       CpxType |
+                       FuncType;
+LitType             := Int | 
+                       Double |
+                       Bool |
+                       String;
+CpxType             := Scale |
+                       Rythm |
+                       Phrase |
+                       Track |
+                       Song |
+                       []Type;
+FuncType            := "(" [type_list] ")" "->" Type;
+type_list           := Type {"," Type};                                              
 ```
