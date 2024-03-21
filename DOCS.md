@@ -1,120 +1,85 @@
 Język umożliwiający wygenerowanie utworów muzycznych w postaci MIDI. Język posiada specjalny zapis nutowy oraz udostępnia generatory.
 
-- wysokość i oktawa `(C, 4)`
-- długość `q`
-- nuta `(C, 4) q`, pauza `rest q`
-- sekwencja nut `(C, 4) q | rest e | (B, 4) q` - operator `|`
-  - może zostać skrócone do `mel [C rest e B]{dur=q, oct=4}`
-- jednoczesne zagranie `(C, 4) q & (E, 4) q & (G, 4) q` - operator `&`
-  - może zostać skrócone do `harm [C E G]{oct=4, dur=q}`
 ```
-harm [mel [(C, 4) rest (D, 3) (E, 5)]{dur=q} (E, 4) q mel [(F, 2) h]]
-```
+((E, 4) w | (G, 4) w | (D, 4) w) & ((C, 4) w | (D, 4) w | (F, 4) w)
+[[E, G, D] |> mel, [C, D, F] |> mel]{dur=w, oct=4} |> harm
 
-- obiekty posiadają pola, które są mutowalne - Motive ma strukturę drzewiastą, gdzie pola dur, oct są dziedziczone od najbliższej nie pustej wartości rodzica(chyba że sam obiekt ma niepuste pole)
+a = [E, G, D]{oct=4} |> mel;
 
-```
-(C,4){oct=1} //(C,1)
-(C,4) q{dur=e, oct=2} //(C,2) e
-
-//at this moment they have oct and dur null
-a = harm [C E G]
-
-a{dur=e, oct=1} //now all of them will be trated as having dur=e and oct=1
-
-b = a | (C,4){dur=h}
-```
-
-- funkcja bez i jedno, wielo argumentowa
-
-```
-factoryFunc = with()->Motive {
-    produce (C, 4) q | rest e | (B, 4) q;
-}
-
-//treated as value
-factoryFunc | (C, 4) q
-
-doubleFunc = with(Int number)->Int {
-    produce number*2;
-}
-
-doubleFunc doubleFunc doubleFunc doubleFunc 2;
-
-addFunc = with(Int a, Int b)->Int {
-    produce a+b;
-}
-addFunc [addFunc [addFunc [2 3] 2] addFunc [3 2] ]
-```
-
-
-- tworzenie uporządkowanych zbiorów z możliwością indeksowania w artymetyce modularnej
-
-```
-a = scale [C D# E G# F]{oct=3}
-a[0] //(C, 3)
-a[-1] //(F, 3)
-a[5] //(C, 3)
-b = groove [q e h e]
-```
-
-- mechanizm splotu indeksów z obiektem sekwencji
-
-```
-c = interval (0 | 1 | 2 & -1) & 0{oct=2};
-Motive a;
-a = scale [C E G F]{oct=3};
-b = groove [q e e];
-
-//C3 | E3| G3| F3 |
-//C2 |
-a<-c;
-
-//q | e | e | e |
-//q |
-b<-c;
-
-//(C, 3) q | (E, 3) e | (G, 3) e | (F, 3) e
-//(C, 2) q | 
-(a<-c)*(b<-c) ;
-```
-
-- mechanizm komponowania
-
-```
-exampleMotive = with()->Motive {
-    m1 = mel [C rest e B]{dur=q, oct=4};
-    i1 = mel [0 1 2];
-    s1 = scale [(C,1), (D,3), (E,4)];
-    produce m1 | s1<-i1{dur=q} & m1{oct=2};
-}
-
-motiveRepeat = with(Int motiveLength)->Int{
-    c = rand*(double) motiveLength;
-    if(c>10.0) {
-        produce 1;
-    }
-    if(c>5.0){
-        produce 2;
-    }
-    produce 3;
-}
-
-track [repeat [motiveRepeat len exampleMotive transpose [2 exampleMotive]]]{instrument=Piano, tempo=120, dur=20}->"melody.mid";
-```
-
-- mechanizm generacji MIDI
-
-```
-exampleMotive = //...
-
-s = with()->Song {
-    t1 = track [exampleMotive*2]{instrument=Piano};
-    t2 = track [exampleMotive{oct=1} | exampleMotive{oct=2}*2]{instrument=Bass};
-    produce  mel [harm [t1 t2]{tempo=120} t1{tempo=60}];
-
-}
+b = a |> 
+    repeat 2 |>
+    transpose -1 |>
+    concat a; |>
+    harm |>
+    track Guitar;
     
-s{dur=60}->"example_song.mid"
+randGen = with(Scale scale, Rythm rythm) -> Phrase {
+    if(scale |> isEmpty || rythm |> isEmpty){
+        "Provided scale or rythm is empty" |> panic;
+    }
+    
+    seed = (scale |> len * rythm |> len) % 3+1;
+    maxLen = [scale |> len, rythm |> len] |> max;
+    lowestNote = scale |> argmin;
+    Template form;
+    for(Int i in 1->seed){
+        line = [rand() % maxLen <| dumb_temp 1->(rand()%4+1)*maxLen] |> mel;
+        form &= line;
+    }
+    
+    return (form>>scale)*(form>>rythm);
+} 
+
+    
+[a |> track Piano;, b, markov ["song1.mid", "song2.mid"] 2;, [C, E, G] |> randGen [q, w, h] |> track BagPipe;] |>
+    song 120, 60; |>
+    export "demo2.mid";
 ```
 
+## EBNF
+
+```
+Program             := {Statement ";"};
+Statement           := Declaration |
+                       Expression;
+
+Declaration         := [Type] identifier ["=" Expression];
+Expression          := LambdaExpression |
+                       ValueExpression [PipeExpression];
+
+PipeExpression      := "|>" { inline_func_call "|>"} inline_func_call;
+inline_func_call    := identifier [arguments_list];
+arguments_list      := ValueExpression {"," ValueExpression};
+
+LambdaExpression    := "with" parameters_list "->" Type Block
+parameters_list     := "(" [parameter {"," parameter}] ")";
+parameter           := Type identifier;
+Block               := "{" {Statement | ControlStatement} ";" "}"
+ControlStatement    := IfStmt |
+                       ForStmt |
+                       ReturnStmt;
+
+IfStmt              := "if" "(" ValueExpression ")" Block ["else" IfStmt | Block];
+ForStmt             := "for" "(" Type identifier "in" ValueExpression ")" Block;
+
+ValueExpression     := MathExpr [ModifierExpr]; 
+
+ModifierExpr        := "{" modifier_item {"," modifier_item } "}"; 
+modifier_item       := identifier "=" ValueExpression; 
+
+MathExpr            := factor {mul_op factor};
+mul_op              := "*" | "/" | "&&" | "&";
+factor              := term | "(" term ")";
+term                := value {add_op value};
+add_op              := "+" | "-" | rel_op | "|";
+rel_op              := "==" | "<=" | ">=" | "!=";
+value               := identifier |
+                       FuncCallExpr |
+                       NoteExpr |
+                       literal;
+
+FuncCallExpr        := identifier arguments_list;
+NoteExpr            := Pitch [Duration];
+Pitch               := "(" pitch_name "," int_lit ")" | pitch_name;
+Duration            := rythm_lit;               
+```
