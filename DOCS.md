@@ -69,15 +69,10 @@ ValueExpression     := MathExpr [ModifierExpr];
 ModifierExpr        := "{" modifier_item {"," modifier_item } "}"; 
 modifier_item       := identifier "=" ValueExpression; 
 
-MathExpr            := hfactor {h_op hfactor};
-h_op                := ">>" | "^" | "->";
-hfactor             := factor | "(" factor ")";
-factor              := term {mul_op term}
-mul_op              := "*" | "/" | "%" | "&&" | "&";
-term                := value {add_op value};
-add_op              := "+" | "-" | rel_op | "|";
-rel_op              := "==" | "<=" | ">=" | "!=";
-assig_op            := "=" | "|=" | "&=" | "*=" | "^=" | "%=" | "+=" | "-=" | "/=";
+MathExpr            := term {add_op term};
+term                := factor {mul_op factor};
+factor              := hfactor {h_op hfactor};
+hfactor             := value | "(" value ")";
 value               := simple_value |
                        ArrayExpr;
 simple_value        := IdOrFuncCall |
@@ -93,6 +88,9 @@ ComprExpr           := "<|" identifier Expression;
 Type                := LitType |
                        CpxType |
                        FuncType;
+FuncType            := "(" [type_list] ")" "->" Type;
+type_list           := Type {"," Type};
+
 LitType             := Int | 
                        Double |
                        Bool |
@@ -103,6 +101,10 @@ CpxType             := Scale |
                        Track |
                        Song |
                        []Type;
-FuncType            := "(" [type_list] ")" "->" Type;
-type_list           := Type {"," Type};                                              
+
+mul_op              := "*" | "/" | "%" | "&&" | "&";
+add_op              := "+" | "-" | rel_op | "|";
+rel_op              := "==" | "<=" | ">=" | "!=";
+h_op                := ">>" | "^" | "->";
+assig_op            := "=" | "|=" | "&=" | "*=" | "^=" | "%=" | "+=" | "-=" | "/=";                                              
 ```
