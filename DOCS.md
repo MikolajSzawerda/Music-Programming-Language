@@ -46,8 +46,7 @@ Statement           := Declaration |
 
 Declaration         := [Type] identifier ["=" Expression];
 Assigment           := identifier assig_op Expression;
-Expression          := LambdaExpression |
-                       ValueExpression [PipeExpression];
+Expression          := (LambdaExpression | ValueExpression) [PipeExpression];
 
 PipeExpression      := "|>" { inline_func_call "|>"} inline_func_call;
 inline_func_call    := identifier [arguments_list];
@@ -61,7 +60,7 @@ ControlStatement    := IfStmt |
                        ForStmt |
                        ReturnStmt;
 
-IfStmt              := "if" "(" ValueExpression ")" Block ["else" IfStmt | Block];
+IfStmt              := "if" "(" Expression ")" Block ["else" IfStmt | Block];
 ForStmt             := "for" "(" Type identifier "in" Expression ")" Block;
 
 ValueExpression     := MathExpr [ModifierExpr]; 
