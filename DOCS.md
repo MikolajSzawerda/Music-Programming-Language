@@ -51,7 +51,7 @@ Expression          := LambdaExpression |
 
 PipeExpression      := "|>" { inline_func_call "|>"} inline_func_call;
 inline_func_call    := identifier [arguments_list];
-arguments_list      := ValueExpression {"," ValueExpression};
+arguments_list      := Expression {"," Expression};
 
 LambdaExpression    := "with" parameters_list "->" Type Block
 parameters_list     := "(" [parameter {"," parameter}] ")";
@@ -62,7 +62,7 @@ ControlStatement    := IfStmt |
                        ReturnStmt;
 
 IfStmt              := "if" "(" ValueExpression ")" Block ["else" IfStmt | Block];
-ForStmt             := "for" "(" Type identifier "in" ValueExpression ")" Block;
+ForStmt             := "for" "(" Type identifier "in" Expression ")" Block;
 
 ValueExpression     := MathExpr [ModifierExpr]; 
 
@@ -87,8 +87,8 @@ IdOrFuncCall        := identifier ["(" arguments_list ")"]
 NoteExpr            := Pitch [Duration];
 Pitch               := "(" pitch_name "," int_lit ")" | pitch_name;
 Duration            := rythm_lit;
-ArrayExpr           := "[" ValueExpression ({"," ValueExpression} | ComprExpr) ]";          
-ComprExpr           := "<|" identifier ValueExpression;
+ArrayExpr           := "[" Expression ({"," Expression} | ComprExpr) ]";          
+ComprExpr           := "<|" identifier Expression;
 
 Type                := LitType |
                        CpxType |
