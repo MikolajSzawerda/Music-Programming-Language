@@ -1,8 +1,8 @@
 Język umożliwiający wygenerowanie utworów muzycznych w postaci MIDI. Język posiada specjalny zapis nutowy oraz udostępnia generatory.
 
 ```
-((E, 4) w | (G, 4) w | (D, 4) w) & ((C, 4) w | (D, 4) w | (F, 4) w)
-[[E, G, D] |> mel, [C, D, F] |> mel]{dur=w, oct=4} |> harm
+((E, 4) w | (G, 4) w | (D, 4) w) & ((C, 4) w | (D, 4) w | (F, 4) w);
+[[E, G, D] |> mel, [C, D, F] |> mel]{dur=w, oct=4} |> harm;
 
 a = [E, G, D]{oct=4} |> mel;
 
@@ -27,12 +27,12 @@ randGen = with(Scale scale, Rythm rythm) -> Phrase {
         form &= line;
     }
     
-    return (form>>scale)*(form>>rythm);
+    return form>>scale*form>>rythm;
 } 
 
     
-[a |> track Piano;, b, markov ["song1.mid", "song2.mid"] 2;, [C, E, G] |> randGen [q, w, h] |> track BagPipe;] |>
-    song 120, 60; |>
+[a |> track Piano, b, markov(["song1.mid", "song2.mid"], 2), [C, E, G] |> randGen [q, w, h] |> track BagPipe] |>
+    song 120, 60 |>
     export "demo2.mid";
 ```
 
@@ -41,9 +41,11 @@ randGen = with(Scale scale, Rythm rythm) -> Phrase {
 ```
 Program             := {Statement ";"};
 Statement           := Declaration |
+                       Assigment |
                        Expression;
 
 Declaration         := [Type] identifier ["=" Expression];
+Assigment           := identifier assig_op Expression;
 Expression          := LambdaExpression |
                        ValueExpression [PipeExpression];
 
@@ -67,19 +69,24 @@ ValueExpression     := MathExpr [ModifierExpr];
 ModifierExpr        := "{" modifier_item {"," modifier_item } "}"; 
 modifier_item       := identifier "=" ValueExpression; 
 
-MathExpr            := factor {mul_op factor};
-mul_op              := "*" | "/" | "&&" | "&";
-factor              := term | "(" term ")";
+MathExpr            := hfactor {h_op hfactor};
+h_op                := ">>" | "^" | "->";
+hfactor             := factor | "(" factor ")";
+factor              := term {mul_op term}
+mul_op              := "*" | "/" | "%" | "&&" | "&";
 term                := value {add_op value};
 add_op              := "+" | "-" | rel_op | "|";
 rel_op              := "==" | "<=" | ">=" | "!=";
-value               := identifier |
-                       FuncCallExpr |
-                       NoteExpr |
-                       literal;
-
-FuncCallExpr        := identifier arguments_list;
+assig_op            := "=" | "|=" | "&=" | "*=" | "^=" | "%=" | "+=" | "-=" | "/=";
+value               := simple_value |
+                       ArrayExpr;
+simple_value        := IdOrFuncCall |
+                       literal |
+                       NoteExpr;
+IdOrFuncCall        := identifier ["(" arguments_list ")"]
 NoteExpr            := Pitch [Duration];
 Pitch               := "(" pitch_name "," int_lit ")" | pitch_name;
-Duration            := rythm_lit;               
+Duration            := rythm_lit;
+ArrayExpr           := "[" ValueExpression ({"," ValueExpression} | ComprExpr) ]";          
+ComprExpr           := "<|" identifier ValueExpression;
 ```
