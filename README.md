@@ -12,11 +12,12 @@
     - sekwencja nut - operator `|` `C | E | G`
     - równoczesne zagranie - operator `&` `C & E G`
 - możliwość zmiany właściwości reprezentacji nutowych - składnia modifier `[(C, 4) q, C, E]{oct=2, dur=q}` - zmiana długości i oktawy dla wszystkich elementów, które nie mają podanych wartości wprost
-- nakładanie szablonu struktury drzewiastej na liniową strukturę(Scale, Rythm, Phrase, Tablica) `(0 | 1 & 0)>>[E, G, D]`
+- nakładanie szablonu struktury drzewiastej na liniową strukturę(Scale, Rythm, Tablica) `(0 | 1 & 0)>>[E, G, D]`
 - możliwość łańcuchowania operacji - operator `|>`(wyjście przekazuje jako pierwszy argument funkcji w kolejnym stopniu) `[1,2,3] |> concat [1,2] |> len`
 - możliwość definiowania lambdy - składnia `with(Parameters...)->ReturnType {...}`
 - możliwość deklaratywnego tworzenia listy - składnia `[fun(x) <| x iterable]`
 - funkcje wbudowane do deklaratywnego odczytu i zapisu midi `open("name.mid", Phrase, 1)` i `export("name.mid")`
+- obsługa operacji `if(Bool){} else{}` oraz pętli `for(T x in Expr){}`
 
 ```
 ((E, 4) w | (G, 4) w | (D, 4) w) & ((C, 4) w | (D, 4) w | (F, 4) w);
@@ -170,3 +171,100 @@ gdzie węzłami są elementy z liniowej struktury o indeksach z danego węzła s
 - funkcja `export(Song s|Track t, String fileName)` zapisuje obiekt piosenki lub ścieżki do pliku midi - typy `Song` oraz `Track`
 posiadają pola tempo i długość, przejście przez drzewo BFS
 
+### Funkcje wbudowane
+
+```
+mel([]T)                        := tworzy z listy sekwencję |
+harm([]T)                       := tworzy z listy drzewo &
+concat(T, [])                   := dołącza do listy element
+isEmpty/len/head/tail/repeat    := operacje na listach
+panic(String msg)               := rzuca wyjątkiem
+transpose/speed                 := operacje muzyczne
+at([]T, Int)                    := zwraca element z listy
+```
+
+## Technologie
+
+### Język
+Java 21
+
+### Budowanie
+Gradle
+
+### Testowanie
+JUnit5, Mockito, assertj
+
+### Zewnętrzne zależności
+
+- `javax.sound.midi` - wbudowana biblioteka w java pozwalająca wykonywać niskopoziomowe operacje na pliku midi - operowanie na poziomie Event'ow KeyOn KeyOff
+
+- `log4j` - bardziej przejrzyste logowanie niż System.out.println()
+
+- `lombok` - generacja Builder'ow i boilerplatu, oraz null checkow
+
+## Struktura i testowanie
+
+### Lexer
+odpowiedzialny za zamianę reprezentacji tekstowej na tokenową
+
+Testy:
+- rozponawanie literałów liczbowych/tekstowych/nutowych
+- rozpoznawanie słów kluczowych języka
+- rozpoznawanie identyfikatorów
+- rozpoznawanie komentarzy, tokeny podawane z pozycją w pliku
+
+### Parser
+
+budowa tablicy symboli i budowa AST
+testy
+
+- budowa tablicy z odpowiednimi wartościami
+- rozpoznawanie produkcji i odpowiednia struktura drzewa
+
+### AST
+
+- drzewiasta reprezentacja kodu
+- przechowuje produkcje w postaci obiektów, w raz z dostępnym dla nich kontekstem
+
+### SemanticAnalyzer
+
+- sprawdzenie poprawności sekwencji produkcji oraz prosta optymalizacja kodu
+
+Testy:
+- wywołanie dla przypadków pozytywnych i negatywnych
+- optymalizacja kodu nieosiągalnego, nieużywanego
+
+### Interpreter
+
+- wykonuje program poprzez przechodzenie AST
+- implementacja własnych typów
+Testy:
+- wykonanie przykładowych kodów źródłowych wraz z oczekiwanymi zmianami stanu
+- obsługa wystąpienia "panic" i wypisanie komunikatu
+
+### MusicTree
+
+moduł implementujący drzewo z iteratorem wg kolejności wystąpienia
+
+### MidiReader
+konwertuje plik midi na reprezentacje użytą w AST/interpreterze
+
+Testy:
+- odczyt pliku midi i konwersja na podany typ Rythm[]/Pitch[]/Motive
+
+### Markov
+
+moduł odpowiedzialny za reprezentację i operacje na łańcuchach markova
+
+Testy
+- Inicjalizacja z podaną macierzą
+- Przyjęcie Phrase
+
+Generowanie kolejnych nut na podstawie aktualnego stanu i macierzy przejść
+
+### MidiWriter
+
+moduł odpowiedzialny za generowanie pliku midi z podanego obiektu Song/Track
+
+Testy:
+- generacja midi z zachowaniem ustalonego tempa/długości
