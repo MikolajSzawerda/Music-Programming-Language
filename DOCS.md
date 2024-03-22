@@ -66,16 +66,15 @@ ValueExpression     := MathExpr [ModifierExpr];
 ModifierExpr        := "{" modifier_item {"," modifier_item } "}"; 
 modifier_item       := identifier "=" Expression; 
 
-MathExpr            := term {add_op term};
+MathExpr            := and_term {or_op and_term};
+and_term            := add_term {and_op add_term};
+add_term            := term {add_op term};
 term                := factor {mul_op factor};
 factor              := hfactor {h_op hfactor};
 hfactor             := value | "(" value ")";
 value               := unary_value |
                        ArrayExpr;
-unary_value         := (mul_op | add_op | h_op) simple_value;                       
-simple_value        := IdOrFuncCall |
-                       literal |
-                       NoteExpr;
+unary_value         := ([unary_op] IdOrFuncCall | literal) | NoteExpr;                       
 IdOrFuncCall        := identifier ["(" arguments_list ")"]
 NoteExpr            := Pitch [Duration];
 Pitch               := "(" pitch_name "," int_lit ")" | pitch_name;
@@ -101,9 +100,12 @@ CpxType             := Scale |
                        Song |
                        []Type;
 
-mul_op              := "*" | "/" | "%" | "&&" | "&";
-add_op              := "+" | "-" | rel_op | "|";
-rel_op              := "==" | "<=" | ">=" | "!=";
 h_op                := ">>" | "^" | "->";
+mul_op              := "*" | "/" | "%" | "&";
+add_op              := "+" | "-" | "|";
+rel_op              := "==" | "<=" | ">=" | "!=";
+and_op              := "&&";
+or_op               := "||";
+unary_op            := "-" | "+";
 assig_op            := "|=" | "&=" | "*=" | "^=" | "%=" | "+=" | "-=" | "/=";                                              
 ```
