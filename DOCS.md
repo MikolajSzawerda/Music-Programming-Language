@@ -1,4 +1,16 @@
-Język umożliwiający wygenerowanie utworów muzycznych w postaci MIDI. Język posiada specjalny zapis nutowy oraz udostępnia generatory.
+**Temat**: Język operacji na typach muzycznych z możliwością generacji do pliku MIDI
+**Autor**: Mikołaj Szawerda
+
+## Funkcjonalności
+
+- reprezentacja zapisu nutowego(w postaci drzewiastej)
+  - sekwencja nut - operator `|` `C | E | G`
+  - równoczesne zagranie - operator `&` `C & E G`
+- nakładanie szablonu struktury drzewiastej na liniową strukturę(Scale, Rythm, Phrase, Tablica) `(0 | 1 & 0)>>[E, G, D]`
+- możliwość łańcuchowania operacji - operator `|>`(wyjście przekazuje jako pierwszy argument funkcji w kolejnym stopniu) `[1,2,3] |> concat [1,2] |> len`
+- możliwość definiowania lambdy - składnia `with(Parameters...)->ReturnType {...}`
+- możliwość deklaratywnego tworzenia listy - składnia `[fun(x) <| x iterable]`
+- funkcje wbudowane do deklaratywnego odczytu i zapisu midi `open("name.mid", Phrase, 1)` i `export("name.mid")` 
 
 ```
 ((E, 4) w | (G, 4) w | (D, 4) w) & ((C, 4) w | (D, 4) w | (F, 4) w);
@@ -7,7 +19,7 @@ Język umożliwiający wygenerowanie utworów muzycznych w postaci MIDI. Język 
 let a = ([E, G, D]{oct=4} |> mel);
 
 let b = a |> 
-        repeat 2 |>
+        repeat 2.0 as Int |>
         transpose -1 |>
         concat a; |>
         harm |>
@@ -78,7 +90,8 @@ and_term            := add_term {and_op add_term};
 add_term            := term {add_op term};
 term                := factor {mul_op factor};
 factor              := hfactor {h_op hfactor};
-hfactor             := value | "(" value ")";
+hfactor             := casted_value | "(" casted_value ")";
+casted_value        := value "as" Type;
 value               := (unary_value | ArrayExpr) {PipeExpression};
 unary_value         := ([unary_op] (IdOrFuncCall | literal)) | NoteExpr;                       
 IdOrFuncCall        := identifier ["(" arguments_list ")"]
