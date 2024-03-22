@@ -4,7 +4,7 @@ Język umożliwiający wygenerowanie utworów muzycznych w postaci MIDI. Język 
 ((E, 4) w | (G, 4) w | (D, 4) w) & ((C, 4) w | (D, 4) w | (F, 4) w);
 [[E, G, D] |> mel, [C, D, F] |> mel]{dur=w, oct=4} |> harm;
 
-let a = [E, G, D]{oct=4} |> mel;
+let a = ([E, G, D]{oct=4} |> mel);
 
 let b = a |> 
         repeat 2 |>
@@ -12,6 +12,10 @@ let b = a |>
         concat a; |>
         harm |>
         track Guitar;
+
+let c = "song.mid" |>
+        open Track 0 |>
+        head 100;
     
 let randGen = with(Scale scale, Rythm rythm) -> Phrase {
     if(scale |> isEmpty || rythm |> isEmpty){
@@ -44,19 +48,22 @@ Statement           := DeclOrAssig |
 
 DeclOrAssig         := Type identifier ["=" Expression] |
                        identifier assig_op Expression;
-Expression          := (LambdaExpression | ValueExpression) [PipeExpression];
 
-PipeExpression      := "|>" { inline_func_call "|>"} inline_func_call;
-inline_func_call    := identifier [arguments_list];
-arguments_list      := Expression {"," Expression};
+Expression          := LambdaExpression |
+                       ValueExpression;
 
-LambdaExpression    := "with" parameters_list "->" Type Block
+LambdaExpression    := LambdaDecl | "(" LambdaDecl ")";
+LambdaDecl          := "with" parameters_list "->" Type Block {PipeExpression}
 parameters_list     := "(" [parameter {"," parameter}] ")";
 parameter           := Type identifier;
 Block               := "{" {Statement | ControlStatement} ";" "}"
 ControlStatement    := IfStmt |
                        ForStmt |
                        ReturnStmt;
+
+PipeExpression      := "|>" inline_func_call;
+inline_func_call    := identifier [arguments_list];
+arguments_list      := Expression {"," Expression};                       
 
 IfStmt              := "if" "(" Expression ")" Block ["else" IfStmt | Block];
 ForStmt             := "for" "(" Type identifier "in" Expression ")" Block;
@@ -72,9 +79,8 @@ add_term            := term {add_op term};
 term                := factor {mul_op factor};
 factor              := hfactor {h_op hfactor};
 hfactor             := value | "(" value ")";
-value               := unary_value |
-                       ArrayExpr;
-unary_value         := ([unary_op] IdOrFuncCall | literal) | NoteExpr;                       
+value               := (unary_value | ArrayExpr) {PipeExpression};
+unary_value         := ([unary_op] (IdOrFuncCall | literal)) | NoteExpr;                       
 IdOrFuncCall        := identifier ["(" arguments_list ")"]
 NoteExpr            := Pitch [Duration];
 Pitch               := "(" pitch_name "," int_lit ")" | pitch_name;
