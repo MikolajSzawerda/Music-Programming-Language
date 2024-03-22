@@ -6,6 +6,7 @@
 - reprezentacja zapisu nutowego(w postaci drzewiastej)
   - sekwencja nut - operator `|` `C | E | G`
   - równoczesne zagranie - operator `&` `C & E G`
+- możliwość zmiany właściwości reprezentacji nutowych - składnia modifier `[(C, 4) q, C, E]{oct=2, dur=q}` - zmiana długości i oktawy dla wszystkich elementów, które nie mają podanych wartości wprost
 - nakładanie szablonu struktury drzewiastej na liniową strukturę(Scale, Rythm, Phrase, Tablica) `(0 | 1 & 0)>>[E, G, D]`
 - możliwość łańcuchowania operacji - operator `|>`(wyjście przekazuje jako pierwszy argument funkcji w kolejnym stopniu) `[1,2,3] |> concat [1,2] |> len`
 - możliwość definiowania lambdy - składnia `with(Parameters...)->ReturnType {...}`
@@ -16,7 +17,7 @@
 ((E, 4) w | (G, 4) w | (D, 4) w) & ((C, 4) w | (D, 4) w | (F, 4) w);
 [[E, G, D] |> mel, [C, D, F] |> mel]{dur=w, oct=4} |> harm;
 
-let a = ([E, G, D]{oct=4} |> mel);
+let a = [E, G, D]{oct=4} |> mel;
 
 let b = a |> 
         repeat 2.0 as Int |>
