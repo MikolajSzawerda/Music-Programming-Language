@@ -1,7 +1,11 @@
 **Temat**: Język operacji na typach muzycznych z możliwością generacji do pliku MIDI
 **Autor**: Mikołaj Szawerda
 
-## Funkcjonalności
+## Charakterystyka
+- silne statyczne typowanie
+- obiekty są niemutowalne i przekazywane przez wartość
+
+### Funkcjonalności
 
 - reprezentacja zapisu nutowego(w postaci drzewiastej)
     - sekwencja nut - operator `|` `C | E | G`
@@ -28,7 +32,7 @@ let b = a |>
 
 let c = "song.mid" |>
         open Track 0 |>
-        head 100;
+        head+100; //shoud be parsed as head(x, 100)
     
 let randGen = with(Scale scale, Rythm rythm) -> Phrase {
     if(scale |> isEmpty || rythm |> isEmpty){
@@ -50,6 +54,10 @@ let randGen = with(Scale scale, Rythm rythm) -> Phrase {
 [a |> track Piano, b, markov(["song1.mid", "song2.mid"], 2), [C, E, G] |> randGen [q, w, h] |> track BagPipe] |>
     song 120, 60 |>
     export "demo2.mid";
+    
+let x1 = [0, 1, 2] |> concat [3,4] |>len+2;//panic
+let x2 = ([0, 1, 2] |> concat [3,4] |> dot (1+3*4^7-*1+3/6*12) |>len)+2;
+
 ```
 
 ## EBNF
@@ -129,3 +137,34 @@ or_op               := "||";
 unary_op            := "-" | "+";
 assig_op            := "|=" | "&=" | "*=" | "^=" | "%=" | "+=" | "-=" | "/=";                                              
 ```
+
+
+## Analiza wymagań
+
+### Zapis utworu w postaci drzewa
+
+| Typ liniowy | Interpretacja                     |
+|-------------|-----------------------------------|
+| Scale       | Uporządkowana lista wysokości nut |
+| Rythm       | Uporządkowana lista długości nut  |
+| []T         | Lista elementów typu T            |
+
+| Typ drzewiasty | Interpretacja                                |                                
+|----------------|----------------------------------------------|
+| Progression    | Wysokości nut drzewo elementów Scale         |
+| Groove         | Długości nut drzewo elementów Rythm          |
+| Phrase         | Nuty(wysokość, długość)                      |                      
+| Template       | Indeksy elementu z branej liniowej struktury |
+
+- operator `|` tworzy listę w której pierwszy węzeł jest "wartownikiem" posiada domyślne wartości, dla węzłów, które któreś z pól mają NULL
+- operator `&` tworzy listę, której elementy mają wspólny węzęł pełniący rolę korzenia(oraz wartownika z domyślnymi wartościami)
+- węzły `Phrase` posiadają wysokość oraz długość, węzły `Template` posiadają wszystkie dostępne pola typów wbudowanych
+- operacja `>>` splotu szablonu z strukturą liniową przechodzi drzewo i buduje strukturę identyczną jak struktura szablonu
+gdzie węzłami są elementy z liniowej struktury o indeksach z danego węzła szablonu z nałożonymi modyfikatorami(mutacją pól) z szablonu
+- operacja złożenia `*` Progression z Groove przechodzi równocześnie oba drzewa i tworzy Phrase o wysokościach z Progression i długościach z Groove
+
+### Zapis i odczyt pliku midi
+
+- funkcja `open(String filename, Type t, [Int trackNumber]` czyta podany plik midi i parsuje go do podanego typu muzycznego
+- funkcja `export(Song s|Track t, String fileName)` zapisuje obiekt piosenki lub ścieżki do pliku midi - typy `Song` oraz `Track`
+posiadają pola tempo i długość 
