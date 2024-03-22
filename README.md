@@ -183,6 +183,27 @@ transpose/speed                 := operacje muzyczne
 at([]T, Int)                    := zwraca element z listy
 ```
 
+### Operatory
+
+| Operator | Interpretacja                             |
+|----------|-------------------------------------------|
+| a->b     | tworzy listę o zakresie od a do b         |
+| a>>b     | nałożenie templat a na b                  |
+| a*b      | mnożenie, lub złożenie                    |
+| a        | \|>b b1,b2,...     pipe b(a, b1, b2, ...) |
+
+### Dostępne modyfikatory dla typów
+
+| Typ         | Modyfikatory                     |
+|-------------|----------------------------------|
+| Scale       | oct                              |
+| Rythm       | dur                              |
+| Progression | oct                              |
+| Groove      | dur                              |
+| Phrase      | oct, dur                         |
+| Track       | oct, dur, instrument, tempo, len |
+| Song        | tempo, len                       |
+
 ## Technologie
 
 ### Język
