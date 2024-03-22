@@ -70,8 +70,9 @@ MathExpr            := term {add_op term};
 term                := factor {mul_op factor};
 factor              := hfactor {h_op hfactor};
 hfactor             := value | "(" value ")";
-value               := simple_value |
+value               := unary_value |
                        ArrayExpr;
+unary_value         := (mul_op | add_op | h_op) simple_value;                       
 simple_value        := IdOrFuncCall |
                        literal |
                        NoteExpr;
