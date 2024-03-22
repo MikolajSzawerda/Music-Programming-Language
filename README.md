@@ -1,4 +1,5 @@
 **Temat**: Język operacji na typach muzycznych z możliwością generacji do pliku MIDI
+
 **Autor**: Mikołaj Szawerda
 
 ## Charakterystyka
@@ -167,4 +168,5 @@ gdzie węzłami są elementy z liniowej struktury o indeksach z danego węzła s
 
 - funkcja `open(String filename, Type t, [Int trackNumber]` czyta podany plik midi i parsuje go do podanego typu muzycznego
 - funkcja `export(Song s|Track t, String fileName)` zapisuje obiekt piosenki lub ścieżki do pliku midi - typy `Song` oraz `Track`
-posiadają pola tempo i długość 
+posiadają pola tempo i długość, przejście przez drzewo BFS
+
