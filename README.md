@@ -53,7 +53,7 @@ let randGen = with(Scale scale, Rythm rythm) -> Phrase {
     return form>>scale*form>>rythm;
 }
     
-[a |> track Piano, b, markov(["song1.mid", "song2.mid"], 2), [C, E, G] |> randGen [q, w, h] |> track BagPipe] |>
+[a |> track Piano, b, markov(["song1.mid", "song2.mid"], 1)((C, 4) q), [C, E, G] |> randGen [q, w, h] |> track BagPipe] |>
     song 120, 60 |>
     export "demo2.mid";
     
@@ -91,7 +91,7 @@ arguments_list      := Expression {"," Expression};
 IfStmt              := "if" "(" Expression ")" Block ["else" IfStmt | Block];
 ForStmt             := "for" "(" Type identifier "in" Expression ")" Block;
 
-ValueExpression     := MathExpr [ModifierExpr]; 
+ValueExpression     := MathExpr [ModifierExpr]  {PipeExpression}; 
 
 ModifierExpr        := "{" modifier_item {"," modifier_item } "}"; 
 modifier_item       := identifier "=" Expression; 
@@ -101,9 +101,8 @@ and_term            := add_term {and_op add_term};
 add_term            := term {add_op term};
 term                := factor {mul_op factor};
 factor              := hfactor {h_op hfactor};
-hfactor             := casted_value | "(" casted_value ")";
-casted_value        := value "as" Type;
-value               := (unary_value | ArrayExpr) {PipeExpression};
+hfactor             := (value | "(" ValueExpression ")" ) ["as" Type];
+value               := (unary_value | ArrayExpr);
 unary_value         := ([unary_op] (IdOrFuncCall | literal)) | NoteExpr;                       
 IdOrFuncCall        := identifier ["(" arguments_list ")"]
 NoteExpr            := Pitch [Duration];
