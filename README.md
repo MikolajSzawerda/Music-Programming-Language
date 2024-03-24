@@ -4,7 +4,7 @@
 
 ## Charakterystyka
 - silne statyczne typowanie
-- obiekty są niemutowalne i przekazywane przez wartość
+- obiekty są mutowalne i przekazywane przez referencję
 
 ### Funkcjonalności
 
@@ -28,7 +28,7 @@ let a = [E, G, D]{oct=4} |> mel;
 let b = a |> 
         repeat 2.0 as Int |>
         transpose -1 |>
-        concat a; |>
+        concat a |>
         harm |>
         track Guitar;
 
@@ -76,7 +76,7 @@ Expression          := LambdaExpression |
                        ValueExpression;
 
 LambdaExpression    := LambdaDecl | "(" LambdaDecl ")";
-LambdaDecl          := "with" parameters_list "->" Type Block {PipeExpression}
+LambdaDecl          := "with" parameters_list "->" (Type|"Void") Block {PipeExpression}
 parameters_list     := "(" [parameter {"," parameter}] ")";
 parameter           := Type identifier;
 Block               := "{" {Statement | ControlStatement} ";" "}"
@@ -90,7 +90,7 @@ arguments_list      := Expression {"," Expression};
 
 IfStmt              := "if" "(" Expression ")" Block ["else" IfStmt | Block];
 ForStmt             := "for" "(" Type identifier "in" Expression ")" Block;
-
+ReturnStmt          := "return" Expression;
 ValueExpression     := MathExpr [ModifierExpr]  {PipeExpression}; 
 
 ModifierExpr        := "{" modifier_item {"," modifier_item } "}"; 
@@ -105,8 +105,8 @@ hfactor             := (value | "(" ValueExpression ")" ) ["as" Type];
 value               := (unary_value | ArrayExpr);
 unary_value         := ([unary_op] (IdOrFuncCall | literal)) | NoteExpr;                       
 IdOrFuncCall        := identifier ["(" arguments_list ")"]
-NoteExpr            := Pitch [Duration];
-Pitch               := "(" pitch_name "," int_lit ")" | pitch_name;
+NoteExpr            := Pitch [Duration] | "rest" rythm_lit;
+Pitch               := "(" pitch_lit "," int_lit ")" | pitch_lit;
 Duration            := rythm_lit;
 ArrayExpr           := "[" Expression ({"," Expression} | ComprExpr) ]";          
 ComprExpr           := "<|" identifier Expression;
@@ -136,7 +136,15 @@ rel_op              := "==" | "<=" | ">=" | "!=";
 and_op              := "&&";
 or_op               := "||";
 unary_op            := "-" | "+";
-assig_op            := "|=" | "&=" | "*=" | "^=" | "%=" | "+=" | "-=" | "/=";                                              
+assig_op            := "|=" | "&=" | "*=" | "^=" | "%=" | "+=" | "-=" | "/=";
+
+identifier          := letter { letter | digit };
+literal             := int_lit | float_lit | string_lit;
+int_lit             := "0" | non_zero_digit {digit};
+float_lit           := int_lit "." [ int_lit ];
+string_lit          := \" {char} \";
+pitch_lit           := [A-G](#);
+rythm_lit           := (dl|l|w|h|q|e|s|t)(_(d|d))
 ```
 
 
@@ -152,13 +160,14 @@ assig_op            := "|=" | "&=" | "*=" | "^=" | "%=" | "+=" | "-=" | "/=";
 
 | Typ drzewiasty | Interpretacja                                |                                
 |----------------|----------------------------------------------|
-| Progression    | Wysokości nut drzewo elementów Scale         |
+| Progression    | Wysokość nut drzewo elementów Scale          |
 | Groove         | Długości nut drzewo elementów Rythm          |
 | Phrase         | Nuty(wysokość, długość)                      |                      
 | Template       | Indeksy elementu z branej liniowej struktury |
 
 - operator `|` tworzy listę w której pierwszy węzeł jest "wartownikiem" posiada domyślne wartości, dla węzłów, które któreś z pól mają NULL
 - operator `&` tworzy listę, której elementy mają wspólny węzęł pełniący rolę korzenia(oraz wartownika z domyślnymi wartościami)
+- przy użyciu składni modyfikatora `{id=x,id2=x1}` zmianie ulegają wartownicy 
 - węzły `Phrase` posiadają wysokość oraz długość, węzły `Template` posiadają wszystkie dostępne pola typów wbudowanych
 - operacja `>>` splotu szablonu z strukturą liniową przechodzi drzewo i buduje strukturę identyczną jak struktura szablonu
 gdzie węzłami są elementy z liniowej struktury o indeksach z danego węzła szablonu z nałożonymi modyfikatorami(mutacją pól) z szablonu
@@ -202,6 +211,25 @@ at([]T, Int)                    := zwraca element z listy
 | Phrase      | oct, dur                         |
 | Track       | oct, dur, instrument, tempo, len |
 | Song        | tempo, len                       |
+
+oct - oktawa, dur długość nuty, tempo - BPM, len - długość w sekundach
+
+### Rzutowanie
+
+Język zapewnia składnię `x as Type`, która realizuje rzutowanie, po za oczywistymi konwersjami dostępne są
+
+| old         | new              |
+|-------------|------------------|
+| Scale       | Phrase(dur=NULL) |
+| Progression | Phrase(dur=NULL) |
+| Rythm       | Groove           |
+| Scale       | Progression      |
+| Phrase      | Progression      |
+| Phrase      | Groove           |
+
+### Obsługa błędów
+
+Język nie zapewnia mechanizmu przechwytywania wyjątków, istnieje natomiast możliwość rzucenia wyjątku przy pomocy funkcji `panic(String)`, która skutkuje wyświetleniem treści komunikatu oraz zatrzymaniem interpretera
 
 ## Technologie
 
@@ -264,13 +292,13 @@ Testy:
 
 ### MusicTree
 
-moduł implementujący drzewo z iteratorem wg kolejności wystąpienia
+moduł implementujący drzewo typów muzycznych z iteratorem wg kolejności wystąpienia
 
 ### MidiReader
 konwertuje plik midi na reprezentacje użytą w AST/interpreterze
 
 Testy:
-- odczyt pliku midi i konwersja na podany typ Rythm[]/Pitch[]/Motive
+- odczyt pliku midi i konwersja na podany typ Progression/Groove/Phrase/Track/Song
 
 ### Markov
 
