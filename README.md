@@ -118,15 +118,10 @@ Type                := LitType |
 FuncType            := "(" [type_list] ")" "->" (Type|"Void");
 type_list           := Type {"," Type};
 
-LitType             := Int | 
-                       Double |
-                       Bool |
-                       String;
-CpxType             := Scale |
-                       Rythm |
-                       Phrase |
-                       Track |
-                       Song |
+LitType             := Int | Double |
+                       Bool | String;
+CpxType             := Scale | Rythm | Progression | Groove |
+                       Phrase | Track | Song |
                        []Type;
 
 h_op                := ">>" | "^" | "->";
@@ -144,7 +139,7 @@ int_lit             := "0" | non_zero_digit {digit};
 float_lit           := int_lit "." [ int_lit ];
 string_lit          := \" {char} \";
 pitch_lit           := [A-G](#);
-rythm_lit           := (dl|l|w|h|q|e|s|t)(_(d|d))
+rythm_lit           := (dl|l|w|h|q|e|s|t)(_(d|t));
 ```
 
 
