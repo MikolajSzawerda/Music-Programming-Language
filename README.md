@@ -131,7 +131,7 @@ rel_op              := "==" | "<=" | ">=" | "!=";
 and_op              := "&&";
 or_op               := "||";
 unary_op            := "-" | "+";
-assig_op            := "|=" | "&=" | "*=" | "^=" | "%=" | "+=" | "-=" | "/=";
+assig_op            := "|=" | "&=" | "*=" | "^=" | "%=" | "+=" | "-=" | "/=" | "=";
 
 identifier          := letter { letter | digit };
 literal             := int_lit | float_lit | string_lit;
