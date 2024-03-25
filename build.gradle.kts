@@ -30,7 +30,7 @@ dependencies {
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testCompileOnly("org.assertj:assertj-core:3.11.1")
+    testImplementation("org.assertj:assertj-core:3.11.1")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
