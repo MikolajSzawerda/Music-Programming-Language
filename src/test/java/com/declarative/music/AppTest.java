@@ -2,13 +2,12 @@ package com.declarative.music;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 class AppTest {
 
     @Test
-    void appHasAGreeting() {
-        App classUnderTest = new App();
-        assertNotNull(classUnderTest.getGreeting(), "app should have a greeting");
+    void shouldBeTrue() {
+        assertThat(1L).isEqualTo(1L);
     }
 }

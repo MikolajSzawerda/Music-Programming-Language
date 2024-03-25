@@ -1,11 +1,10 @@
 package com.declarative.music;
 
-public class App {
-    public String getGreeting() {
-        return "Hello World!";
-    }
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
+public class App {
     public static void main(String[] args) {
-        System.out.println(new App().getGreeting());
+        log.info("Hello world");
     }
 }
