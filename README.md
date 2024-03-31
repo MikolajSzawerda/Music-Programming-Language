@@ -3,17 +3,20 @@
 **Autor**: Mikołaj Szawerda
 
 ## Charakterystyka
+
 - silne statyczne typowanie
 - obiekty są mutowalne i przekazywane przez referencję
 
-### Funkcjonalności
+### Funkcje
 
 - reprezentacja zapisu nutowego(w postaci drzewiastej)
     - sekwencja nut - operator `|` `C | E | G`
     - równoczesne zagranie - operator `&` `C & E G`
-- możliwość zmiany właściwości reprezentacji nutowych - składnia modifier `[(C, 4) q, C, E]{oct=2, dur=q}` - zmiana długości i oktawy dla wszystkich elementów, które nie mają podanych wartości wprost
+- możliwość zmiany właściwości reprezentacji nutowych - składnia modifier `[(C, 4) q, C, E]{oct=2, dur=q}` - zmiana
+  długości i oktawy dla wszystkich elementów, które nie mają podanych wartości wprost
 - nakładanie szablonu struktury drzewiastej na liniową strukturę(Scale, Rythm, Tablica) `(0 | 1 & 0)>>[E, G, D]`
-- możliwość łańcuchowania operacji - operator `|>`(wyjście przekazuje jako pierwszy argument funkcji w kolejnym stopniu) `[1,2,3] |> concat [1,2] |> len`
+- możliwość łańcuchowania operacji - operator `|>`(wyjście przekazuje jako pierwszy argument funkcji w kolejnym
+  stopniu) `[1,2,3] |> concat [1,2] |> len`
 - możliwość definiowania lambdy - składnia `with(Parameters...)->ReturnType {...}`
 - możliwość deklaratywnego tworzenia listy - składnia `[fun(x) <| x iterable]`
 - funkcje wbudowane do deklaratywnego odczytu i zapisu midi `open("name.mid", Phrase, 1)` i `export("name.mid")`
@@ -62,6 +65,8 @@ let x2 = ([0, 1, 2] |> concat [3,4] |> dot (1+3*4^7-*1+3/6*12) |>len)+2;
 
 ```
 
+shift-reduce conflict
+
 ## EBNF
 
 ```
@@ -69,7 +74,7 @@ Program             := {Statement ";"};
 Statement           := DeclOrAssig |
                        Expression;
 
-DeclOrAssig         := Type identifier ["=" Expression] |
+DeclOrAssig         := (Type|"let") identifier ["=" Expression] |
                        identifier assig_op Expression;
 
 Expression          := LambdaExpression |
@@ -90,14 +95,15 @@ arguments_list      := Expression {"," Expression};
 
 IfStmt              := "if" "(" Expression ")" Block ["else" IfStmt | Block];
 ForStmt             := "for" "(" Type identifier "in" Expression ")" Block;
-ReturnStmt          := "return" Expression;
+ReturnStmt          := "return" [Expression];
 ValueExpression     := MathExpr [ModifierExpr]  {PipeExpression}; 
 
 ModifierExpr        := "{" modifier_item {"," modifier_item } "}"; 
 modifier_item       := identifier "=" Expression; 
 
 MathExpr            := and_term {or_op and_term};
-and_term            := add_term {and_op add_term};
+and_term            := rel_term {and_op rel_term};
+rel_term            := add_term {rel_op add_term};
 add_term            := term {add_op term};
 term                := factor {mul_op factor};
 factor              := hfactor {h_op hfactor};
@@ -106,15 +112,14 @@ value               := (unary_value | ArrayExpr);
 unary_value         := ([unary_op] (IdOrFuncCall | literal)) | NoteExpr;                       
 IdOrFuncCall        := identifier ["(" arguments_list ")"]
 NoteExpr            := Pitch [Duration] | "rest" rythm_lit;
-Pitch               := "(" pitch_lit "," int_lit ")" | pitch_lit;
+Pitch               := "(" pitch_lit "," Expression ")" | identifier;
 Duration            := rythm_lit;
 ArrayExpr           := "[" Expression ({"," Expression} | ComprExpr) ]";          
 ComprExpr           := "<|" identifier Expression;
 
 Type                := LitType |
                        CpxType |
-                       FuncType |
-                       let;
+                       FuncType;
 FuncType            := "(" [type_list] ")" "->" (Type|"Void");
 type_list           := Type {"," Type};
 
@@ -127,7 +132,7 @@ CpxType             := Scale | Rythm | Progression | Groove |
 h_op                := ">>" | "^" | "->";
 mul_op              := "*" | "/" | "%" | "&";
 add_op              := "+" | "-" | "|";
-rel_op              := "==" | "<=" | ">=" | "!=";
+rel_op              := "==" | "<=" | ">=" | "!=" | ">" | "<";
 and_op              := "&&";
 or_op               := "||";
 unary_op            := "-" | "+";
@@ -140,8 +145,10 @@ float_lit           := int_lit "." [ int_lit ];
 string_lit          := \" {char} \";
 pitch_lit           := [A-G](#);
 rythm_lit           := (dl|l|w|h|q|e|s|t)(_(d|t));
+l_d
+l
+l_t
 ```
-
 
 ## Analiza wymagań
 
@@ -160,19 +167,26 @@ rythm_lit           := (dl|l|w|h|q|e|s|t)(_(d|t));
 | Phrase         | Nuty(wysokość, długość)                      |                      
 | Template       | Indeksy elementu z branej liniowej struktury |
 
-- operator `|` tworzy listę w której pierwszy węzeł jest "wartownikiem" posiada domyślne wartości, dla węzłów, które któreś z pól mają NULL
-- operator `&` tworzy listę, której elementy mają wspólny węzęł pełniący rolę korzenia(oraz wartownika z domyślnymi wartościami)
-- przy użyciu składni modyfikatora `{id=x,id2=x1}` zmianie ulegają wartownicy 
+- operator `|` tworzy listę w której pierwszy węzeł jest "wartownikiem" posiada domyślne wartości, dla węzłów, które
+  któreś z pól mają NULL
+- operator `&` tworzy listę, której elementy mają wspólny węzęł pełniący rolę korzenia(oraz wartownika z domyślnymi
+  wartościami)
+- przy użyciu składni modyfikatora `{id=x,id2=x1}` zmianie ulegają wartownicy
 - węzły `Phrase` posiadają wysokość oraz długość, węzły `Template` posiadają wszystkie dostępne pola typów wbudowanych
-- operacja `>>` splotu szablonu z strukturą liniową przechodzi drzewo i buduje strukturę identyczną jak struktura szablonu
-gdzie węzłami są elementy z liniowej struktury o indeksach z danego węzła szablonu z nałożonymi modyfikatorami(mutacją pól) z szablonu
-- operacja złożenia `*` Progression z Groove przechodzi równocześnie oba drzewa i tworzy Phrase o wysokościach z Progression i długościach z Groove
+- operacja `>>` splotu szablonu z strukturą liniową przechodzi drzewo i buduje strukturę identyczną jak struktura
+  szablonu
+  gdzie węzłami są elementy z liniowej struktury o indeksach z danego węzła szablonu z nałożonymi modyfikatorami(mutacją
+  pól) z szablonu
+- operacja złożenia `*` Progression z Groove przechodzi równocześnie oba drzewa i tworzy Phrase o wysokościach z
+  Progression i długościach z Groove
 
 ### Zapis i odczyt pliku midi
 
-- funkcja `open(String filename, Type t, [Int trackNumber]` czyta podany plik midi i parsuje go do podanego typu muzycznego
-- funkcja `export(Song s|Track t, String fileName)` zapisuje obiekt piosenki lub ścieżki do pliku midi - typy `Song` oraz `Track`
-posiadają pola tempo i długość, przejście przez drzewo BFS
+- funkcja `open(String filename, Type t, [Int trackNumber]` czyta podany plik midi i parsuje go do podanego typu
+  muzycznego
+- funkcja `export(Song s|Track t, String fileName)` zapisuje obiekt piosenki lub ścieżki do pliku midi - typy `Song`
+  oraz `Track`
+  posiadają pola tempo i długość, przejście przez drzewo BFS
 
 ### Funkcje wbudowane
 
@@ -224,22 +238,27 @@ Język zapewnia składnię `x as Type`, która realizuje rzutowanie, po za oczyw
 
 ### Obsługa błędów
 
-Język nie zapewnia mechanizmu przechwytywania wyjątków, istnieje natomiast możliwość rzucenia wyjątku przy pomocy funkcji `panic(String)`, która skutkuje wyświetleniem treści komunikatu oraz zatrzymaniem interpretera
+Język nie zapewnia mechanizmu przechwytywania wyjątków, istnieje natomiast możliwość rzucenia wyjątku przy pomocy
+funkcji `panic(String)`, która skutkuje wyświetleniem treści komunikatu oraz zatrzymaniem interpretera
 
 ## Technologie
 
 ### Język
+
 Java 21
 
 ### Budowanie
+
 Gradle
 
 ### Testowanie
+
 JUnit5, Mockito, assertj
 
 ### Zewnętrzne zależności
 
-- `javax.sound.midi` - wbudowana biblioteka w java pozwalająca wykonywać niskopoziomowe operacje na pliku midi - operowanie na poziomie Event'ow KeyOn KeyOff
+- `javax.sound.midi` - wbudowana biblioteka w java pozwalająca wykonywać niskopoziomowe operacje na pliku midi -
+  operowanie na poziomie Event'ow KeyOn KeyOff
 
 - `log4j` - bardziej przejrzyste logowanie niż System.out.println()
 
@@ -248,9 +267,11 @@ JUnit5, Mockito, assertj
 ## Struktura i testowanie
 
 ### Lexer
+
 odpowiedzialny za zamianę reprezentacji tekstowej na tokenową
 
 Testy:
+
 - rozponawanie literałów liczbowych/tekstowych/nutowych
 - rozpoznawanie słów kluczowych języka
 - rozpoznawanie identyfikatorów
@@ -274,6 +295,7 @@ testy
 - sprawdzenie poprawności sekwencji produkcji oraz prosta optymalizacja kodu
 
 Testy:
+
 - wywołanie dla przypadków pozytywnych i negatywnych
 - optymalizacja kodu nieosiągalnego, nieużywanego
 
@@ -281,7 +303,7 @@ Testy:
 
 - wykonuje program poprzez przechodzenie AST
 - implementacja własnych typów
-Testy:
+  Testy:
 - wykonanie przykładowych kodów źródłowych wraz z oczekiwanymi zmianami stanu
 - obsługa wystąpienia "panic" i wypisanie komunikatu
 
@@ -290,9 +312,11 @@ Testy:
 moduł implementujący drzewo typów muzycznych z iteratorem wg kolejności wystąpienia
 
 ### MidiReader
+
 konwertuje plik midi na reprezentacje użytą w AST/interpreterze
 
 Testy:
+
 - odczyt pliku midi i konwersja na podany typ Progression/Groove/Phrase/Track/Song
 
 ### Markov
@@ -300,6 +324,7 @@ Testy:
 moduł odpowiedzialny za reprezentację i operacje na łańcuchach markova
 
 Testy
+
 - Inicjalizacja z podaną macierzą
 - Przyjęcie Phrase
 
@@ -310,4 +335,5 @@ Generowanie kolejnych nut na podstawie aktualnego stanu i macierzy przejść
 moduł odpowiedzialny za generowanie pliku midi z podanego obiektu Song/Track
 
 Testy:
+
 - generacja midi z zachowaniem ustalonego tempa/długości
