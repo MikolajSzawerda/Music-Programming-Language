@@ -44,7 +44,7 @@ class LexerTest {
                                a=10
                                 
                                 
-                b=20
+                b="20"
                 """;
         var lexer = new Lexer(new StringReader(code));
 
@@ -63,7 +63,7 @@ class LexerTest {
                 new Token(TokenType.T_NUMBER, new Position(0, 0), 10),
                 new Token(TokenType.T_IDENTIFIER, new Position(0, 0), "b"),
                 new Token(TokenType.T_OPERATOR, new Position(0, 0), '='),
-                new Token(TokenType.T_NUMBER, new Position(0, 0), 20)
+                new Token(TokenType.T_STRING, new Position(0, 0), "20")
         ));
 
         // then

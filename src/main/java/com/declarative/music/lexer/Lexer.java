@@ -1,9 +1,6 @@
 package com.declarative.music.lexer;
 
-import com.declarative.music.lexer.matcher.IdentifierTokenMatcher;
-import com.declarative.music.lexer.matcher.NumberTokenMatcher;
-import com.declarative.music.lexer.matcher.OperatorTokenMatcher;
-import com.declarative.music.lexer.matcher.TokenMatcher;
+import com.declarative.music.lexer.matcher.*;
 import com.declarative.music.lexer.token.Token;
 
 import java.io.BufferedReader;
@@ -20,6 +17,7 @@ public class Lexer {
         tokenMatchers = List.of(
                 new OperatorTokenMatcher(this.reader),
                 new NumberTokenMatcher(this.reader),
+                new StringsTokenMatcher(this.reader),
                 new IdentifierTokenMatcher(this.reader)
         );
     }
