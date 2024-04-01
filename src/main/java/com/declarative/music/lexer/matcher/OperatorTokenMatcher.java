@@ -8,6 +8,8 @@ import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 
+//TODO handle rest of operators
+//TODO handle punctuation
 public class OperatorTokenMatcher extends AbstractTokenMatcher {
     public OperatorTokenMatcher(BufferedReader reader) {
         super(reader);
