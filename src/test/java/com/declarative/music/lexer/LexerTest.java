@@ -41,7 +41,7 @@ class LexerTest {
     void shouldHandleNewLine() throws IOException {
         // given
         var code = """
-                               a=10
+                               a=10 //Hello world
                                 
                                 
                 b="20"
@@ -56,18 +56,20 @@ class LexerTest {
         tokens.add(lexer.getNextToken());
         tokens.add(lexer.getNextToken());
         tokens.add(lexer.getNextToken());
+        tokens.add(lexer.getNextToken());
         assertThat(lexer.getNextToken()).isNull();
         assertThat(tokens).containsExactlyElementsOf(List.of(
                 new Token(TokenType.T_IDENTIFIER, new Position(0, 0), "a"),
                 new Token(TokenType.T_OPERATOR, new Position(0, 0), '='),
                 new Token(TokenType.T_NUMBER, new Position(0, 0), 10),
+                new Token(TokenType.T_COMMENT, new Position(0, 0), "Hello world"),
                 new Token(TokenType.T_IDENTIFIER, new Position(0, 0), "b"),
                 new Token(TokenType.T_OPERATOR, new Position(0, 0), '='),
                 new Token(TokenType.T_STRING, new Position(0, 0), "20")
         ));
 
         // then
-        assertThat(tokens).hasSize(6);
+        assertThat(tokens).hasSize(7);
     }
 
 

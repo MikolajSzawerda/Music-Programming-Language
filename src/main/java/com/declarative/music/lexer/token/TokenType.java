@@ -4,5 +4,6 @@ public enum TokenType {
     T_IDENTIFIER,
     T_OPERATOR,
     T_NUMBER,
-    T_STRING
+    T_STRING,
+    T_COMMENT
 }

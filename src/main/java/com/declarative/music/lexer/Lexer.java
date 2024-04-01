@@ -18,7 +18,8 @@ public class Lexer {
                 new OperatorTokenMatcher(this.reader),
                 new NumberTokenMatcher(this.reader),
                 new StringsTokenMatcher(this.reader),
-                new IdentifierTokenMatcher(this.reader)
+                new IdentifierTokenMatcher(this.reader),
+                new CommentTokenMatcher(this.reader)
         );
     }
 
