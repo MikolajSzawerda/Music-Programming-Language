@@ -42,4 +42,23 @@ class IdentifierStateTest {
         // then
         Assertions.assertEquals(expectedToken, token);
     }
+
+    @Test
+    void shouldParseKeyword() throws IOException {
+        // given
+        when(lexer.getCurrentStreamChar())
+                .thenReturn((int) 'w');
+        when(lexer.getNextStreamChar())
+                .thenReturn((int) 'i')
+                .thenReturn((int) 't')
+                .thenReturn((int) 'h')
+                .thenReturn(-1);
+        final var expectedToken = new Token(TokenType.T_WITH, new Position(0, 0), null);
+
+        // when
+        final var token = tested.processNext();
+
+        // then
+        Assertions.assertEquals(expectedToken, token);
+    }
 }

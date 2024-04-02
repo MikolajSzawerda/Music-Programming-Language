@@ -6,5 +6,5 @@ public enum TokenType {
     T_NUMBER,
     T_STRING,
     T_COMMENT,
-    T_EOF
+    T_LET_TYPE, T_LET, T_WITH, T_IF, T_FOR, T_RETURN, T_EOF
 }

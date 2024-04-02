@@ -8,7 +8,6 @@ import java.io.IOException;
 
 public class IdentifierState extends LexerState {
     private final StringBuilder tokenBuilder;
-    private final boolean completed = false;
 
     public IdentifierState(final LexerContext lexerContext) {
         super(lexerContext);
@@ -24,7 +23,9 @@ public class IdentifierState extends LexerState {
             currentChar = lexerContext.getNextStreamChar();
         }
         lexerContext.stateTransition(new IdleState(lexerContext));
-        return new Token(TokenType.T_IDENTIFIER, new Position(0, 0), tokenBuilder.toString());
+        return KeywordsMap.getKeywordType(tokenBuilder.toString())
+                .map(keywordType -> new Token(keywordType, new Position(0, 0), null))
+                .orElse(new Token(TokenType.T_IDENTIFIER, new Position(0, 0), tokenBuilder.toString()));
     }
 
 }
