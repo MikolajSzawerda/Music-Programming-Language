@@ -1,51 +1,46 @@
 package com.declarative.music.lexer;
 
-import com.declarative.music.lexer.matcher.*;
+import com.declarative.music.lexer.state.IdleState;
+import com.declarative.music.lexer.state.LexerContext;
+import com.declarative.music.lexer.state.LexerState;
 import com.declarative.music.lexer.token.Token;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.List;
 
-public class Lexer {
+public class Lexer implements LexerContext {
     private final BufferedReader reader;
-    private final List<TokenMatcher> tokenMatchers;
+    private int nextStreamChar = -1;
+    private LexerState currentState;
 
-    public Lexer(Reader reader) {
+    public Lexer(final Reader reader) {
         this.reader = new BufferedReader(reader);
-        tokenMatchers = List.of(
-                new OperatorTokenMatcher(this.reader),
-                new NumberTokenMatcher(this.reader),
-                new StringsTokenMatcher(this.reader),
-                new IdentifierTokenMatcher(this.reader),
-                new CommentTokenMatcher(this.reader)
-        );
+        currentState = new IdleState(this);
     }
 
     public Token getNextToken() throws IOException {
-        skipWhites();
-        for (var matcher : tokenMatchers) {
-            var result = matcher.matchNextToken();
-            if (result != null) {
-                return result;
-            }
+        Token nextToken = null;
+        while (nextToken == null) {
+            nextToken = currentState.processNext();
         }
-        return null;
+        return nextToken;
     }
 
-    private void skipWhites() throws IOException {
-        reader.mark(1024);
-        int readChar;
-        int i = 0;
-        while ((readChar = reader.read()) != -1) {
-            if (!Character.isWhitespace((char) readChar)) {
-                reader.reset();
-                reader.skip(i);
-                return;
-            }
-            i++;
-        }
+
+    @Override
+    public void stateTransition(final LexerState newState) {
+        currentState = newState;
     }
 
+    @Override
+    public int getCurrentStreamChar() {
+        return nextStreamChar;
+    }
+
+    @Override
+    public int getNextStreamChar() throws IOException {
+        nextStreamChar = reader.read();
+        return nextStreamChar;
+    }
 }
