@@ -24,12 +24,30 @@ class OperatorStateTest {
     }
 
     @Test
-    void shouldParseIdentifier() throws IOException {
+    void shouldParseSingleOperator() throws IOException {
         // given
-        final var expectedValue = '=';
-        when(lexer.getCurrentStreamChar()).thenReturn((int) expectedValue);
-        when(lexer.getNextStreamChar()).thenReturn(-1);
-        final var expectedToken = new Token(TokenType.T_OPERATOR, new Position(0, 0), expectedValue);
+        when(lexer.getCurrentStreamChar())
+                .thenReturn((int) '+');
+        when(lexer.getNextStreamChar())
+                .thenReturn(-1);
+        final var expectedToken = new Token(TokenType.T_OPERATOR, new Position(0, 0), "+");
+
+        // when
+        final var token = tested.processNext();
+
+        // then
+        Assertions.assertEquals(expectedToken, token);
+    }
+
+    @Test
+    void shouldParseDoubleOperator() throws IOException {
+        // given
+        when(lexer.getCurrentStreamChar())
+                .thenReturn((int) '+');
+        when(lexer.getNextStreamChar())
+                .thenReturn((int) '=')
+                .thenReturn(-1);
+        final var expectedToken = new Token(TokenType.T_OPERATOR, new Position(0, 0), "+=");
 
         // when
         final var token = tested.processNext();
