@@ -41,4 +41,26 @@ class NumberStateTest {
         // then
         Assertions.assertEquals(expectedToken, token);
     }
+
+    @Test
+    void shouldParseFloatingNumber() throws IOException {
+        // given
+        final double expectedValue = 12.34;
+        when(lexer.getCurrentStreamChar())
+                .thenReturn((int) '1')
+                .thenReturn((int) '.');
+        when(lexer.getNextStreamChar())
+                .thenReturn((int) '2')
+                .thenReturn((int) '.')
+                .thenReturn((int) '3')
+                .thenReturn((int) '4')
+                .thenReturn(-1);
+        final var expectedToken = new Token(TokenType.T_NUMBER, new Position(0, 0), expectedValue);
+
+        // when
+        final var token = tested.processNext();
+
+        // then
+        Assertions.assertEquals(expectedToken, token);
+    }
 }
