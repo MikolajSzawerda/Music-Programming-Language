@@ -65,14 +65,14 @@ let x2 = ([0, 1, 2] |> concat [3,4] |> dot (1+3*4^7-*1+3/6*12) |>len)+2;
 
 ```
 
-shift-reduce conflict
-
 ## EBNF
 
 ```
 Program             := {Statement ";"};
 Statement           := DeclOrAssig |
-                       Expression;
+                       Expression |
+                       IfStmt |
+                       ForStmt;
 
 DeclOrAssig         := (Type|"let") identifier ["=" Expression] |
                        identifier assig_op Expression;
@@ -145,9 +145,6 @@ float_lit           := int_lit "." [ int_lit ];
 string_lit          := \" {char} \";
 pitch_lit           := [A-G](#);
 rythm_lit           := (dl|l|w|h|q|e|s|t)(_(d|t));
-l_d
-l
-l_t
 ```
 
 ## Analiza wymagań
