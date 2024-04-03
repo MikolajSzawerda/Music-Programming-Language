@@ -17,7 +17,8 @@ public class OperatorOrUnknownState extends LexerState {
 
     @Override
     public Token processNext() throws IOException {
-        final var operator = tryBuildOperator('>', Set.of('=', '>'))
+        final var operator = tryBuildPunctuation()
+                .or(() -> tryBuildOperator('>', Set.of('=', '>')))
                 .or(() -> tryBuildOperator('<', Set.of('|', '=')))
                 .or(() -> tryBuildOperator('-', Set.of('>', '=')))
                 .or(() -> tryBuildOperator('=', Set.of('=')))
@@ -28,6 +29,17 @@ public class OperatorOrUnknownState extends LexerState {
                 .or(() -> tryBuildOperator('+', Set.of('=')));
         lexerContext.stateTransition(new IdleState(lexerContext));
         return operator.orElse(null);
+    }
+
+    private Optional<Token> tryBuildPunctuation() throws IOException {
+        final var currentChar = (char) lexerContext.getCurrentStreamChar();
+        final var result = PunctuationMap.getPunctuation(currentChar)
+                .map(punctuation -> new Token(punctuation, new Position(0, 0), null));
+        if (result.isPresent()) {
+            lexerContext.getNextStreamChar();
+
+        }
+        return result;
     }
 
     @SneakyThrows

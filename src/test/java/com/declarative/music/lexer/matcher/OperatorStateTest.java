@@ -55,4 +55,18 @@ class OperatorStateTest {
         // then
         Assertions.assertEquals(expectedToken, token);
     }
+
+    @Test
+    void shouldParsePunctuation() throws IOException {
+        // given
+        when(lexer.getCurrentStreamChar())
+                .thenReturn((int) '{');
+        final var expectedToken = new Token(TokenType.T_L_CURL_PARENTHESIS, new Position(0, 0), null);
+
+        // when
+        final var token = tested.processNext();
+
+        // then
+        Assertions.assertEquals(expectedToken, token);
+    }
 }
