@@ -27,7 +27,7 @@ public class IdleState extends LexerState {
         } else if (currentStreamChar == '/') {
             lexerContext.stateTransition(new CommentOrDivisionState(lexerContext));
         } else if (Character.isLetter(currentStreamChar)) {
-            lexerContext.stateTransition(new IdentifierState(lexerContext));
+            lexerContext.stateTransition(new NoteOrIdentifierState(lexerContext));
         } else {
             lexerContext.stateTransition(new OperatorOrUnknownState(lexerContext));
         }

@@ -14,6 +14,11 @@ public class IdentifierState extends LexerState {
         tokenBuilder = new StringBuilder();
     }
 
+    public IdentifierState(final LexerContext lexerContext, final StringBuilder stringBuilder) {
+        super(lexerContext);
+        tokenBuilder = stringBuilder;
+    }
+
 
     @Override
     public Token processNext() throws IOException {
