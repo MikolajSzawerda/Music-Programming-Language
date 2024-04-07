@@ -1,4 +1,4 @@
-package com.declarative.music.lexer.state;
+package com.declarative.music.lexer.terminals;
 
 import com.declarative.music.lexer.token.TokenType;
 import lombok.NoArgsConstructor;

@@ -1,7 +1,8 @@
 package com.declarative.music.lexer.utils;
 
-import com.declarative.music.lexer.state.LexerContext;
+import com.declarative.music.lexer.LexerContext;
 import com.declarative.music.lexer.state.LexerState;
+import com.declarative.music.lexer.token.Position;
 
 public class LexerContextMock implements LexerContext {
     private final String code;
@@ -30,7 +31,14 @@ public class LexerContextMock implements LexerContext {
 
     @Override
     public int getNextStreamChar() {
-        idx++;
+        if (idx < code.length()) {
+            idx++;
+        }
         return getCurrentStreamChar();
+    }
+
+    @Override
+    public Position getCurrentPosition() {
+        return new Position(0, idx);
     }
 }

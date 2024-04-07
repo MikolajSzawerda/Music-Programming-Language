@@ -1,6 +1,6 @@
 package com.declarative.music.lexer.state;
 
-import com.declarative.music.lexer.token.Position;
+import com.declarative.music.lexer.LexerContext;
 import com.declarative.music.lexer.token.Token;
 import com.declarative.music.lexer.token.TokenType;
 
@@ -17,6 +17,7 @@ public class CommentState extends LexerState {
 
     @Override
     public Token processNext() throws IOException {
+        final var startPosition = lexerContext.getCurrentPosition();
         var currentChar = lexerContext.getCurrentStreamChar();
         var readChar = (char) currentChar;
         while (currentChar != -1 && readChar != '\n') {
@@ -25,7 +26,7 @@ public class CommentState extends LexerState {
             readChar = (char) currentChar;
         }
         lexerContext.stateTransition(new IdleState(lexerContext));
-        return new Token(TokenType.T_COMMENT, new Position(0, 0), stringBuilder.toString());
+        return new Token(TokenType.T_COMMENT, startPosition, stringBuilder.toString());
     }
 
 }

@@ -1,6 +1,6 @@
 package com.declarative.music.lexer.state;
 
-import com.declarative.music.lexer.token.Position;
+import com.declarative.music.lexer.LexerContext;
 import com.declarative.music.lexer.token.Token;
 import com.declarative.music.lexer.token.TokenType;
 
@@ -17,7 +17,7 @@ public class IdleState extends LexerState {
     public Token processNext() throws IOException {
         skipWhites();
         if (lexerContext.getCurrentStreamChar() == -1) {
-            return new Token(TokenType.T_EOF, new Position(0, 0), null);
+            return new Token(TokenType.T_EOF, lexerContext.getCurrentPosition(), null);
         }
         final var currentStreamChar = (char) lexerContext.getCurrentStreamChar();
         if (Character.isDigit(currentStreamChar)) {

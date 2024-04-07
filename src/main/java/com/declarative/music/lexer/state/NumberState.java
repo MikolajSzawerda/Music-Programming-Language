@@ -1,6 +1,6 @@
 package com.declarative.music.lexer.state;
 
-import com.declarative.music.lexer.token.Position;
+import com.declarative.music.lexer.LexerContext;
 import com.declarative.music.lexer.token.Token;
 import com.declarative.music.lexer.token.TokenType;
 
@@ -15,16 +15,17 @@ public class NumberState extends LexerState {
 
     @Override
     public Token processNext() throws IOException {
+        final var startPosition = lexerContext.getCurrentPosition();
         final int decimals = parseNumber(lexerContext.getCurrentStreamChar()).value;
         lexerContext.stateTransition(new IdleState(lexerContext));
 
         if (lexerContext.getCurrentStreamChar() != '.') {
-            return new Token(TokenType.T_NUMBER, new Position(0, 0), decimals);
+            return new Token(TokenType.T_NUMBER, startPosition, decimals);
         }
         final var firstFractional = lexerContext.getNextStreamChar();
         final var fractional = parseNumber(firstFractional);
         final double value = decimals + fractional.value / Math.pow(10, fractional.length);
-        return new Token(TokenType.T_NUMBER, new Position(0, 0), value);
+        return new Token(TokenType.T_NUMBER, startPosition, value);
     }
 
     private ParsedNumber parseNumber(int currentChar) throws IOException {

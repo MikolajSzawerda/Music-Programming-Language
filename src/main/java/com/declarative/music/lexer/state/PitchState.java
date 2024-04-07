@@ -1,6 +1,6 @@
 package com.declarative.music.lexer.state;
 
-import com.declarative.music.lexer.token.Position;
+import com.declarative.music.lexer.LexerContext;
 import com.declarative.music.lexer.token.Token;
 import com.declarative.music.lexer.token.TokenType;
 
@@ -16,6 +16,7 @@ public class PitchState extends LexerState {
 
     @Override
     public Token processNext() throws IOException {
+        final var startPosition = lexerContext.getCurrentPosition();
         tokenBuilder.append((char) lexerContext.getCurrentStreamChar());
         final var nextChar = lexerContext.getNextStreamChar();
         var readChar = (char) nextChar;
@@ -24,12 +25,12 @@ public class PitchState extends LexerState {
             readChar = (char) lexerContext.getNextStreamChar();
             if (!Character.isLetterOrDigit(readChar)) {
                 lexerContext.stateTransition(new IdleState(lexerContext));
-                return new Token(TokenType.T_PITCH, new Position(0, 0), tokenBuilder.toString());
+                return new Token(TokenType.T_PITCH, startPosition, tokenBuilder.toString());
             }
         }
         if (nextChar == -1 || !Character.isLetterOrDigit(readChar)) {
             lexerContext.stateTransition(new IdleState(lexerContext));
-            return new Token(TokenType.T_PITCH, new Position(0, 0), tokenBuilder.toString());
+            return new Token(TokenType.T_PITCH, startPosition, tokenBuilder.toString());
         }
         lexerContext.stateTransition(new IdentifierState(lexerContext, tokenBuilder));
         return null;

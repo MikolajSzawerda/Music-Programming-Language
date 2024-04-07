@@ -1,5 +1,6 @@
 package com.declarative.music.lexer.state;
 
+import com.declarative.music.lexer.LexerContext;
 import com.declarative.music.lexer.token.Token;
 
 import java.io.IOException;

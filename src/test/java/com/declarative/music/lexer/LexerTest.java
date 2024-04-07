@@ -25,11 +25,11 @@ class LexerTest {
         final var tokens = LexerUtils.getAllTokens(lexer);
 
         // then
-        assertThat(lexer.getNextToken()).isEqualTo(new Token(TokenType.T_EOF, new Position(0, 0), null));
+        assertThat(lexer.getNextToken()).isEqualTo(new Token(TokenType.T_EOF, new Position(0, 4), null));
         assertThat(tokens).containsExactlyElementsOf(List.of(
                 new Token(TokenType.T_IDENTIFIER, new Position(0, 0), "a"),
-                new Token(TokenType.T_OPERATOR, new Position(0, 0), "="),
-                new Token(TokenType.T_NUMBER, new Position(0, 0), 10)
+                new Token(TokenType.T_OPERATOR, new Position(0, 1), "="),
+                new Token(TokenType.T_NUMBER, new Position(0, 2), 10)
         ));
     }
 
@@ -37,7 +37,7 @@ class LexerTest {
     void shouldHandleNewLine() throws IOException {
         // given
         final var code = """
-                               let a=10.23; //Hello world
+                   let a=10.23; //Hello world
                                 
                                 
                 let b="20";
@@ -49,19 +49,19 @@ class LexerTest {
 
 
         // then
-        assertThat(lexer.getNextToken()).isEqualTo(new Token(TokenType.T_EOF, new Position(0, 0), null));
+        assertThat(lexer.getNextToken()).isEqualTo(new Token(TokenType.T_EOF, new Position(4, 0), null));
         assertThat(tokens).containsExactlyElementsOf(List.of(
-                new Token(TokenType.T_LET, new Position(0, 0), null),
-                new Token(TokenType.T_IDENTIFIER, new Position(0, 0), "a"),
-                new Token(TokenType.T_OPERATOR, new Position(0, 0), "="),
-                new Token(TokenType.T_NUMBER, new Position(0, 0), 10.23),
-                new Token(TokenType.T_SEMICOLON, new Position(0, 0), null),
-                new Token(TokenType.T_COMMENT, new Position(0, 0), "Hello world"),
-                new Token(TokenType.T_LET, new Position(0, 0), null),
-                new Token(TokenType.T_IDENTIFIER, new Position(0, 0), "b"),
-                new Token(TokenType.T_OPERATOR, new Position(0, 0), "="),
-                new Token(TokenType.T_STRING, new Position(0, 0), "20"),
-                new Token(TokenType.T_SEMICOLON, new Position(0, 0), null)
+                new Token(TokenType.T_LET, new Position(0, 3), null),
+                new Token(TokenType.T_IDENTIFIER, new Position(0, 7), "a"),
+                new Token(TokenType.T_OPERATOR, new Position(0, 8), "="),
+                new Token(TokenType.T_NUMBER, new Position(0, 9), 10.23),
+                new Token(TokenType.T_SEMICOLON, new Position(0, 14), null),
+                new Token(TokenType.T_COMMENT, new Position(0, 18), "Hello world"),
+                new Token(TokenType.T_LET, new Position(3, 0), null),
+                new Token(TokenType.T_IDENTIFIER, new Position(3, 4), "b"),
+                new Token(TokenType.T_OPERATOR, new Position(3, 5), "="),
+                new Token(TokenType.T_STRING, new Position(3, 6), "20"),
+                new Token(TokenType.T_SEMICOLON, new Position(3, 10), null)
         ));
     }
 
@@ -80,29 +80,29 @@ class LexerTest {
 
 
         // then
-        assertThat(lexer.getNextToken()).isEqualTo(new Token(TokenType.T_EOF, new Position(0, 0), null));
+        assertThat(lexer.getNextToken()).isEqualTo(new Token(TokenType.T_EOF, new Position(3, 0), null));
         assertThat(tokens).containsExactlyElementsOf(List.of(
                 new Token(TokenType.T_LET, new Position(0, 0), null),
-                new Token(TokenType.T_IDENTIFIER, new Position(0, 0), "fun"),
-                new Token(TokenType.T_OPERATOR, new Position(0, 0), "="),
-                new Token(TokenType.T_WITH, new Position(0, 0), null),
-                new Token(TokenType.T_L_PARENTHESIS, new Position(0, 0), null),
-                new Token(TokenType.T_IDENTIFIER, new Position(0, 0), "Note"),
-                new Token(TokenType.T_IDENTIFIER, new Position(0, 0), "a"),
-                new Token(TokenType.T_R_PARENTHESIS, new Position(0, 0), null),
-                new Token(TokenType.T_OPERATOR, new Position(0, 0), "->"),
-                new Token(TokenType.T_IDENTIFIER, new Position(0, 0), "Note"),
-                new Token(TokenType.T_L_CURL_PARENTHESIS, new Position(0, 0), null),
-                new Token(TokenType.T_RETURN, new Position(0, 0), null),
-                new Token(TokenType.T_L_PARENTHESIS, new Position(0, 0), null),
-                new Token(TokenType.T_PITCH, new Position(0, 0), "C"),
-                new Token(TokenType.T_COMMA, new Position(0, 0), null),
-                new Token(TokenType.T_NUMBER, new Position(0, 0), 4),
-                new Token(TokenType.T_R_PARENTHESIS, new Position(0, 0), null),
-                new Token(TokenType.T_RHYTHM, new Position(0, 0), "q"),
-                new Token(TokenType.T_SEMICOLON, new Position(0, 0), null),
-                new Token(TokenType.T_R_CURL_PARENTHESIS, new Position(0, 0), null),
-                new Token(TokenType.T_SEMICOLON, new Position(0, 0), null)
+                new Token(TokenType.T_IDENTIFIER, new Position(0, 4), "fun"),
+                new Token(TokenType.T_OPERATOR, new Position(0, 8), "="),
+                new Token(TokenType.T_WITH, new Position(0, 10), null),
+                new Token(TokenType.T_L_PARENTHESIS, new Position(0, 14), null),
+                new Token(TokenType.T_IDENTIFIER, new Position(0, 15), "Note"),
+                new Token(TokenType.T_IDENTIFIER, new Position(0, 20), "a"),
+                new Token(TokenType.T_R_PARENTHESIS, new Position(0, 21), null),
+                new Token(TokenType.T_OPERATOR, new Position(0, 23), "->"),
+                new Token(TokenType.T_IDENTIFIER, new Position(0, 26), "Note"),
+                new Token(TokenType.T_L_CURL_PARENTHESIS, new Position(0, 31), null),
+                new Token(TokenType.T_RETURN, new Position(1, 4), null),
+                new Token(TokenType.T_L_PARENTHESIS, new Position(1, 11), null),
+                new Token(TokenType.T_PITCH, new Position(1, 12), "C"),
+                new Token(TokenType.T_COMMA, new Position(1, 13), null),
+                new Token(TokenType.T_NUMBER, new Position(1, 15), 4),
+                new Token(TokenType.T_R_PARENTHESIS, new Position(1, 16), null),
+                new Token(TokenType.T_RHYTHM, new Position(1, 18), "q"),
+                new Token(TokenType.T_SEMICOLON, new Position(1, 19), null),
+                new Token(TokenType.T_R_CURL_PARENTHESIS, new Position(2, 0), null),
+                new Token(TokenType.T_SEMICOLON, new Position(2, 1), null)
         ));
     }
 

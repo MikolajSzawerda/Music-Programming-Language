@@ -1,6 +1,6 @@
 package com.declarative.music.lexer.state;
 
-import com.declarative.music.lexer.token.Position;
+import com.declarative.music.lexer.LexerContext;
 import com.declarative.music.lexer.token.Token;
 import com.declarative.music.lexer.token.TokenType;
 
@@ -17,6 +17,7 @@ public class RythmState extends LexerState {
     @Override
     public Token processNext() throws IOException {
         final var currentChar = (char) lexerContext.getCurrentStreamChar();
+        final var startPosition = lexerContext.getCurrentPosition();
         tokenBuilder.append(currentChar);
         var nextChar = lexerContext.getNextStreamChar();
         var readChar = (char) nextChar;
@@ -39,7 +40,7 @@ public class RythmState extends LexerState {
                 readChar = (char) lexerContext.getNextStreamChar();
                 if (!Character.isLetterOrDigit(readChar)) {
                     lexerContext.stateTransition(new IdleState(lexerContext));
-                    return new Token(TokenType.T_RHYTHM, new Position(0, 0), tokenBuilder.toString());
+                    return new Token(TokenType.T_RHYTHM, startPosition, tokenBuilder.toString());
                 }
             }
             lexerContext.stateTransition(new IdentifierState(lexerContext, tokenBuilder));
@@ -47,8 +48,7 @@ public class RythmState extends LexerState {
         }
         if (nextChar == -1 || !Character.isLetterOrDigit(readChar)) {
             lexerContext.stateTransition(new IdleState(lexerContext));
-
-            return new Token(TokenType.T_RHYTHM, new Position(0, 0), tokenBuilder.toString());
+            return new Token(TokenType.T_RHYTHM, startPosition, tokenBuilder.toString());
         }
         lexerContext.stateTransition(new IdentifierState(lexerContext, tokenBuilder));
         return null;

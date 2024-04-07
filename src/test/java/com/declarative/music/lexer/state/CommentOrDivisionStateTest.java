@@ -19,7 +19,7 @@ class CommentOrDivisionStateTest {
         final var code = "//" + expectedValue;
         final var lexer = new LexerContextMock(code);
         lexer.stateTransition(new CommentOrDivisionState(lexer));
-        final var expectedToken = new Token(TokenType.T_COMMENT, new Position(0, 0), expectedValue.strip());
+        final var expectedToken = new Token(TokenType.T_COMMENT, new Position(0, 2), expectedValue.strip());
 
         // when
         Token token = null;
