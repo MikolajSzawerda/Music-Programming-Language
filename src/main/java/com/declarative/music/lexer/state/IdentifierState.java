@@ -27,7 +27,7 @@ public class IdentifierState extends LexerState {
     @Override
     public Token processNext() throws IOException {
         var currentChar = lexerContext.getCurrentStreamChar();
-        while (currentChar != -1 && Character.isLetterOrDigit(currentChar)) {
+        while (currentChar != -1 && (Character.isLetterOrDigit(currentChar) || currentChar == (int) '_')) {
             tokenBuilder.append((char) currentChar);
             currentChar = lexerContext.getNextStreamChar();
             if (tokenBuilder.length() > MAX_IDENTIFIER_LEN) {

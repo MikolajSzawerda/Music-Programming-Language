@@ -14,7 +14,7 @@ class IdentifierStateTest {
     @Test
     void shouldParseIdentifier() throws IOException {
         // given
-        final var code = "abcd";
+        final var code = "ab_cd";
         final var tested = new IdentifierState(new LexerContextMock(code));
         final var expectedToken = new Token(TokenType.T_IDENTIFIER, new Position(0, 0), code);
 

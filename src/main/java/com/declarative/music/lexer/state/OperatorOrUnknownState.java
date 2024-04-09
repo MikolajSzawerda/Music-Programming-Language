@@ -30,9 +30,11 @@ public class OperatorOrUnknownState extends LexerState {
                 .or(() -> tryBuildOperator('|', Set.of('>', '|')))
                 .or(() -> tryBuildOperator('*', Set.of('=')))
                 .or(() -> tryBuildOperator('^', Set.of('=')))
+                .or(() -> tryBuildOperator('%', Set.of('=')))
+                .or(() -> tryBuildOperator('!', Set.of('=')))
                 .or(() -> tryBuildOperator('+', Set.of('=')));
         lexerContext.stateTransition(new IdleState(lexerContext));
-        return operator.orElse(null);
+        return operator.orElseThrow();
     }
 
     private Optional<Token> tryBuildPunctuation() throws IOException {
