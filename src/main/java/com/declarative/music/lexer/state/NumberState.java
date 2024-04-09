@@ -32,7 +32,8 @@ public class NumberState extends LexerState {
         int number = 0;
         int parsedLen = 0;
         while (currentChar != -1 && Character.isDigit(currentChar)) {
-            number = number * 10 + Character.digit((char) currentChar, 10);
+
+            number = Math.addExact(Math.multiplyExact(number, 10), Character.digit((char) currentChar, 10));
             currentChar = lexerContext.getNextStreamChar();
             parsedLen++;
         }

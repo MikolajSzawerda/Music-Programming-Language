@@ -40,4 +40,11 @@ class NumberStateTest {
         // then
         Assertions.assertEquals(expectedToken, token);
     }
+
+    @Test
+    void shouldThrow_WhenTooManyDigits() {
+        final var code = "123456789123456789123456789";
+        final var tested = new NumberState(new LexerContextMock(code));
+        Assertions.assertThrows(ArithmeticException.class, tested::processNext);
+    }
 }
