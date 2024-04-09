@@ -17,7 +17,7 @@ class NumberStateTest {
         final var expectedValue = 123;
         final var code = "123";
         final var tested = new NumberState(new LexerContextMock(code));
-        final var expectedToken = new Token(TokenType.T_NUMBER, new Position(0, 0), expectedValue);
+        final var expectedToken = new Token(TokenType.T_INT_NUMBER, new Position(0, 0), expectedValue);
 
         // when
         final var token = tested.processNext();
@@ -32,7 +32,7 @@ class NumberStateTest {
         final double expectedValue = 12.34;
         final var code = "12.34";
         final var tested = new NumberState(new LexerContextMock(code));
-        final var expectedToken = new Token(TokenType.T_NUMBER, new Position(0, 0), expectedValue);
+        final var expectedToken = new Token(TokenType.T_FLOATING_NUMBER, new Position(0, 0), expectedValue);
 
         // when
         final var token = tested.processNext();

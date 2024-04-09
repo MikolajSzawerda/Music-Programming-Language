@@ -29,7 +29,14 @@ public class StringState extends LexerState {
             escape = (readChar == '\\');
             if (escape) {
                 currentChar = lexerContext.getNextStreamChar();
-                readChar = (char) currentChar;
+                readChar = switch ((char) currentChar) {
+                    case 'n':
+                        yield '\n';
+                    case 't':
+                        yield '\t';
+                    default:
+                        yield (char) currentChar;
+                };
             }
         }
         if (currentChar != -1) {

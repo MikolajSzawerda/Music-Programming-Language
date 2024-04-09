@@ -22,7 +22,7 @@ public class CommentOrDivisionState extends LexerState {
             return null;
         }
         lexerContext.stateTransition(new IdleState(lexerContext));
-        return new Token(TokenType.T_OPERATOR, startPosition, '/');
+        return new Token(TokenType.T_OPERATOR, startPosition, "/");
     }
 
 }

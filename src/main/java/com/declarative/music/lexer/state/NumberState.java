@@ -20,12 +20,12 @@ public class NumberState extends LexerState {
         lexerContext.stateTransition(new IdleState(lexerContext));
 
         if (lexerContext.getCurrentStreamChar() != '.') {
-            return new Token(TokenType.T_NUMBER, startPosition, decimals);
+            return new Token(TokenType.T_INT_NUMBER, startPosition, decimals);
         }
         final var firstFractional = lexerContext.getNextStreamChar();
         final var fractional = parseNumber(firstFractional);
         final double value = decimals + fractional.value / Math.pow(10, fractional.length);
-        return new Token(TokenType.T_NUMBER, startPosition, value);
+        return new Token(TokenType.T_FLOATING_NUMBER, startPosition, value);
     }
 
     private ParsedNumber parseNumber(int currentChar) throws IOException {
