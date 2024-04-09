@@ -21,10 +21,16 @@ public class StringState extends LexerState {
         final var currentPosition = lexerContext.getCurrentPosition();
         var currentChar = lexerContext.getNextStreamChar();
         var readChar = (char) currentChar;
-        while (currentChar != -1 && readChar != '"') {
+        var escape = false;
+        while (currentChar != -1 && (escape || readChar != '"')) {
             stringBuilder.append(readChar);
             currentChar = lexerContext.getNextStreamChar();
             readChar = (char) currentChar;
+            escape = (readChar == '\\');
+            if (escape) {
+                currentChar = lexerContext.getNextStreamChar();
+                readChar = (char) currentChar;
+            }
         }
         if (currentChar != -1) {
             lexerContext.getNextStreamChar();

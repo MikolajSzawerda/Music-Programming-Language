@@ -23,4 +23,18 @@ class StringsStateTest {
         // then
         Assertions.assertEquals(expectedToken, token);
     }
+
+    @Test
+    void shouldHandleEscapeForQuote() throws IOException {
+        // given
+        final var code = "\"a\\\"b\"";
+        final var tested = new StringState(new LexerContextMock(code));
+        final var expectedToken = new Token(TokenType.T_STRING, new Position(0, 0), "a\"b");
+
+        // when
+        final var token = tested.processNext();
+
+        // then
+        Assertions.assertEquals(expectedToken, token);
+    }
 }

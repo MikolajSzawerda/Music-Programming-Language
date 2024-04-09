@@ -1,12 +1,13 @@
 package com.declarative.music.lexer.terminals;
 
 import com.declarative.music.lexer.token.TokenType;
+import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 import java.util.Map;
 import java.util.Optional;
 
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PunctuationMap {
     private static final Map<Character, TokenType> punctuationMap = Map.of(
             '(', TokenType.T_L_PARENTHESIS,
