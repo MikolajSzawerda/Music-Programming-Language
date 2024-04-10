@@ -1,5 +1,6 @@
 package com.declarative.music.lexer.state;
 
+import com.declarative.music.lexer.terminals.OperatorEnum;
 import com.declarative.music.lexer.token.Position;
 import com.declarative.music.lexer.token.Token;
 import com.declarative.music.lexer.token.TokenType;
@@ -37,7 +38,7 @@ class CommentOrDivisionStateTest {
         // given
         final var lexer = new LexerContextMock(code);
         lexer.stateTransition(new CommentOrDivisionState(lexer));
-        final var expectedToken = new Token(TokenType.T_OPERATOR, new Position(0, 0), "/");
+        final var expectedToken = new Token(TokenType.T_OPERATOR, new Position(0, 0), OperatorEnum.O_DIVIDE);
 
         // when
         Token token = null;

@@ -1,5 +1,6 @@
 package com.declarative.music.lexer;
 
+import com.declarative.music.lexer.terminals.OperatorEnum;
 import com.declarative.music.lexer.token.Position;
 import com.declarative.music.lexer.token.Token;
 import com.declarative.music.lexer.token.TokenType;
@@ -28,7 +29,7 @@ class LexerTest {
         assertThat(lexer.getNextToken()).isEqualTo(new Token(TokenType.T_EOF, new Position(0, 4), null));
         assertThat(tokens).containsExactlyElementsOf(List.of(
                 new Token(TokenType.T_IDENTIFIER, new Position(0, 0), "a"),
-                new Token(TokenType.T_OPERATOR, new Position(0, 1), "="),
+                new Token(TokenType.T_OPERATOR, new Position(0, 1), OperatorEnum.O_ASSIGN),
                 new Token(TokenType.T_INT_NUMBER, new Position(0, 2), 10)
         ));
     }
@@ -53,13 +54,13 @@ class LexerTest {
         assertThat(tokens).containsExactlyElementsOf(List.of(
                 new Token(TokenType.T_LET, new Position(0, 3), null),
                 new Token(TokenType.T_IDENTIFIER, new Position(0, 7), "a"),
-                new Token(TokenType.T_OPERATOR, new Position(0, 8), "="),
+                new Token(TokenType.T_OPERATOR, new Position(0, 8), OperatorEnum.O_ASSIGN),
                 new Token(TokenType.T_FLOATING_NUMBER, new Position(0, 9), 10.23),
                 new Token(TokenType.T_SEMICOLON, new Position(0, 14), null),
                 new Token(TokenType.T_COMMENT, new Position(0, 18), "Hello world"),
                 new Token(TokenType.T_LET, new Position(3, 0), null),
                 new Token(TokenType.T_IDENTIFIER, new Position(3, 4), "b"),
-                new Token(TokenType.T_OPERATOR, new Position(3, 5), "="),
+                new Token(TokenType.T_OPERATOR, new Position(3, 5), OperatorEnum.O_ASSIGN),
                 new Token(TokenType.T_STRING, new Position(3, 6), "20"),
                 new Token(TokenType.T_SEMICOLON, new Position(3, 10), null)
         ));
@@ -84,13 +85,13 @@ class LexerTest {
         assertThat(tokens).containsExactlyElementsOf(List.of(
                 new Token(TokenType.T_LET, new Position(0, 0), null),
                 new Token(TokenType.T_IDENTIFIER, new Position(0, 4), "fun"),
-                new Token(TokenType.T_OPERATOR, new Position(0, 8), "="),
+                new Token(TokenType.T_OPERATOR, new Position(0, 8), OperatorEnum.O_ASSIGN),
                 new Token(TokenType.T_WITH, new Position(0, 10), null),
                 new Token(TokenType.T_L_PARENTHESIS, new Position(0, 14), null),
                 new Token(TokenType.T_IDENTIFIER, new Position(0, 15), "Note"),
                 new Token(TokenType.T_IDENTIFIER, new Position(0, 20), "a"),
                 new Token(TokenType.T_R_PARENTHESIS, new Position(0, 21), null),
-                new Token(TokenType.T_OPERATOR, new Position(0, 23), "->"),
+                new Token(TokenType.T_OPERATOR, new Position(0, 23), OperatorEnum.O_ARROW),
                 new Token(TokenType.T_IDENTIFIER, new Position(0, 26), "Note"),
                 new Token(TokenType.T_L_CURL_PARENTHESIS, new Position(0, 31), null),
                 new Token(TokenType.T_RETURN, new Position(1, 4), null),
@@ -118,19 +119,19 @@ class LexerTest {
         // then
         assertThat(lexer.getNextToken()).isEqualTo(new Token(TokenType.T_EOF, new Position(0, 24), null));
         assertThat(tokens).containsExactlyElementsOf(List.of(
-                new Token(TokenType.T_OPERATOR, new Position(0, 0), "-"),
+                new Token(TokenType.T_OPERATOR, new Position(0, 0), OperatorEnum.O_MINUS),
                 new Token(TokenType.T_L_PARENTHESIS, new Position(0, 1), null),
                 new Token(TokenType.T_INT_NUMBER, new Position(0, 2), 4),
-                new Token(TokenType.T_OPERATOR, new Position(0, 3), "^"),
+                new Token(TokenType.T_OPERATOR, new Position(0, 3), OperatorEnum.O_POW),
                 new Token(TokenType.T_FLOATING_NUMBER, new Position(0, 4), 20.0),
                 new Token(TokenType.T_R_PARENTHESIS, new Position(0, 9), null),
-                new Token(TokenType.T_OPERATOR, new Position(0, 10), "/"),
+                new Token(TokenType.T_OPERATOR, new Position(0, 10), OperatorEnum.O_DIVIDE),
                 new Token(TokenType.T_INT_NUMBER, new Position(0, 13), 2),
-                new Token(TokenType.T_OPERATOR, new Position(0, 14), "+"),
+                new Token(TokenType.T_OPERATOR, new Position(0, 14), OperatorEnum.O_PLUS),
                 new Token(TokenType.T_INT_NUMBER, new Position(0, 16), 4),
-                new Token(TokenType.T_OPERATOR, new Position(0, 17), "*"),
+                new Token(TokenType.T_OPERATOR, new Position(0, 17), OperatorEnum.O_MUL),
                 new Token(TokenType.T_INT_NUMBER, new Position(0, 18), 7),
-                new Token(TokenType.T_OPERATOR, new Position(0, 20), "|>"),
+                new Token(TokenType.T_OPERATOR, new Position(0, 20), OperatorEnum.O_PIPE),
                 new Token(TokenType.T_IDENTIFIER, new Position(0, 23), "a")
         ));
     }

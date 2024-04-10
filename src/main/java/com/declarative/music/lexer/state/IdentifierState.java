@@ -37,9 +37,10 @@ public class IdentifierState extends LexerState {
         lexerContext.stateTransition(new IdleState(lexerContext));
         final var endPosition = lexerContext.getCurrentPosition();
         final var startPosition = new Position(endPosition.line(), endPosition.characterNumber() - tokenBuilder.length());
-        return KeywordsMap.getKeywordType(tokenBuilder.toString())
+        final var lexem = tokenBuilder.toString();
+        return KeywordsMap.getKeywordType(lexem)
                 .map(keywordType -> new Token(keywordType, startPosition, null))
-                .orElse(new Token(TokenType.T_IDENTIFIER, startPosition, tokenBuilder.toString()));
+                .orElse(new Token(TokenType.T_IDENTIFIER, startPosition, lexem));
     }
 
 }

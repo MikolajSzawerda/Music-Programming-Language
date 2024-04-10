@@ -1,6 +1,8 @@
 package com.declarative.music.lexer.state;
 
 import com.declarative.music.lexer.LexerContext;
+import com.declarative.music.lexer.expection.UnknownTokenTypeException;
+import com.declarative.music.lexer.terminals.OperatorMap;
 import com.declarative.music.lexer.terminals.PunctuationMap;
 import com.declarative.music.lexer.token.Position;
 import com.declarative.music.lexer.token.Token;
@@ -34,7 +36,7 @@ public class OperatorOrUnknownState extends LexerState {
                 .or(() -> tryBuildOperator('!', Set.of('=')))
                 .or(() -> tryBuildOperator('+', Set.of('=')));
         lexerContext.stateTransition(new IdleState(lexerContext));
-        return operator.orElseThrow();
+        return operator.orElseThrow(() -> new UnknownTokenTypeException(lexerContext.getCurrentPosition()));
     }
 
     private Optional<Token> tryBuildPunctuation() throws IOException {
@@ -58,7 +60,7 @@ public class OperatorOrUnknownState extends LexerState {
                 lexerContext.getNextStreamChar();
                 value += nextChar;
             }
-            return Optional.of(new Token(TokenType.T_OPERATOR, startPosition, value));
+            return Optional.of(new Token(TokenType.T_OPERATOR, startPosition, OperatorMap.getOperator(value).orElseThrow(() -> new UnknownTokenTypeException(lexerContext.getCurrentPosition()))));
         }
         return Optional.empty();
     }

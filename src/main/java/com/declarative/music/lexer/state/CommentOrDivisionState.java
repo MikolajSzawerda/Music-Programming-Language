@@ -1,6 +1,7 @@
 package com.declarative.music.lexer.state;
 
 import com.declarative.music.lexer.LexerContext;
+import com.declarative.music.lexer.terminals.OperatorEnum;
 import com.declarative.music.lexer.token.Token;
 import com.declarative.music.lexer.token.TokenType;
 
@@ -22,7 +23,7 @@ public class CommentOrDivisionState extends LexerState {
             return null;
         }
         lexerContext.stateTransition(new IdleState(lexerContext));
-        return new Token(TokenType.T_OPERATOR, startPosition, "/");
+        return new Token(TokenType.T_OPERATOR, startPosition, OperatorEnum.O_DIVIDE);
     }
 
 }

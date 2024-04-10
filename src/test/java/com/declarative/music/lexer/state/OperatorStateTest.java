@@ -1,5 +1,6 @@
 package com.declarative.music.lexer.state;
 
+import com.declarative.music.lexer.terminals.OperatorEnum;
 import com.declarative.music.lexer.token.Position;
 import com.declarative.music.lexer.token.Token;
 import com.declarative.music.lexer.token.TokenType;
@@ -16,7 +17,7 @@ class OperatorStateTest {
         // given
         final var code = "+";
         final var tested = new OperatorOrUnknownState(new LexerContextMock(code));
-        final var expectedToken = new Token(TokenType.T_OPERATOR, new Position(0, 0), code);
+        final var expectedToken = new Token(TokenType.T_OPERATOR, new Position(0, 0), OperatorEnum.O_PLUS);
 
         // when
         final var token = tested.processNext();
@@ -30,7 +31,7 @@ class OperatorStateTest {
         // given
         final var code = "+=";
         final var tested = new OperatorOrUnknownState(new LexerContextMock(code));
-        final var expectedToken = new Token(TokenType.T_OPERATOR, new Position(0, 0), code);
+        final var expectedToken = new Token(TokenType.T_OPERATOR, new Position(0, 0), OperatorEnum.O_PLUS_ASSIGN);
 
         // when
         final var token = tested.processNext();
