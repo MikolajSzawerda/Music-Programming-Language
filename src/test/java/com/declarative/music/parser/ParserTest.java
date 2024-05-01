@@ -21,7 +21,7 @@ import com.declarative.music.parser.production.expression.pipe.PipeExpression;
 import com.declarative.music.parser.production.expression.relation.AndExpression;
 import com.declarative.music.parser.production.expression.relation.EqExpression;
 import com.declarative.music.parser.production.literal.IntLiteral;
-import com.declarative.music.parser.production.type.LeafType;
+import com.declarative.music.parser.production.type.SimpleType;
 import org.junit.jupiter.api.Test;
 
 import java.io.StringReader;
@@ -78,7 +78,7 @@ class ParserTest {
                 new Parameter("Int", "a"),
                 new Parameter("String", "c"))
         ), "Void", new Block(
-                List.of(new Declaration(new LeafType(Types.Int), "b", null))
+                List.of(new Declaration(new SimpleType(Types.Int), "b", null))
         ));
         final var expected = new Program(List.of(new AssigmentStatement("a", expectedValue)));
 
@@ -92,7 +92,7 @@ class ParserTest {
         final var code = "Int a;";
         final var lexer = new Lexer(new StringReader(code));
         final var parser = new Parser(lexer);
-        final var expected = new Program(List.of(new Declaration(new LeafType(Types.Int), "a", null)));
+        final var expected = new Program(List.of(new Declaration(new SimpleType(Types.Int), "a", null)));
 
         final var program = parser.parserProgram();
 
@@ -105,7 +105,7 @@ class ParserTest {
         final var lexer = new Lexer(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
-                new Declaration(new LeafType(Types.Scale), "a", new NoteExpression("C", new IntLiteral(4), "q"))
+                new Declaration(new SimpleType(Types.Scale), "a", new NoteExpression("C", new IntLiteral(4), "q"))
         ));
 
         final var program = parser.parserProgram();
@@ -388,7 +388,7 @@ class ParserTest {
         final var lexer = new Lexer(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
-                new ForStatement(new Declaration(new LeafType(Types.Int), "i", null),
+                new ForStatement(new Declaration(new SimpleType(Types.Int), "i", null),
                         new RangeExpression(new IntLiteral(1), new IntLiteral(3)),
                         new Block(List.of())
                 )
@@ -434,7 +434,7 @@ class ParserTest {
         final var lexer = new Lexer(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
-                new AddExpression(new IntLiteral(1), new CastExpresion(new IntLiteral(2), new LeafType(Types.Int)))
+                new AddExpression(new IntLiteral(1), new CastExpresion(new IntLiteral(2), new SimpleType(Types.Int)))
         ));
 
         final var program = parser.parserProgram();

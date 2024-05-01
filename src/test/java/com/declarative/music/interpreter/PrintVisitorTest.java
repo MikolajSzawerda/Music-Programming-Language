@@ -5,7 +5,7 @@ import com.declarative.music.parser.production.*;
 import com.declarative.music.parser.production.expression.arithmetic.AddExpression;
 import com.declarative.music.parser.production.expression.lambda.LambdaExpression;
 import com.declarative.music.parser.production.literal.IntLiteral;
-import com.declarative.music.parser.production.type.LeafType;
+import com.declarative.music.parser.production.type.SimpleType;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -26,7 +26,7 @@ class PrintVisitorTest {
                         new Block(List.of(new AddExpression(new IntLiteral(1), new IntLiteral(2))))
                 ),
                 new AssigmentStatement("a", new IntLiteral(2)),
-                new Declaration(new LeafType(Types.Int), "b", new IntLiteral(2))
+                new Declaration(new SimpleType(Types.Int), "b", new IntLiteral(2))
         )).accept(visitor);
     }
 }

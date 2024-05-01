@@ -26,7 +26,7 @@ import com.declarative.music.parser.production.expression.pipe.PipeExpression;
 import com.declarative.music.parser.production.expression.relation.AndExpression;
 import com.declarative.music.parser.production.expression.relation.EqExpression;
 import com.declarative.music.parser.production.literal.IntLiteral;
-import com.declarative.music.parser.production.type.LeafType;
+import com.declarative.music.parser.production.type.SimpleType;
 import com.declarative.music.parser.production.type.Type;
 import lombok.RequiredArgsConstructor;
 
@@ -97,33 +97,25 @@ public class Parser {
                 }
                 yield tryParseArrayExpression(true);
             }
-            default -> {
+            case T_IDENTIFIER -> {
                 Type type = null;
                 if ((type = tryParseType()) != null) {
                     yield parseDeclaration(type);
                 }
-                if (nextToken.type() == TokenType.T_IDENTIFIER) {
-                    currentIdentifierToken = nextToken;
-                    consumeToken();
-                    if (nextToken.type() == TokenType.T_OPERATOR && nextToken.value() == OperatorEnum.O_ASSIGN) {
-                        AssigmentStatement assigmentStatement = null;
-                        if ((assigmentStatement = tryParseAssigment()) != null) {
-                            yield assigmentStatement;
-                        }
+                currentIdentifierToken = nextToken;
+                consumeToken();
+                if (nextToken.type() == TokenType.T_OPERATOR && nextToken.value() == OperatorEnum.O_ASSIGN) {
+                    AssigmentStatement assigmentStatement = null;
+                    if ((assigmentStatement = tryParseAssigment()) != null) {
+                        yield assigmentStatement;
                     }
-
-                    Expression expression = null;
-                    if ((expression = tryParseExpression()) != null) {
-                        yield expression;
-                    }
-
                 }
-                Expression expression = null;
-                if ((expression = tryParseExpression()) != null) {
-                    yield expression;
-                }
-                throw new UnsupportedOperationException();
+                yield tryParseExpression();
             }
+            case T_L_PARENTHESIS,
+                    T_FLOATING_NUMBER, T_INT_NUMBER,
+                    T_OPERATOR -> tryParseExpression();
+            default -> throw new UnsupportedOperationException();
         };
 
     }
@@ -389,7 +381,7 @@ public class Parser {
             }
             final var type = Types.valueOf((String) nextToken.value());
             consumeToken();
-            return new LeafType(type);
+            return new SimpleType(type);
         } catch (final IllegalArgumentException ex) {
             return null;
         }
