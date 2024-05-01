@@ -13,8 +13,11 @@ public final class KeywordsMap {
             "let", TokenType.T_LET,
             "with", TokenType.T_WITH,
             "if", TokenType.T_IF,
+            "else", TokenType.T_ELSE,
             "for", TokenType.T_FOR,
-            "return", TokenType.T_RETURN
+            "return", TokenType.T_RETURN,
+            "in", TokenType.T_IN,
+            "as", TokenType.T_AS
     );
 
     public static Optional<TokenType> getKeywordType(final String token) {
