@@ -18,11 +18,11 @@ class PrintVisitorTest {
                 new AddExpression(new IntLiteral(1), new IntLiteral(2)),
                 new LambdaExpression(new Parameters(
                         List.of(
-                                new Parameter("Int", "a"),
-                                new Parameter("Float", "b")
+                                new Parameter(new SimpleType(Types.Int), "a"),
+                                new Parameter(new SimpleType(Types.String), "b")
                         )
                 ),
-                        "Int",
+                        new SimpleType(Types.Int),
                         new Block(List.of(new AddExpression(new IntLiteral(1), new IntLiteral(2))))
                 ),
                 new AssigmentStatement("a", new IntLiteral(2)),

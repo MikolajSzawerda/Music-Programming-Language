@@ -1,4 +1,6 @@
 package com.declarative.music.parser.production;
 
-public record Parameter(String type, String name) {
+import com.declarative.music.parser.production.type.Type;
+
+public record Parameter(Type type, String name) {
 }

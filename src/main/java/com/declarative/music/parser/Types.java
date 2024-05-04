@@ -1,6 +1,7 @@
 package com.declarative.music.parser;
 
 public enum Types {
+    Void,
     Int,
     Double,
     Bool,

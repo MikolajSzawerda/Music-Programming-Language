@@ -20,7 +20,7 @@ class LexerTest {
     void shouldReadMultipleTokens() throws IOException {
         // given
         final var code = "a=10";
-        final var lexer = new Lexer(new StringReader(code));
+        final var lexer = new LexerImpl(new StringReader(code));
 
         // when
         final var tokens = LexerUtils.getAllTokens(lexer);
@@ -43,7 +43,7 @@ class LexerTest {
                                 
                 let b="20";
                 """;
-        final var lexer = new Lexer(new StringReader(code));
+        final var lexer = new LexerImpl(new StringReader(code));
 
         // when
         final var tokens = LexerUtils.getAllTokens(lexer);
@@ -74,7 +74,7 @@ class LexerTest {
                     return (C, 4) q;
                 };
                 """;
-        final var lexer = new Lexer(new StringReader(code));
+        final var lexer = new LexerImpl(new StringReader(code));
 
         // when
         final var tokens = LexerUtils.getAllTokens(lexer);
@@ -111,7 +111,7 @@ class LexerTest {
     void shouldParseMathExpression() throws IOException {
         // given
         final var code = "-(4^20.0 )/  2+ 4*7 |> a";
-        final var lexer = new Lexer(new StringReader(code));
+        final var lexer = new LexerImpl(new StringReader(code));
 
         // when
         final var tokens = LexerUtils.getAllTokens(lexer);
