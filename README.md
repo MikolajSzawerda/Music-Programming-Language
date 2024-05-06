@@ -100,12 +100,14 @@ ControlStatement    := IfStmt |
 
 PipeExpression      := "|>" inline_func_call;
 inline_func_call    := identifier [arguments_list];
-arguments_list      := Expression {"," Expression};                       
+arguments_list      := UnPipeableOrNested {"," UnPipeableOrNested};
+UnPipeableOrNested  := UnPipeableExpr | "(" Expression ")";           
 
 IfStmt              := "if" "(" Expression ")" Block ["else" IfStmt | Block];
 ForStmt             := "for" "(" Type identifier "in" Expression ")" Block;
 ReturnStmt          := "return" [Expression];
-ValueExpression     := MathExpr [ModifierExpr]  {PipeExpression}; 
+ValueExpression     := UnPipeableExpr {PipeExpression}; 
+UnPipeableExpr      := MathExpr [ModifierExpr]
 
 ModifierExpr        := "{" modifier_item {"," modifier_item } "}"; 
 modifier_item       := identifier "=" Expression; 

@@ -151,11 +151,6 @@ public class Parser
                 consumeToken();
                 yield parseForStatemnt();
             }
-            case T_WITH ->
-            {
-                consumeToken();
-                yield parseLambdaExpression();
-            }
             case T_LET ->
             {
                 consumeToken();
@@ -206,7 +201,7 @@ public class Parser
                 yield tryParseExpressionNode(this::tryParseAndExpression, Set.of(OperatorEnum.O_OR));
             }
             case T_FLOATING_NUMBER, T_INT_NUMBER,
-                T_OPERATOR, T_STRING, T_PITCH, T_RHYTHM -> tryParseExpression();
+                T_OPERATOR, T_STRING, T_PITCH, T_RHYTHM, T_WITH -> tryParseExpression();
             default ->
             {
                 final var msg = "L: %d C: %d Token: (%s, %s)".formatted(nextToken.position().line() + 1,
@@ -218,72 +213,16 @@ public class Parser
 
     }
 
-    private Statement parseLambdaTypeOrNestedExpression() throws Exception
-    {
-        require(TokenType.T_L_PARENTHESIS);
-        if (nextToken.type() == TokenType.T_L_PARENTHESIS)
-        {
-            return parseLambdaTypeOrNestedExpression();
-        }
-        Type type = null;
-        if ((type = parseLambdaType()) != null)
-        {
-
-            return parseDeclaration(type);
-        }
-        return tryParseExpressionNode(this::tryParseAndExpression, Set.of(OperatorEnum.O_OR));
-    }
-
-    private Expression tryParseExpression(final boolean canPipe) throws Exception
-    {
-
-        Expression expression = tryParseArrayExpression(false);
-        if (expression == null)
-        {
-            expression = tryParseLambdaExpression();
-        }
-        if (expression == null)
-        {
-            if (currentIdentifierToken == null)
-            {
-                if (nextToken.type() == TokenType.T_OPERATOR && nextToken.value() == OperatorEnum.O_PLUS)
-                {
-                    consumeToken();
-                    expression = new PlusUnaryExpression(tryParseExpressionNode(this::tryParseAndExpression, Set.of(OperatorEnum.O_OR)));
-                }
-                else if (nextToken.type() == TokenType.T_OPERATOR && nextToken.value() == OperatorEnum.O_MINUS)
-                {
-                    consumeToken();
-                    expression = new MinusUnaryExpression(tryParseExpressionNode(this::tryParseAndExpression, Set.of(OperatorEnum.O_OR)));
-                }
-            }
-            if (expression == null)
-            {
-                expression = tryParseExpressionNode(this::tryParseAndExpression, Set.of(OperatorEnum.O_OR));
-            }
-        }
-
-        Modifier modifier = null;
-        if ((modifier = tryParseModifier()) != null)
-        {
-            expression = new ModifierExpression(expression, modifier);
-        }
-        if (canPipe)
-        {
-
-            while (nextToken.type() == TokenType.T_OPERATOR && nextToken.value() == OperatorEnum.O_PIPE)
-            {
-                consumeToken();
-                final InlineFuncCall right = tryParseInlineFuncCall();
-                expression = new PipeExpression(expression, right);
-            }
-        }
-        return expression;
-    }
-
     private Expression tryParseExpression() throws Exception
     {
-        return tryParseExpression(true);
+        var expression = tryParseUnpipeableExpression();
+        while (nextToken.type() == TokenType.T_OPERATOR && nextToken.value() == OperatorEnum.O_PIPE)
+        {
+            consumeToken();
+            final InlineFuncCall right = tryParseInlineFuncCall();
+            expression = new PipeExpression(expression, right);
+        }
+        return expression;
     }
 
     private Expression tryParseArrayExpression(final boolean checked) throws Exception
@@ -363,10 +302,46 @@ public class Parser
         final var arguments = new LinkedList<Expression>();
         while (!areInlineArgumentsEnd())
         {
-            arguments.add(tryParseExpression(false));
+            arguments.add(tryParseUnpipeableExpression());
         }
         return new InlineFuncCall(name, arguments);
 
+    }
+
+    private Expression tryParseUnpipeableExpression() throws Exception
+    {
+        Expression expression = tryParseArrayExpression(false);
+        if (expression == null)
+        {
+            expression = tryParseLambdaExpression();
+        }
+        if (expression == null)
+        {
+            if (currentIdentifierToken == null)
+            {
+                if (nextToken.type() == TokenType.T_OPERATOR && nextToken.value() == OperatorEnum.O_PLUS)
+                {
+                    consumeToken();
+                    expression = new PlusUnaryExpression(tryParseExpressionNode(this::tryParseAndExpression, Set.of(OperatorEnum.O_OR)));
+                }
+                else if (nextToken.type() == TokenType.T_OPERATOR && nextToken.value() == OperatorEnum.O_MINUS)
+                {
+                    consumeToken();
+                    expression = new MinusUnaryExpression(tryParseExpressionNode(this::tryParseAndExpression, Set.of(OperatorEnum.O_OR)));
+                }
+            }
+            if (expression == null)
+            {
+                expression = tryParseExpressionNode(this::tryParseAndExpression, Set.of(OperatorEnum.O_OR));
+            }
+        }
+
+        Modifier modifier = null;
+        if ((modifier = tryParseModifier()) != null)
+        {
+            expression = new ModifierExpression(expression, modifier);
+        }
+        return expression;
     }
 
     private boolean areInlineArgumentsEnd()
@@ -709,12 +684,6 @@ public class Parser
             return new Declaration(type, varName, tryParseExpression());
         }
         return new Declaration(type, varName, null);
-
-    }
-
-    private Statement parseLambdaExpression()
-    {
-        return null;
 
     }
 

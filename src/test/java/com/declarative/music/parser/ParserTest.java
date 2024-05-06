@@ -223,6 +223,24 @@ class ParserTest
     }
 
     @Test
+    void shouldParseLambdaExpressionWithPipe() throws Exception
+    {
+        final var code = "with(Int a, String c) -> Void {Int b;} |> call;";
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        final var expected = new Program(List.of(new PipeExpression(new LambdaExpression(new Parameters(List.of(
+            new Parameter(new SimpleType(Types.Int), "a"),
+            new Parameter(new SimpleType(Types.String), "c"))
+        ), new SimpleType(Types.Void), new Block(
+            List.of(new Declaration(new SimpleType(Types.Int), "b", null))
+        )), new InlineFuncCall("call", List.of()))));
+
+        final var program = parser.parserProgram();
+
+        assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
+    }
+
+    @Test
     void shouldParseVarDeclaration() throws Exception
     {
         final var code = "Int a;";
@@ -557,6 +575,25 @@ class ParserTest
                     new InlineFuncCall("twice", List.of(new MinusUnaryExpression(new IntLiteral(1))))),
                 new InlineFuncCall("add", List.of(new FunctionCall("a", List.of()),
                     new AddExpression(new VariableReference("b"), new IntLiteral(1)))))
+        ));
+
+        final var program = parser.parserProgram();
+
+        assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
+    }
+
+    @Test
+    void shouldParsePipeExpression_WithPipeAsInlineArgument() throws Exception
+    {
+        final var code = "a |> twice (2 |> twice) |> twice;";
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        final var expected = new Program(List.of(
+            new PipeExpression(
+                new PipeExpression(new VariableReference("a"),
+                    new InlineFuncCall("twice", List.of(new PipeExpression(new IntLiteral(2), new InlineFuncCall("twice", List.of()))))
+                ), new InlineFuncCall("twice", List.of())
+            )
         ));
 
         final var program = parser.parserProgram();
