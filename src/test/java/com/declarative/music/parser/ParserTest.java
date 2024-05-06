@@ -4,8 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.StringReader;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.declarative.music.lexer.LexerImpl;
 import com.declarative.music.parser.production.AssigmentStatement;
@@ -16,8 +22,18 @@ import com.declarative.music.parser.production.IfStatement;
 import com.declarative.music.parser.production.Parameter;
 import com.declarative.music.parser.production.Parameters;
 import com.declarative.music.parser.production.Program;
+import com.declarative.music.parser.production.ReturnStatement;
+import com.declarative.music.parser.production.Statement;
+import com.declarative.music.parser.production.assign.DivAssignStatement;
+import com.declarative.music.parser.production.assign.MinusAssignStatement;
+import com.declarative.music.parser.production.assign.ModuloAssignStatement;
+import com.declarative.music.parser.production.assign.MulAssignStatement;
+import com.declarative.music.parser.production.assign.ParalerAssignStatement;
 import com.declarative.music.parser.production.assign.PlusAssignStatement;
+import com.declarative.music.parser.production.assign.PowAssignStatement;
+import com.declarative.music.parser.production.assign.SequenceAssignStatement;
 import com.declarative.music.parser.production.expression.CastExpresion;
+import com.declarative.music.parser.production.expression.Expression;
 import com.declarative.music.parser.production.expression.VariableReference;
 import com.declarative.music.parser.production.expression.arithmetic.AddExpression;
 import com.declarative.music.parser.production.expression.arithmetic.MinusUnaryExpression;
@@ -39,8 +55,15 @@ import com.declarative.music.parser.production.expression.pipe.InlineFuncCall;
 import com.declarative.music.parser.production.expression.pipe.PipeExpression;
 import com.declarative.music.parser.production.expression.relation.AndExpression;
 import com.declarative.music.parser.production.expression.relation.EqExpression;
+import com.declarative.music.parser.production.expression.relation.GreaterEqExpression;
+import com.declarative.music.parser.production.expression.relation.GreaterExpression;
+import com.declarative.music.parser.production.expression.relation.LessEqExpression;
+import com.declarative.music.parser.production.expression.relation.LessExpression;
+import com.declarative.music.parser.production.expression.relation.NegateExpression;
 import com.declarative.music.parser.production.expression.relation.OrExpression;
+import com.declarative.music.parser.production.literal.FloatLiteral;
 import com.declarative.music.parser.production.literal.IntLiteral;
+import com.declarative.music.parser.production.literal.StringLiter;
 import com.declarative.music.parser.production.type.ArrayType;
 import com.declarative.music.parser.production.type.LambdaType;
 import com.declarative.music.parser.production.type.SimpleType;
@@ -48,6 +71,45 @@ import com.declarative.music.parser.production.type.SimpleType;
 
 class ParserTest
 {
+    private static Stream<Arguments> provideAssigmentWithExpressionStatement()
+    {
+        return Stream.of(
+            Arguments.of("+=", (BiFunction<String, Expression, Statement>) PlusAssignStatement::new),
+            Arguments.of("-=", (BiFunction<String, Expression, Statement>) MinusAssignStatement::new),
+            Arguments.of("/=", (BiFunction<String, Expression, Statement>) DivAssignStatement::new),
+            Arguments.of("*=", (BiFunction<String, Expression, Statement>) MulAssignStatement::new),
+            Arguments.of("|=", (BiFunction<String, Expression, Statement>) SequenceAssignStatement::new),
+            Arguments.of("&=", (BiFunction<String, Expression, Statement>) ParalerAssignStatement::new),
+            Arguments.of("^=", (BiFunction<String, Expression, Statement>) PowAssignStatement::new),
+            Arguments.of("%=", (BiFunction<String, Expression, Statement>) ModuloAssignStatement::new)
+        );
+    }
+
+    private static Stream<Arguments> provideRelationExpression()
+    {
+        return Stream.of(
+            Arguments.of("==", (BiFunction<Expression, Expression, Expression>) EqExpression::new),
+            Arguments.of("!=", (BiFunction<Expression, Expression, Expression>) NegateExpression::new),
+            Arguments.of(">=", (BiFunction<Expression, Expression, Expression>) GreaterEqExpression::new),
+            Arguments.of("<=", (BiFunction<Expression, Expression, Expression>) LessEqExpression::new),
+            Arguments.of(">", (BiFunction<Expression, Expression, Expression>) GreaterExpression::new),
+            Arguments.of("<", (BiFunction<Expression, Expression, Expression>) LessExpression::new)
+        );
+    }
+
+    public static Stream<Arguments> provideLiterals()
+    {
+        return Stream.of(
+            Arguments.of("10", new IntLiteral(10)),
+            Arguments.of("10.0", new FloatLiteral(10.0)),
+            Arguments.of("\"10\"", new StringLiter("10")),
+            Arguments.of("C", new NoteExpression("C", null, null)),
+            Arguments.of("q", new NoteExpression(null, null, "q")),
+            Arguments.of("(C, 4)", new NoteExpression("C", new IntLiteral(4), null)),
+            Arguments.of("(C, 4) q", new NoteExpression("C", new IntLiteral(4), "q"))
+        );
+    }
+
     @Test
     void shouldParseAssigment() throws Exception
     {
@@ -61,26 +123,31 @@ class ParserTest
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
     }
 
-    @Test
-    void shouldParseExpressionAsStatement() throws Exception
+    @ParameterizedTest
+    @MethodSource("provideLiterals")
+    void shouldParseExpressionAsStatement(String value, Statement parsedValue) throws Exception
     {
-        final var code = "10;";
+        var code = "%s;".formatted(value);
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        final var expected = new Program(List.of(new IntLiteral(10)));
+        final var expected = new Program(List.of(parsedValue));
 
         final var program = parser.parserProgram();
 
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
     }
 
-    @Test
-    void shouldParseAssigmentExpression() throws Exception
+    @ParameterizedTest
+    @MethodSource("provideAssigmentWithExpressionStatement")
+    void shouldParseAssigmentExpression(String assigmentOperator, BiFunction<String, Expression, Statement> statementFactory) throws Exception
     {
-        final var code = "a+=10;";
+        var variableName = "a";
+        var variableValue = 10;
+        final var code = "%s %s %d;".formatted(variableName, assigmentOperator, variableValue);
+
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        final var expected = new Program(List.of(new PlusAssignStatement("a", new IntLiteral(10))));
+        final var expected = new Program(List.of(statementFactory.apply(variableName, new IntLiteral(variableValue))));
 
         final var program = parser.parserProgram();
 
@@ -125,6 +192,23 @@ class ParserTest
         final var expected = new Program(List.of(
             new Declaration(new LambdaType(List.of(new LambdaType(List.of(new SimpleType(Types.Int)), new SimpleType(Types.Int))),
                 new SimpleType(Types.Int)),
+                "a", null)
+        ));
+
+        final var program = parser.parserProgram();
+
+        assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
+    }
+
+    @Test
+    void shouldParseLambdaType_WithNoParameters() throws Exception
+    {
+        final var code = "lam()->Int a;";
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        final var expected = new Program(List.of(
+            new Declaration(
+                new LambdaType(List.of(), new SimpleType(Types.Int)),
                 "a", null)
         ));
 
@@ -206,14 +290,17 @@ class ParserTest
     @Test
     void shouldParseLambdaExpression() throws Exception
     {
-        final var code = "a=with(Int a, String c) -> Void {Int b;};";
+        final var code = "a=with(Int a, String c) -> Int {Int b;return b+2;};";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expectedValue = new LambdaExpression(new Parameters(List.of(
             new Parameter(new SimpleType(Types.Int), "a"),
             new Parameter(new SimpleType(Types.String), "c"))
-        ), new SimpleType(Types.Void), new Block(
-            List.of(new Declaration(new SimpleType(Types.Int), "b", null))
+        ), new SimpleType(Types.Int), new Block(
+            List.of(
+                new Declaration(new SimpleType(Types.Int), "b", null),
+                new ReturnStatement(new AddExpression(new VariableReference("b"), new IntLiteral(2)))
+            )
         ));
         final var expected = new Program(List.of(new AssigmentStatement("a", expectedValue)));
 
@@ -225,13 +312,14 @@ class ParserTest
     @Test
     void shouldParseLambdaExpressionWithPipe() throws Exception
     {
-        final var code = "with(Int a, String c) -> Void {Int b;} |> call;";
+        final var code = "with(Int a, []Int c, lam(Int)->Void d) -> Void {Int b;} |> call;";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(new PipeExpression(new LambdaExpression(new Parameters(List.of(
             new Parameter(new SimpleType(Types.Int), "a"),
-            new Parameter(new SimpleType(Types.String), "c"))
-        ), new SimpleType(Types.Void), new Block(
+            new Parameter(new ArrayType(new SimpleType(Types.Int)), "c"),
+            new Parameter(new LambdaType(List.of(new SimpleType(Types.Int)), new SimpleType(Types.Void)), "d")
+        )), new SimpleType(Types.Void), new Block(
             List.of(new Declaration(new SimpleType(Types.Int), "b", null))
         )), new InlineFuncCall("call", List.of()))));
 
@@ -341,14 +429,15 @@ class ParserTest
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
     }
 
-    @Test
-    void shouldParseEqExpression() throws Exception
+    @ParameterizedTest
+    @MethodSource("provideRelationExpression")
+    void shouldParseRelationExpression(String operator, BiFunction<Expression, Expression, Expression> factory) throws Exception
     {
-        final var code = "1==2;";
+        final var code = "1 %s 2;".formatted(operator);
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
-            new EqExpression(new IntLiteral(1), new IntLiteral(2))
+            factory.apply(new IntLiteral(1), new IntLiteral(2))
         ));
 
         final var program = parser.parserProgram();
@@ -777,6 +866,22 @@ class ParserTest
     }
 
     @Test
+    void shouldParseMultipleStatements() throws Exception
+    {
+        final var code = "Int a;a+=2;";
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        final var expected = new Program(List.of(
+            new Declaration(new SimpleType(Types.Int), "a", null),
+            new PlusAssignStatement("a", new IntLiteral(2))
+        ));
+
+        final var program = parser.parserProgram();
+
+        assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
+    }
+
+    @Test
     void shouldParse() throws Exception
     {
         final var code =
@@ -806,6 +911,28 @@ class ParserTest
         final var program = parser.parserProgram();
 
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
+    }
+
+    private String a1(String b)
+    {
+        System.out.println("HELLo");
+        return "1";
+    }
+
+    private String a2(String b)
+    {
+        System.out.println("HELLo2");
+        return "1";
+    }
+
+    @Test
+    void testCallable() throws Exception
+    {
+        Callable<String> t = () -> a1(a2("test"));
+        System.out.println("BEFORE");
+        t.call();
+        System.out.println("AFTER");
+
     }
 
 }
