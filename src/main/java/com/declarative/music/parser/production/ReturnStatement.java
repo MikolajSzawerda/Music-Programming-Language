@@ -1,12 +1,10 @@
-package com.declarative.music.parser.production.expression.lambda;
-
-import java.util.List;
+package com.declarative.music.parser.production;
 
 import com.declarative.music.interpreter.Visitor;
 import com.declarative.music.parser.production.expression.Expression;
 
 
-public record LambdaCall(ExecutionCall call, List<Expression> arguments) implements ExecutionCall
+public record ReturnStatement(Expression value) implements Statement
 {
     @Override
     public void accept(final Visitor visitor)

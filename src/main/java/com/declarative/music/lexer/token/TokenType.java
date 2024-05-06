@@ -1,6 +1,7 @@
 package com.declarative.music.lexer.token;
 
-public enum TokenType {
+public enum TokenType
+{
     T_IDENTIFIER,
     T_OPERATOR,
     T_INT_NUMBER,
@@ -9,5 +10,5 @@ public enum TokenType {
     T_COMMENT,
     T_LET, T_WITH, T_IF, T_FOR, T_RETURN, T_L_PARENTHESIS, T_R_PARENTHESIS, T_L_CURL_PARENTHESIS, T_R_CURL_PARENTHESIS, T_L_QAD_PARENTHESIS, T_R_QAD_PARENTHESIS, T_SEMICOLON, T_COMMA, T_EOF,
     T_PITCH,
-    T_IN, T_AS, T_ELSE, T_RHYTHM
+    T_IN, T_AS, T_ELSE, T_LAMBDA, T_RHYTHM
 }

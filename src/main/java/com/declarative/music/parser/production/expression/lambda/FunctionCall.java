@@ -6,11 +6,11 @@ import com.declarative.music.interpreter.Visitor;
 import com.declarative.music.parser.production.expression.Expression;
 
 
-public record LambdaCall(ExecutionCall call, List<Expression> arguments) implements ExecutionCall
+public record FunctionCall(String name, List<Expression> arguments) implements ExecutionCall
 {
     @Override
     public void accept(final Visitor visitor)
     {
-
+        visitor.visit(this);
     }
 }

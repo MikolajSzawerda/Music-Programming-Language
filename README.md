@@ -129,7 +129,7 @@ ComprExpr           := "<|" identifier Expression;
 Type                := LitType |
                        CpxType |
                        FuncType;
-FuncType            := "(" [type_list] ")" "->" (Type|"Void");
+FuncType            := "lam" (" [type_list] ")" "->" (Type|"Void");
 type_list           := Type {"," Type};
 
 LitType             := Int | Double |

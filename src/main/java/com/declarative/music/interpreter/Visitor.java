@@ -1,6 +1,10 @@
 package com.declarative.music.interpreter;
 
-import com.declarative.music.parser.production.*;
+import com.declarative.music.parser.production.AssigmentStatement;
+import com.declarative.music.parser.production.Block;
+import com.declarative.music.parser.production.Declaration;
+import com.declarative.music.parser.production.IfStatement;
+import com.declarative.music.parser.production.Program;
 import com.declarative.music.parser.production.expression.CastExpresion;
 import com.declarative.music.parser.production.expression.VariableReference;
 import com.declarative.music.parser.production.expression.arithmetic.AddExpression;
@@ -10,7 +14,7 @@ import com.declarative.music.parser.production.expression.arithmetic.PlusUnaryEx
 import com.declarative.music.parser.production.expression.array.ArrayExpression;
 import com.declarative.music.parser.production.expression.array.ListComprehension;
 import com.declarative.music.parser.production.expression.array.RangeExpression;
-import com.declarative.music.parser.production.expression.lambda.LambdaCall;
+import com.declarative.music.parser.production.expression.lambda.FunctionCall;
 import com.declarative.music.parser.production.expression.lambda.LambdaExpression;
 import com.declarative.music.parser.production.expression.modifier.ModifierExpression;
 import com.declarative.music.parser.production.expression.music.ConvolutionExpression;
@@ -22,7 +26,9 @@ import com.declarative.music.parser.production.expression.relation.EqExpression;
 import com.declarative.music.parser.production.expression.relation.OrExpression;
 import com.declarative.music.parser.production.literal.IntLiteral;
 
-public interface Visitor {
+
+public interface Visitor
+{
 
     void visit(AddExpression addExpression);
 
@@ -50,7 +56,7 @@ public interface Visitor {
 
     void visit(RangeExpression rangeExpression);
 
-    void visit(LambdaCall lambdaCall);
+    void visit(FunctionCall functionCall);
 
     void visit(ModifierExpression modifierExpression);
 
