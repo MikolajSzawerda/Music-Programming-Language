@@ -77,9 +77,9 @@ let x2 = ([0, 1, 2] |> concat [3,4] |> dot (1+3*4^7-*1+3/6*12) |>len)+2;
 ## EBNF
 
 ```
-Program             := {Statement ";"};
-Statement           := DeclOrAssig |
-                       Expression |
+Program             := {Statement};
+Statement           := DeclOrAssig  ";" |
+                       Expression  ";" |
                        IfStmt |
                        ForStmt;
 

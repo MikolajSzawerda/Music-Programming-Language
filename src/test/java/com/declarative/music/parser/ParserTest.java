@@ -516,7 +516,7 @@ class ParserTest
     @Test
     void shouldParseIfStatement() throws Exception
     {
-        final var code = "if(1==1){};";
+        final var code = "if(1==1){}";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
@@ -531,7 +531,7 @@ class ParserTest
     @Test
     void shouldParseIfStatementWithPipe() throws Exception
     {
-        final var code = "if((1|>mel) || (2 |> mel)){};";
+        final var code = "if((1|>mel) || (2 |> mel)){}";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
@@ -548,7 +548,7 @@ class ParserTest
     @Test
     void shouldParseIfElseIfElseStatement() throws Exception
     {
-        final var code = "if(1==1){} else if(2==2) {} else {};";
+        final var code = "if(1==1){} else if(2==2) {} else {}";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
@@ -672,7 +672,7 @@ class ParserTest
     @Test
     void shouldParseFor() throws Exception
     {
-        final var code = "for(Int i in 1->3){};";
+        final var code = "for(Int i in 1->3){}";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(

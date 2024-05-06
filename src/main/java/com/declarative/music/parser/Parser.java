@@ -120,12 +120,10 @@ public class Parser
 
         final List<Statement> statements = new LinkedList<>();
         var stmt = parseStatement();
-        require(TokenType.T_SEMICOLON);
         statements.add(stmt);
         while (stmt != null && (nextToken != null && nextToken.type() != TokenType.T_EOF))
         {
             stmt = parseStatement();
-            require(TokenType.T_SEMICOLON);
             statements.add(stmt);
         }
 
@@ -139,18 +137,19 @@ public class Parser
 
     private Statement parseStatement() throws Exception
     {
-        return switch (nextToken.type())
+        //Statements with no need of semicolon after
+        if (nextToken.type() == TokenType.T_IF)
         {
-            case T_IF ->
-            {
-                consumeToken();
-                yield parseIfStatement();
-            }
-            case T_FOR ->
-            {
-                consumeToken();
-                yield parseForStatemnt();
-            }
+            consumeToken();
+            return parseIfStatement();
+        }
+        if (nextToken.type() == TokenType.T_FOR)
+        {
+            consumeToken();
+            return parseForStatemnt();
+        }
+        var semicolonEndedStmt = switch (nextToken.type())
+        {
             case T_LET ->
             {
                 consumeToken();
@@ -210,6 +209,8 @@ public class Parser
                 throw new UnsupportedOperationException(msg);
             }
         };
+        require(TokenType.T_SEMICOLON);
+        return semicolonEndedStmt;
 
     }
 
@@ -707,7 +708,6 @@ public class Parser
         while (nextToken.type() != TokenType.T_R_CURL_PARENTHESIS)
         {
             stms.add(parseStatement());
-            require(TokenType.T_SEMICOLON);
         }
         require(TokenType.T_R_CURL_PARENTHESIS);
 

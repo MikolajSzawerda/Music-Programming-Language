@@ -19,14 +19,14 @@ lam(Int, Int)->Int NWD;
 NWD = with(Int a, Int b)->Int {
     if(b!=0){
         return NWD(b, a%b);
-    };
+    }
     return a;
 };
 a(1, with()->Int{b(1);c(2);});
 let randGen = with(Scale scale, Rythm rythm) -> Phrase {
     if((scale |> isEmpty) || (rythm |> isEmpty)){
         "Provided scale or rythm is empty" |> panic;
-    };
+    }
     
     let seed = ((scale |> len) * (rythm |> len)) % 3+1;
     let maxLen = [scale |> len, rythm |> len] |> max;
@@ -35,7 +35,7 @@ let randGen = with(Scale scale, Rythm rythm) -> Phrase {
     for(Int i in 1->seed){
         let line = [rand() % maxLen <| dumb_temp 1->(rand()%4+1)*maxLen] |> mel;
         form &= line;
-    };
+    }
     
     return form>>scale*form>>rythm;
 };
