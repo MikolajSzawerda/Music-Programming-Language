@@ -21,11 +21,14 @@ import com.declarative.music.parser.production.expression.lambda.LambdaExpressio
 import com.declarative.music.parser.production.expression.modifier.ModifierExpression;
 import com.declarative.music.parser.production.expression.music.ConvolutionExpression;
 import com.declarative.music.parser.production.expression.music.NoteExpression;
+import com.declarative.music.parser.production.expression.music.ParallerExpression;
+import com.declarative.music.parser.production.expression.music.SequenceExpression;
 import com.declarative.music.parser.production.expression.pipe.InlineFuncCall;
 import com.declarative.music.parser.production.expression.pipe.PipeExpression;
 import com.declarative.music.parser.production.expression.relation.AndExpression;
 import com.declarative.music.parser.production.expression.relation.EqExpression;
 import com.declarative.music.parser.production.expression.relation.OrExpression;
+import com.declarative.music.parser.production.literal.FloatLiteral;
 import com.declarative.music.parser.production.literal.IntLiteral;
 
 import lombok.RequiredArgsConstructor;
@@ -82,10 +85,8 @@ public class PrintVisitor implements Visitor
         write("assigment:");
         indentation++;
         write("variable: %s".formatted(assigmentStatement.identifier()));
-        write("value:");
-        indentation++;
         assigmentStatement.value().accept(this);
-        indentation -= 2;
+        indentation--;
     }
 
     @Override
@@ -104,10 +105,13 @@ public class PrintVisitor implements Visitor
         indentation++;
         write("type: %s".formatted(declaration.type()));
         write("name: %s".formatted(declaration.name()));
-        write("value:");
-        indentation++;
+        if (declaration.value() == null)
+        {
+            indentation--;
+            return;
+        }
         declaration.value().accept(this);
-        indentation -= 2;
+        indentation--;
     }
 
     @Override
@@ -120,20 +124,26 @@ public class PrintVisitor implements Visitor
         ifStatement.condition().accept(this);
         indentation--;
         ifStatement.instructions().accept(this);
-        ifStatement.otherwise().accept(this);
+        if (ifStatement.otherwise() != null)
+        {
+            ifStatement.otherwise().accept(this);
+        }
         indentation--;
     }
 
     @Override
     public void visit(final Program program)
     {
-
+        program.statements().forEach(stmt -> stmt.accept(this));
     }
 
     @Override
     public void visit(final MinusUnaryExpression minusUnaryExpression)
     {
-
+        write("minusUnaryExpression:");
+        indentation++;
+        minusUnaryExpression.value().accept(this);
+        indentation--;
     }
 
     @Override
@@ -145,13 +155,22 @@ public class PrintVisitor implements Visitor
     @Override
     public void visit(final PlusUnaryExpression plusUnaryExpression)
     {
-
+        write("plusUnaryExpression:");
+        indentation++;
+        plusUnaryExpression.value().accept(this);
+        indentation--;
     }
 
     @Override
     public void visit(final ArrayExpression arrayExpression)
     {
-
+        write("arrayExpression:");
+        indentation++;
+        for (var item : arrayExpression.items())
+        {
+            item.accept(this);
+        }
+        indentation--;
     }
 
     @Override
@@ -175,6 +194,22 @@ public class PrintVisitor implements Visitor
     @Override
     public void visit(final ModifierExpression modifierExpression)
     {
+        write("modifierExpression:");
+        indentation++;
+
+        write("modifier:");
+        indentation++;
+        for (var modifier : modifierExpression.modifier().modifiers())
+        {
+            write("name: %s".formatted(modifier.name()));
+            write("value:");
+            indentation++;
+            modifier.expression().accept(this);
+            indentation--;
+        }
+        indentation--;
+        modifierExpression.modified().accept(this);
+        indentation--;
 
     }
 
@@ -187,19 +222,52 @@ public class PrintVisitor implements Visitor
     @Override
     public void visit(final NoteExpression noteExpression)
     {
-
+        write("noteExpression:");
+        indentation++;
+        if (noteExpression.pitch() != null)
+        {
+            write("pitch: %s".formatted(noteExpression.pitch()));
+        }
+        if (noteExpression.octave() != null)
+        {
+            write("octave:");
+            indentation++;
+            noteExpression.octave().accept(this);
+            indentation--;
+        }
+        if (noteExpression.duration() != null)
+        {
+            write("duration: %s".formatted(noteExpression.duration()));
+        }
+        indentation--;
     }
 
     @Override
     public void visit(final InlineFuncCall inlineFuncCall)
     {
-
+        write("inlineFuncCall: %s".formatted(inlineFuncCall.name()));
+        if (inlineFuncCall.arguments().isEmpty())
+        {
+            return;
+        }
+        indentation++;
+        write("arguments:");
+        indentation++;
+        for (var arg : inlineFuncCall.arguments())
+        {
+            arg.accept(this);
+        }
+        indentation -= 2;
     }
 
     @Override
     public void visit(final PipeExpression pipeExpression)
     {
-
+        write("pipeExpression:");
+        indentation++;
+        pipeExpression.right().accept(this);
+        pipeExpression.left().accept(this);
+        indentation--;
     }
 
     @Override
@@ -223,18 +291,48 @@ public class PrintVisitor implements Visitor
     @Override
     public void visit(final CastExpresion castExpresion)
     {
-
+        write("castExpression:");
+        indentation++;
+        write("type: %s".formatted(castExpresion.type()));
+        castExpresion.value().accept(this);
+        indentation--;
     }
 
     @Override
     public void visit(final VariableReference variableReference)
     {
-
+        write("variableReference: %s".formatted(variableReference.name()));
     }
 
     @Override
     public void visit(final IntLiteral intLiteral)
     {
         write("IntLiteral: %d".formatted(intLiteral.value()));
+    }
+
+    @Override
+    public void visit(final SequenceExpression sequenceExpression)
+    {
+        write("sequenceExpression:");
+        indentation++;
+        sequenceExpression.left().accept(this);
+        sequenceExpression.right().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final ParallerExpression parallerExpression)
+    {
+        write("parallerExpression:");
+        indentation++;
+        parallerExpression.left().accept(this);
+        parallerExpression.right().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final FloatLiteral floatLiteral)
+    {
+        write("floatLiteral: %f".formatted(floatLiteral.value()));
     }
 }

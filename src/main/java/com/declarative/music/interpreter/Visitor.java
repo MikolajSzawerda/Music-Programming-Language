@@ -19,11 +19,14 @@ import com.declarative.music.parser.production.expression.lambda.LambdaExpressio
 import com.declarative.music.parser.production.expression.modifier.ModifierExpression;
 import com.declarative.music.parser.production.expression.music.ConvolutionExpression;
 import com.declarative.music.parser.production.expression.music.NoteExpression;
+import com.declarative.music.parser.production.expression.music.ParallerExpression;
+import com.declarative.music.parser.production.expression.music.SequenceExpression;
 import com.declarative.music.parser.production.expression.pipe.InlineFuncCall;
 import com.declarative.music.parser.production.expression.pipe.PipeExpression;
 import com.declarative.music.parser.production.expression.relation.AndExpression;
 import com.declarative.music.parser.production.expression.relation.EqExpression;
 import com.declarative.music.parser.production.expression.relation.OrExpression;
+import com.declarative.music.parser.production.literal.FloatLiteral;
 import com.declarative.music.parser.production.literal.IntLiteral;
 
 
@@ -79,4 +82,10 @@ public interface Visitor
     void visit(VariableReference variableReference);
 
     void visit(IntLiteral intLiteral);
+
+    void visit(SequenceExpression sequenceExpression);
+
+    void visit(ParallerExpression parallerExpression);
+
+    void visit(FloatLiteral floatLiteral);
 }
