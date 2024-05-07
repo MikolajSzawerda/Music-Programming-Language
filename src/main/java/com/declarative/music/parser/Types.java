@@ -14,5 +14,5 @@ public enum Types
     Phrase,
     Track,
     Song,
-    Template
+    LET, Template
 }

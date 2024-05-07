@@ -1,5 +1,5 @@
 ((E, 4) w | (G, 4) w | (D, 4) w) & ((C, 4) w | (D, 4) w | (F, 4) w);
-[[E, G, D] |> mel, [C, D, F] |> mel]{dur=w, oct=4} |> harm;
+[([E, G, D] |> mel), ([C, D, F] |> mel)]{dur=w, oct=4} |> harm;
 
 let a = [E, G, D]{oct=4} |> mel;
 
@@ -11,7 +11,7 @@ let b = a |>
         track Guitar;
 
 let c = "song.mid" |>
-        open Track 0 |>
+        open Track, 0 |>
         head+100; //shoud be parsed as head(x, 100)
         
 lam(Int, Int)->Int NWD;
@@ -29,7 +29,7 @@ let randGen = with(Scale scale, Rythm rythm) -> Phrase {
     }
     
     let seed = ((scale |> len) * (rythm |> len)) % 3+1;
-    let maxLen = [scale |> len, rythm |> len] |> max;
+    let maxLen = [(scale |> len), rythm |> len] |> max;
     let lowestNote = scale |> argmin;
     Template form;
     for(Int i in 1->seed){
@@ -41,7 +41,7 @@ let randGen = with(Scale scale, Rythm rythm) -> Phrase {
 };
     //Hello world
 [a |> track Piano, b, markov(["song1.mid", "song2.mid"], 1)((C, 4) q), [C, E, G] |> randGen [q, w, h] |> track BagPipe] |>
-    song 120 60 |>
+    song 120, 60 |>
     export "demo2.mid";
     
 //let x1 = [0, 1, 2] |> concat [3,4] |>len+2;//panic

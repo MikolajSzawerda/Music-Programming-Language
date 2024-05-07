@@ -1,6 +1,7 @@
 package com.declarative.music.lexer.terminals;
 
-public enum OperatorEnum {
+public enum OperatorEnum
+{
     O_GREATER,
     O_GREATER_EQ,
     O_DOUBLE_GR,
@@ -28,5 +29,5 @@ public enum OperatorEnum {
     O_DIVIDE_ASSIGN,
     O_SIM,
     O_SIM_ASSIGN,
-    O_PLUS_ASSIGN
+    O_NEGATE, O_PLUS_ASSIGN
 }

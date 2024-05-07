@@ -1,10 +1,10 @@
-package com.declarative.music.parser.production.expression.relation;
+package com.declarative.music.parser.production.literal;
 
 import com.declarative.music.interpreter.Visitor;
 import com.declarative.music.parser.production.expression.Expression;
 
 
-public record NegateExpression(Expression expression) implements Expression
+public record BoolLiteral(boolean value) implements Expression
 {
     @Override
     public void accept(final Visitor visitor)

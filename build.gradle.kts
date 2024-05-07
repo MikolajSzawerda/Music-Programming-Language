@@ -12,7 +12,6 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.23.1")
     implementation("com.google.guava:guava:32.1.1-jre")
     implementation("commons-cli:commons-cli:1.6.0")
-
     compileOnly("org.projectlombok:lombok:1.18.32")
     annotationProcessor("org.projectlombok:lombok:1.18.32")
 
