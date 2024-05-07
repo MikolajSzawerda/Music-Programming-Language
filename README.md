@@ -38,15 +38,6 @@ let b = a |>
 let c = "song.mid" |>
         open Track 0 |>
         head+100; //shoud be parsed as head(x, 100)
-        
-(Int, Int)->Int NWD;
-
-NWD = with(Int a, Int b)->Int {
-    if(b!=0){
-        return NWD(b, a%b);
-    }
-    return a;
-};
     
 let randGen = with(Scale scale, Rythm rythm) -> Phrase {
     if(scale |> isEmpty || rythm |> isEmpty){
