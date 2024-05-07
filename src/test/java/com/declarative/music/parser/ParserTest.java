@@ -200,7 +200,7 @@ class ParserTest
         final var parser = new Parser(lexer);
 
         assertThatThrownBy(parser::parserProgram)
-            .hasMessageStartingWith("SYNTAX ERROR no expression provided to assign");
+            .hasMessageStartingWith("SYNTAX ERROR expected expression when parsing assigment");
     }
 
     @ParameterizedTest
@@ -256,7 +256,7 @@ class ParserTest
         final var parser = new Parser(lexer);
 
         assertThatThrownBy(parser::parserProgram)
-            .hasMessageStartingWith("SYNTAX ERROR no closing ) parenthesis");
+            .hasMessageStartingWith("SYNTAX ERROR missing closing \"[T_R_PARENTHESIS]\" parenthesis");
     }
 
     @Test
@@ -502,7 +502,7 @@ class ParserTest
         final var parser = new Parser(lexer);
 
         assertThatThrownBy(parser::parserProgram)
-            .hasMessageStartingWith("SYNTAX ERROR right expression expected after binary operator");
+            .hasMessageStartingWith("SYNTAX ERROR expected expression when parsing binary operator");
     }
 
     @Test
@@ -820,7 +820,7 @@ class ParserTest
         final var parser = new Parser(lexer);
 
         assertThatThrownBy(parser::parserProgram)
-            .hasMessageStartingWith("SYNTAX ERROR if stmt should start with if token");
+            .hasMessageStartingWith("SYNTAX ERROR else statement without if statement");
     }
 
     @Test
@@ -922,7 +922,7 @@ class ParserTest
         final var parser = new Parser(lexer);
 
         assertThatThrownBy(parser::parserProgram)
-            .hasMessageStartingWith("SYNTAX ERROR inline call expected after pipe operator");
+            .hasMessageStartingWith("SYNTAX ERROR missing inline call after pipe operator");
     }
 
     @Test
@@ -988,7 +988,7 @@ class ParserTest
     @Test
     void shouldParseArrayWithPipe() throws Exception
     {
-        final var code = "[([1]|>a),([1]|>b)];";
+        final var code = "[[1]|>a,[1]|>b];";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
@@ -1011,7 +1011,7 @@ class ParserTest
         final var parser = new Parser(lexer);
 
         assertThatThrownBy(parser::parserProgram)
-            .hasMessageStartingWith("SYNTAX ERROR no expression after comma in array expression");
+            .hasMessageStartingWith("SYNTAX ERROR expected expression when parsing array item");
     }
 
     @Test

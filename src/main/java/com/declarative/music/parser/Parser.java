@@ -4,13 +4,15 @@ import static com.declarative.music.lexer.token.TokenType.T_COMMA;
 import static com.declarative.music.lexer.token.TokenType.T_ELSE;
 import static com.declarative.music.lexer.token.TokenType.T_FALSE;
 import static com.declarative.music.lexer.token.TokenType.T_FLOATING_NUMBER;
-import static com.declarative.music.lexer.token.TokenType.T_IF;
 import static com.declarative.music.lexer.token.TokenType.T_INT_NUMBER;
 import static com.declarative.music.lexer.token.TokenType.T_LET;
 import static com.declarative.music.lexer.token.TokenType.T_L_QAD_PARENTHESIS;
 import static com.declarative.music.lexer.token.TokenType.T_OPERATOR;
 import static com.declarative.music.lexer.token.TokenType.T_PITCH;
 import static com.declarative.music.lexer.token.TokenType.T_RHYTHM;
+import static com.declarative.music.lexer.token.TokenType.T_R_CURL_PARENTHESIS;
+import static com.declarative.music.lexer.token.TokenType.T_R_PARENTHESIS;
+import static com.declarative.music.lexer.token.TokenType.T_R_QAD_PARENTHESIS;
 import static com.declarative.music.lexer.token.TokenType.T_STRING;
 import static com.declarative.music.lexer.token.TokenType.T_TRUE;
 import static com.declarative.music.lexer.token.TokenType.T_WITH;
@@ -27,7 +29,12 @@ import com.declarative.music.lexer.Lexer;
 import com.declarative.music.lexer.terminals.OperatorEnum;
 import com.declarative.music.lexer.token.Token;
 import com.declarative.music.lexer.token.TokenType;
+import com.declarative.music.parser.exception.MissingInlineCallException;
+import com.declarative.music.parser.exception.MissingParenthesisException;
+import com.declarative.music.parser.exception.ParsingException;
+import com.declarative.music.parser.exception.RequiredExpressionException;
 import com.declarative.music.parser.exception.SyntaxException;
+import com.declarative.music.parser.exception.WrongElseStatement;
 import com.declarative.music.parser.production.AssigmentStatement;
 import com.declarative.music.parser.production.Block;
 import com.declarative.music.parser.production.Declaration;
@@ -128,7 +135,6 @@ public class Parser
     );
     private static final Set<TokenType> inlineArgumentsEnd = Set.of(
         TokenType.T_EOF,
-//        TokenType.T_COMMA,
         TokenType.T_R_PARENTHESIS,
         TokenType.T_SEMICOLON,
         TokenType.T_R_QAD_PARENTHESIS
@@ -164,13 +170,13 @@ public class Parser
         nextToken = lexer.getNextToken();
     }
 
-    private Statement parseStatement() throws Exception
+    private Statement parseStatement() throws ParsingException, IOException
     {
         //Statements with no need of semicolon after
         var res = new Try<Statement>(TokenType.T_IF, this::parseIfStatement)
-            .orElse(TokenType.T_FOR, this::parseForStatemnt)
+            .orElse(TokenType.T_FOR, this::parseForStatement)
             .orElseNoConsume(T_ELSE, () -> {
-                throw new SyntaxException(Set.of(T_IF), nextToken, "if stmt should start with if token");
+                throw new WrongElseStatement(nextToken);
             })
             .get();
         if (res != null)
@@ -197,7 +203,7 @@ public class Parser
         throw new UnsupportedOperationException(msg);
     }
 
-    private Statement tryParseArrayTypeOrArray() throws Exception
+    private Statement tryParseArrayTypeOrArray() throws IOException, ParsingException
     {
         if (nextToken.type() == TokenType.T_R_QAD_PARENTHESIS)
         {
@@ -210,7 +216,7 @@ public class Parser
         return arrayExpression;
     }
 
-    private Statement tryParseWithIdentifierAsFirst() throws Exception
+    private Statement tryParseWithIdentifierAsFirst() throws ParsingException, IOException
     {
         Type type = null;
         if ((type = tryParseSimpleType()) != null)
@@ -230,31 +236,30 @@ public class Parser
         return tryParseExpression();
     }
 
-    private Expression tryParseExpression() throws Exception
+    private Expression tryParseExpression() throws ParsingException, IOException
     {
         return tryEnrichExpressionWithPipe(tryParseUnpipeableExpression());
     }
 
-    private Expression tryEnrichExpressionWithPipe(Expression expression) throws Exception
+    private Expression tryEnrichExpressionWithPipe(Expression expression) throws ParsingException, IOException
     {
         while (nextToken.type() == T_OPERATOR && nextToken.value() == OperatorEnum.O_PIPE)
         {
             consumeToken();
             try
             {
-
                 final InlineFuncCall right = tryParseInlineFuncCall();
                 expression = new PipeExpression(expression, right);
             }
-            catch (SyntaxException e)
+            catch (ParsingException e)
             {
-                throw new SyntaxException(e.getRequiredTokenTypes(), e.getCurrentToken(), "inline call expected after pipe operator");
+                throw new MissingInlineCallException(nextToken);
             }
         }
         return expression;
     }
 
-    private Expression parseArrayExpressionWithCheckedFirst() throws Exception
+    private Expression parseArrayExpressionWithCheckedFirst() throws ParsingException, IOException
     {
         final var expression = tryParseExpression();
         if (nextToken.type() == T_OPERATOR && nextToken.value() == OperatorEnum.O_LIST_COMPR)
@@ -270,21 +275,14 @@ public class Parser
         while (nextToken.type() == TokenType.T_COMMA)
         {
             consumeToken();
-            try
-            {
-
-                items.add(tryParseExpression());
-            }
-            catch (SyntaxException e)
-            {
-                throw new SyntaxException(e.getRequiredTokenTypes(), e.getCurrentToken(), "no expression after comma in array expression");
-            }
+            var expr = requireExpression("array item");
+            items.add(expr);
         }
         require(TokenType.T_R_QAD_PARENTHESIS);
         return new ArrayExpression(items);
     }
 
-    private Modifier tryParseModifier() throws Exception
+    private Modifier tryParseModifier() throws ParsingException, IOException
     {
         if (nextToken.type() != TokenType.T_L_CURL_PARENTHESIS)
         {
@@ -308,16 +306,21 @@ public class Parser
         return new Modifier(modifiers);
     }
 
-    private InlineFuncCall tryParseInlineFuncCall() throws Exception
+    private InlineFuncCall tryParseInlineFuncCall() throws ParsingException, IOException
     {
         final var name = (String) require(TokenType.T_IDENTIFIER).value();
         final var arguments = new LinkedList<Expression>();
-        if (!areInlineArgumentsEnd())
+        if (nextToken.type() == T_COMMA)
+        {
+            return new InlineFuncCall(name, List.of());
+        }
+
+        if (areInlineArguments())
         {
             arguments.add(tryParseUnpipeableExpression());
         }
 
-        while (!areInlineArgumentsEnd())
+        while (areInlineArguments())
         {
             require(T_COMMA);
             arguments.add(tryParseUnpipeableExpression());
@@ -326,7 +329,7 @@ public class Parser
 
     }
 
-    private Expression tryParseUnpipeableExpression() throws Exception
+    private Expression tryParseUnpipeableExpression() throws ParsingException, IOException
     {
         var result = new Try<>(T_L_QAD_PARENTHESIS, this::parseArrayExpressionWithCheckedFirst)
             .orElseNoConsume(T_WITH, this::tryParseLambdaExpression)
@@ -361,7 +364,7 @@ public class Parser
         return tryEnrichExpressionWithModifier(expression);
     }
 
-    private Expression tryEnrichExpressionWithModifier(Expression expression) throws Exception
+    private Expression tryEnrichExpressionWithModifier(Expression expression) throws ParsingException, IOException
     {
         Modifier modifier = null;
         if ((modifier = tryParseModifier()) != null)
@@ -371,23 +374,23 @@ public class Parser
         return expression;
     }
 
-    private boolean areInlineArgumentsEnd()
+    private boolean areInlineArguments()
     {
         if (nextToken.type() == T_OPERATOR && nextToken.value() == OperatorEnum.O_PIPE)
         {
-            return true;
+            return false;
         }
-        return (nextToken.type() == T_OPERATOR && (nextToken.value() != OperatorEnum.O_NEGATE && nextToken.value() != OperatorEnum.O_PLUS
-            && nextToken.value() != OperatorEnum.O_MINUS))
-            || inlineArgumentsEnd.contains(nextToken.type());
+        return (nextToken.type() != T_OPERATOR || (nextToken.value() == OperatorEnum.O_NEGATE || nextToken.value() == OperatorEnum.O_PLUS
+            || nextToken.value() == OperatorEnum.O_MINUS))
+            && !inlineArgumentsEnd.contains(nextToken.type());
     }
 
-    private Expression tryParseAndExpression() throws Exception
+    private Expression tryParseAndExpression() throws ParsingException, IOException
     {
         return tryParseExpressionNode(this::tryParseRelExpression, Set.of(OperatorEnum.O_AND));
     }
 
-    private Expression tryParseRelExpression() throws Exception
+    private Expression tryParseRelExpression() throws ParsingException, IOException
     {
         return tryParseExpressionNode(this::tryParseAddExpression,
             Set.of(OperatorEnum.O_EQ,
@@ -398,18 +401,18 @@ public class Parser
                 OperatorEnum.O_NEQ));
     }
 
-    private Expression tryParseAddExpression() throws Exception
+    private Expression tryParseAddExpression() throws ParsingException, IOException
     {
         return tryParseExpressionNode(this::tryParseMulExpression, Set.of(OperatorEnum.O_PLUS, OperatorEnum.O_SIM, OperatorEnum.O_MINUS));
     }
 
-    private Expression tryParseMulExpression() throws Exception
+    private Expression tryParseMulExpression() throws ParsingException, IOException
     {
         return tryParseExpressionNode(this::tryParseHExpression,
             Set.of(OperatorEnum.O_MUL, OperatorEnum.O_AMPER, OperatorEnum.O_DIVIDE, OperatorEnum.O_MOD));
     }
 
-    private Expression tryParseHExpression() throws Exception
+    private Expression tryParseHExpression() throws ParsingException, IOException
     {
         final var term = tryParseExpressionNode(this::tryParseLeaf, Set.of(OperatorEnum.O_ARROW, OperatorEnum.O_POW, OperatorEnum.O_DOUBLE_GR));
         if (nextToken.type() == TokenType.T_AS)
@@ -421,7 +424,7 @@ public class Parser
         return term;
     }
 
-    private Expression tryParseLeaf() throws Exception
+    private Expression tryParseLeaf() throws ParsingException, IOException
     {
         if (currentIdentifierToken != null)
         {
@@ -444,15 +447,7 @@ public class Parser
                 return pitch;
             }
             final var expresion = tryParseExpression();
-            try
-            {
-                require(TokenType.T_R_PARENTHESIS);
-
-            }
-            catch (SyntaxException e)
-            {
-                throw new SyntaxException(e.getRequiredTokenTypes(), e.getCurrentToken(), "no closing ) parenthesis");
-            }
+            require(TokenType.T_R_PARENTHESIS);
             return expresion;
         }
 
@@ -479,7 +474,7 @@ public class Parser
         };
     }
 
-    private Expression parseVariableOrFuncCall(final String name) throws Exception
+    private Expression parseVariableOrFuncCall(final String name) throws ParsingException, IOException
     {
         if (nextToken.type() == TokenType.T_L_PARENTHESIS)
         {
@@ -489,7 +484,7 @@ public class Parser
 
     }
 
-    private ExecutionCall parseExecutionCall(final String name) throws Exception
+    private ExecutionCall parseExecutionCall(final String name) throws ParsingException, IOException
     {
         require(TokenType.T_L_PARENTHESIS);
         if (nextToken.type() == TokenType.T_R_PARENTHESIS)
@@ -508,7 +503,7 @@ public class Parser
 
     }
 
-    private List<Expression> parseArguments() throws Exception
+    private List<Expression> parseArguments() throws ParsingException, IOException
     {
         final var arguments = new LinkedList<Expression>();
         arguments.add(tryParseExpression());
@@ -521,9 +516,26 @@ public class Parser
         return arguments;
     }
 
-    private Expression tryParseExpressionNode(final Callable<Expression> nodeSuplier, final Set<OperatorEnum> operators) throws Exception
+    private Expression tryParseExpressionNode(final Callable<Expression> nodeSuplier, final Set<OperatorEnum> operators)
+        throws ParsingException, IOException
     {
-        var left = nodeSuplier.call();
+        Expression left;
+        try
+        {
+            left = nodeSuplier.call();
+        }
+        catch (SyntaxException exception)
+        {
+            throw new RequiredExpressionException(exception, "binary operator");
+        }
+        catch (ParsingException e)
+        {
+            throw e.copy();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
         while (nextToken.type() == T_OPERATOR && operators.contains((OperatorEnum) nextToken.value()))
         {
             final var currentOperator = (OperatorEnum) nextToken.value();
@@ -535,21 +547,29 @@ public class Parser
                 throw new UnsupportedOperationException(msg);
             }
             consumeToken();
+
             try
             {
                 final var right = nodeSuplier.call();
                 left = rootSuplier.get(currentOperator).apply(left, right);
-
             }
-            catch (SyntaxException e)
+            catch (SyntaxException exception)
             {
-                throw new SyntaxException(e.getRequiredTokenTypes(), e.getCurrentToken(), "right expression expected after binary operator");
+                throw new RequiredExpressionException(exception, "binary operator");
+            }
+            catch (ParsingException e)
+            {
+                throw e.copy();
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException(e);
             }
         }
         return left;
     }
 
-    private LambdaExpression tryParseLambdaExpression() throws Exception
+    private LambdaExpression tryParseLambdaExpression() throws ParsingException, IOException
     {
         if (nextToken.type() == T_WITH)
         {
@@ -563,7 +583,7 @@ public class Parser
         return null;
     }
 
-    private NoteExpression tryParseNoteExpression() throws Exception
+    private NoteExpression tryParseNoteExpression() throws ParsingException, IOException
     {
 
         consumeToken();
@@ -590,7 +610,7 @@ public class Parser
         return null;
     }
 
-    private Parameters parseParameters() throws IOException
+    private Parameters parseParameters() throws IOException, ParsingException
     {
         require(TokenType.T_L_PARENTHESIS);
         if (nextToken.type() == TokenType.T_R_PARENTHESIS)
@@ -615,24 +635,34 @@ public class Parser
 
     }
 
-    private Statement tryParseAssigment() throws Exception
+    private Statement tryParseAssigment() throws ParsingException, IOException
     {
         final var varName = currentIdentifierToken.value();
         currentIdentifierToken = null;
         final var factory = assignSupplier.get((OperatorEnum) nextToken.value());
         consumeToken();
-        try
-        {
-            return factory.apply((String) varName, tryParseExpression());
-        }
-        catch (SyntaxException e)
-        {
-            throw new SyntaxException(Set.of(), nextToken, "no expression provided to assign");
-        }
+        var expression = requireExpression("assigment");
+        return factory.apply((String) varName, expression);
 
     }
 
-    private Type tryParseType() throws IOException
+    private Expression requireExpression(String production) throws RequiredExpressionException
+    {
+        try
+        {
+            return tryParseExpression();
+        }
+        catch (ParsingException e)
+        {
+            throw new RequiredExpressionException(e, production);
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Type tryParseType() throws IOException, ParsingException
     {
         if (nextToken.type() == T_LET)
         {
@@ -658,7 +688,7 @@ public class Parser
 
     }
 
-    private Type parseLambdaType() throws IOException
+    private Type parseLambdaType() throws IOException, ParsingException
     {
         require(TokenType.T_L_PARENTHESIS);
         if (nextToken.type() == TokenType.T_R_PARENTHESIS)
@@ -696,19 +726,7 @@ public class Parser
 
     }
 
-    private Type parseArrayType() throws IOException
-    {
-        if (nextToken.type() == TokenType.T_IDENTIFIER)
-        {
-            return new ArrayType(tryParseSimpleType());
-        }
-        require(TokenType.T_L_QAD_PARENTHESIS);
-        require(TokenType.T_R_QAD_PARENTHESIS);
-        return new ArrayType(parseArrayType());
-
-    }
-
-    private Statement parseDeclaration(final Type type) throws Exception
+    private Statement parseDeclaration(final Type type) throws ParsingException, IOException
     {
         final var varName = (String) require(TokenType.T_IDENTIFIER).value();
         if (nextToken.type() == T_OPERATOR && nextToken.value() == OperatorEnum.O_ASSIGN)
@@ -720,20 +738,20 @@ public class Parser
 
     }
 
-    private Statement parseForStatemnt() throws Exception
+    private Statement parseForStatement() throws Exception
     {
         require(TokenType.T_L_PARENTHESIS);
         final var type = tryParseType();
         final var name = (String) require(TokenType.T_IDENTIFIER).value();
         require(TokenType.T_IN);
-        final var iterable = tryParseExpression();
+        final var iterable = requireExpression("for statement iterable");
         require(TokenType.T_R_PARENTHESIS);
         final var block = tryParseBlock();
         return new ForStatement(new Declaration(type, name, null), iterable, block);
 
     }
 
-    private Block tryParseBlock() throws Exception
+    private Block tryParseBlock() throws ParsingException, IOException
     {
         require(TokenType.T_L_CURL_PARENTHESIS);
         final var stms = new LinkedList<Statement>();
@@ -746,10 +764,10 @@ public class Parser
         return new Block(stms);
     }
 
-    private IfStatement parseIfStatement() throws Exception
+    private IfStatement parseIfStatement() throws ParsingException, IOException
     {
         require(TokenType.T_L_PARENTHESIS);
-        final var condition = tryParseExpression();
+        final var condition = requireExpression("if statement");
         require(TokenType.T_R_PARENTHESIS);
         final var block = tryParseBlock();
         IfStatement alternative = null;
@@ -771,7 +789,7 @@ public class Parser
 
     }
 
-    private Token require(final Set<TokenType> requiredTokenTypes, final Set<Object> requiredValue) throws IOException
+    private Token require(final Set<TokenType> requiredTokenTypes, final Set<Object> requiredValue) throws IOException, ParsingException
     {
         if (nextToken != null && requiredTokenTypes.contains(nextToken.type()))
         {
@@ -787,20 +805,25 @@ public class Parser
                 return currentToken;
             }
         }
+        if (Set.of(T_R_PARENTHESIS, T_R_QAD_PARENTHESIS, T_R_CURL_PARENTHESIS).stream()
+            .anyMatch(requiredTokenTypes::contains))
+        {
+            throw new MissingParenthesisException(requiredTokenTypes, nextToken);
+        }
         throw new SyntaxException(requiredTokenTypes, nextToken);
     }
 
-    private void require(OperatorEnum requiredValue) throws IOException
+    private void require(OperatorEnum requiredValue) throws IOException, ParsingException
     {
         require(Set.of(T_OPERATOR), Set.of(requiredValue));
     }
 
-    private Token require(final TokenType requiredTokenTypes) throws IOException
+    private Token require(final TokenType requiredTokenTypes) throws IOException, ParsingException
     {
         return require(Set.of(requiredTokenTypes), null);
     }
 
-    private Token require(final Set<TokenType> requiredTokenTypes) throws IOException
+    private Token require(final Set<TokenType> requiredTokenTypes) throws IOException, ParsingException
     {
         return require(requiredTokenTypes, null);
     }
@@ -809,12 +832,12 @@ public class Parser
     {
         private T result;
 
-        public Try(final TokenType intitToken, final Callable<T> initSupplier) throws Exception
+        public Try(final TokenType intitToken, final Callable<T> initSupplier) throws ParsingException, IOException
         {
             this.result = tryCall(Set.of(intitToken), initSupplier);
         }
 
-        private T tryCall(Set<TokenType> tokens, final Callable<T> initSupplier, boolean consume) throws Exception
+        private T tryCall(Set<TokenType> tokens, final Callable<T> initSupplier, boolean consume) throws ParsingException, IOException
         {
             if (tokens.contains(nextToken.type()))
             {
@@ -822,27 +845,38 @@ public class Parser
                 {
                     consumeToken();
                 }
-                return initSupplier.call();
+                try
+                {
+                    return initSupplier.call();
+                }
+                catch (ParsingException exception)
+                {
+                    throw new ParsingException(exception);
+                }
+                catch (Exception exception)
+                {
+                    throw new RuntimeException(exception);
+                }
             }
             return null;
         }
 
-        private T tryCall(Set<TokenType> tokens, final Callable<T> initSupplier) throws Exception
+        private T tryCall(Set<TokenType> tokens, final Callable<T> initSupplier) throws ParsingException, IOException
         {
             return tryCall(tokens, initSupplier, true);
         }
 
-        public Try<T> orElse(TokenType tokens, Callable<T> supplier) throws Exception
+        public Try<T> orElse(TokenType tokens, Callable<T> supplier) throws ParsingException, IOException
         {
             return orElse(Set.of(tokens), supplier);
         }
 
-        public Try<T> orElseNoConsume(TokenType tokens, Callable<T> supplier) throws Exception
+        public Try<T> orElseNoConsume(TokenType tokens, Callable<T> supplier) throws ParsingException, IOException
         {
             return orElseNoConsume(Set.of(tokens), supplier);
         }
 
-        public Try<T> orElse(Set<TokenType> tokens, Callable<T> supplier) throws Exception
+        public Try<T> orElse(Set<TokenType> tokens, Callable<T> supplier) throws ParsingException, IOException
         {
             if (result == null)
             {
@@ -852,7 +886,7 @@ public class Parser
             return this;
         }
 
-        public Try<T> orElseNoConsume(Set<TokenType> tokens, Callable<T> supplier) throws Exception
+        public Try<T> orElseNoConsume(Set<TokenType> tokens, Callable<T> supplier) throws ParsingException, IOException
         {
             if (result == null)
             {
