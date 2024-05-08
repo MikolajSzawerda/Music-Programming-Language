@@ -1,0 +1,343 @@
+parallerExpression:
+    sequenceExpression:
+        sequenceExpression:
+            noteExpression:
+                pitch: E
+                octave:
+                    IntLiteral: 4
+                duration: w
+            noteExpression:
+                pitch: G
+                octave:
+                    IntLiteral: 4
+                duration: w
+        noteExpression:
+            pitch: D
+            octave:
+                IntLiteral: 4
+            duration: w
+    sequenceExpression:
+        sequenceExpression:
+            noteExpression:
+                pitch: C
+                octave:
+                    IntLiteral: 4
+                duration: w
+            noteExpression:
+                pitch: D
+                octave:
+                    IntLiteral: 4
+                duration: w
+        noteExpression:
+            pitch: F
+            octave:
+                IntLiteral: 4
+            duration: w
+pipeExpression:
+    inlineFuncCall: harm
+    modifierExpression:
+        modifier:
+            name: dur
+            value:
+                noteExpression:
+                    duration: w
+            name: oct
+            value:
+                IntLiteral: 4
+        arrayExpression:
+            pipeExpression:
+                inlineFuncCall: mel
+                arrayExpression:
+                    noteExpression:
+                        pitch: E
+                    noteExpression:
+                        pitch: G
+                    noteExpression:
+                        pitch: D
+            pipeExpression:
+                inlineFuncCall: mel
+                arrayExpression:
+                    noteExpression:
+                        pitch: C
+                    noteExpression:
+                        pitch: D
+                    noteExpression:
+                        pitch: F
+declaration:
+    type: InferenceType[position=Position[line=3, characterNumber=0]]
+    name: a
+    pipeExpression:
+        inlineFuncCall: mel
+        modifierExpression:
+            modifier:
+                name: oct
+                value:
+                    IntLiteral: 4
+            arrayExpression:
+                noteExpression:
+                    pitch: E
+                noteExpression:
+                    pitch: G
+                noteExpression:
+                    pitch: D
+declaration:
+    type: InferenceType[position=Position[line=5, characterNumber=0]]
+    name: b
+    pipeExpression:
+        inlineFuncCall: track
+            arguments:
+                variableReference: Guitar
+        pipeExpression:
+            inlineFuncCall: harm
+            pipeExpression:
+                inlineFuncCall: concat
+                    arguments:
+                        variableReference: a
+                pipeExpression:
+                    inlineFuncCall: transpose
+                        arguments:
+                            minusUnaryExpression:
+                                IntLiteral: 1
+                    pipeExpression:
+                        inlineFuncCall: repeat
+                            arguments:
+                                castExpression:
+                                    type: SimpleType[type=Int, position=Position[line=6, characterNumber=22]]
+                                    floatLiteral: 2,000000
+                        variableReference: a
+declaration:
+    type: InferenceType[position=Position[line=12, characterNumber=0]]
+    name: c
+    pipeExpression:
+        inlineFuncCall: head
+            arguments:
+                plusUnaryExpression:
+                    IntLiteral: 100
+        pipeExpression:
+            inlineFuncCall: open
+                arguments:
+                    variableReference: Track
+                    IntLiteral: 0
+            stringLiter: song.mid
+declaration:
+    type: LambdaType[parameter=[SimpleType[type=Int, position=Position[line=16, characterNumber=4]], SimpleType[type=Int, position=Position[line=16, characterNumber=9]]], returnType=SimpleType[type=Int, position=Position[line=16, characterNumber=15]], position=Position[line=16, characterNumber=0]]
+    name: NWD
+assigment:
+    variable: NWD
+    lambda:
+        parameters:
+            a: SimpleType[type=Int, position=Position[line=18, characterNumber=11]]
+            b: SimpleType[type=Int, position=Position[line=18, characterNumber=18]]
+        returns: SimpleType[type=Int, position=Position[line=18, characterNumber=26]]
+        block:
+            ifStatement
+                condition:
+                    NotEqExpression:
+                        variableReference: b
+                        IntLiteral: 0
+                block:
+                    ReturnStatement:
+                        FunctionCall:
+                            name: NWD
+                            arguments:
+                                variableReference: b
+                                ModuloExpression:
+                                    variableReference: a
+                                    variableReference: b
+            ReturnStatement:
+                variableReference: a
+FunctionCall:
+    name: a
+    arguments:
+        IntLiteral: 1
+        lambda:
+            parameters:
+            returns: SimpleType[type=Int, position=Position[line=24, characterNumber=13]]
+            block:
+                FunctionCall:
+                    name: b
+                    arguments:
+                        IntLiteral: 1
+                FunctionCall:
+                    name: c
+                    arguments:
+                        IntLiteral: 2
+declaration:
+    type: InferenceType[position=Position[line=25, characterNumber=0]]
+    name: randGen
+    lambda:
+        parameters:
+            scale: SimpleType[type=Scale, position=Position[line=25, characterNumber=19]]
+            rythm: SimpleType[type=Rythm, position=Position[line=25, characterNumber=32]]
+        returns: SimpleType[type=Phrase, position=Position[line=25, characterNumber=48]]
+        block:
+            ifStatement
+                condition:
+                    OrExpression:
+                        pipeExpression:
+                            inlineFuncCall: isEmpty
+                            variableReference: scale
+                        pipeExpression:
+                            inlineFuncCall: isEmpty
+                            variableReference: rythm
+                block:
+                    pipeExpression:
+                        inlineFuncCall: panic
+                        stringLiter: Provided scale or rythm is empty
+            declaration:
+                type: InferenceType[position=Position[line=30, characterNumber=4]]
+                name: seed
+                AddExpression:
+                    ModuloExpression:
+                        MulExpression:
+                            pipeExpression:
+                                inlineFuncCall: len
+                                variableReference: scale
+                            pipeExpression:
+                                inlineFuncCall: len
+                                variableReference: rythm
+                        IntLiteral: 3
+                    IntLiteral: 1
+            declaration:
+                type: InferenceType[position=Position[line=31, characterNumber=4]]
+                name: maxLen
+                pipeExpression:
+                    inlineFuncCall: max
+                    arrayExpression:
+                        pipeExpression:
+                            inlineFuncCall: len
+                            variableReference: scale
+                        pipeExpression:
+                            inlineFuncCall: len
+                            variableReference: rythm
+            declaration:
+                type: InferenceType[position=Position[line=32, characterNumber=4]]
+                name: lowestNote
+                pipeExpression:
+                    inlineFuncCall: argmin
+                    variableReference: scale
+            declaration:
+                type: SimpleType[type=Template, position=Position[line=33, characterNumber=4]]
+                name: form
+            ForStatement:
+                declaration:
+                    type: SimpleType[type=Int, position=Position[line=34, characterNumber=8]]
+                    name: i
+                RangeExpression:
+                    IntLiteral: 1
+                    variableReference: seed
+                block:
+                    declaration:
+                        type: InferenceType[position=Position[line=35, characterNumber=8]]
+                        name: line
+                        pipeExpression:
+                            inlineFuncCall: mel
+                            ListComprehension:
+                                variableReference: dumb_temp
+                                mapper:
+                                    ModuloExpression:
+                                        FunctionCall:
+                                            name: rand
+                                            arguments:
+                                        variableReference: maxLen
+                                MulExpression:
+                                    RangeExpression:
+                                        IntLiteral: 1
+                                        AddExpression:
+                                            ModuloExpression:
+                                                FunctionCall:
+                                                    name: rand
+                                                    arguments:
+                                                IntLiteral: 4
+                                            IntLiteral: 1
+                                    variableReference: maxLen
+                    ParalerAssignStatement:
+                        variable: form
+                        variableReference: line
+            ReturnStatement:
+                MulExpression:
+                    ConvolutionExpression:
+                        variableReference: form
+                        variableReference: scale
+                    ConvolutionExpression:
+                        variableReference: form
+                        variableReference: rythm
+pipeExpression:
+    inlineFuncCall: export
+        arguments:
+            stringLiter: demo2.mid
+    pipeExpression:
+        inlineFuncCall: song
+            arguments:
+                IntLiteral: 120
+                IntLiteral: 60
+        arrayExpression:
+            pipeExpression:
+                inlineFuncCall: track
+                    arguments:
+                        variableReference: BagPipe
+                pipeExpression:
+                    inlineFuncCall: randGen
+                        arguments:
+                            arrayExpression:
+                                noteExpression:
+                                    duration: q
+                                noteExpression:
+                                    duration: w
+                                noteExpression:
+                                    duration: h
+                    pipeExpression:
+                        inlineFuncCall: track
+                            arguments:
+                                variableReference: Piano
+                                variableReference: b
+                                LambdaCall:
+                                    arguments:
+                                        noteExpression:
+                                            pitch: C
+                                            octave:
+                                                IntLiteral: 4
+                                            duration: q
+                                arrayExpression:
+                                    noteExpression:
+                                        pitch: C
+                                    noteExpression:
+                                        pitch: E
+                                    noteExpression:
+                                        pitch: G
+                        variableReference: a
+declaration:
+    type: InferenceType[position=Position[line=47, characterNumber=0]]
+    name: x2
+    AddExpression:
+        pipeExpression:
+            inlineFuncCall: len
+            pipeExpression:
+                inlineFuncCall: dot
+                    arguments:
+                        AddExpression:
+                            MinusExpression:
+                                AddExpression:
+                                    IntLiteral: 1
+                                    MulExpression:
+                                        IntLiteral: 3
+                                        PowExpression:
+                                            IntLiteral: 4
+                                            IntLiteral: 7
+                                IntLiteral: 1
+                            MulExpression:
+                                DivExpression:
+                                    IntLiteral: 3
+                                    IntLiteral: 6
+                                IntLiteral: 12
+                pipeExpression:
+                    inlineFuncCall: concat
+                        arguments:
+                            arrayExpression:
+                                IntLiteral: 3
+                                IntLiteral: 4
+                    arrayExpression:
+                        IntLiteral: 0
+                        IntLiteral: 1
+                        IntLiteral: 2
+        IntLiteral: 2

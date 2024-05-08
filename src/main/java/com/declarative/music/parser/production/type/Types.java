@@ -1,4 +1,4 @@
-package com.declarative.music.parser;
+package com.declarative.music.parser.production.type;
 
 public enum Types {
     Void,
@@ -13,5 +13,5 @@ public enum Types {
     Phrase,
     Track,
     Song,
-    LET, Template
+    Template
 }

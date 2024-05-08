@@ -1,16 +1,15 @@
 package com.declarative.music.interpreter;
 
 import com.declarative.music.parser.production.*;
+import com.declarative.music.parser.production.assign.*;
 import com.declarative.music.parser.production.expression.CastExpresion;
 import com.declarative.music.parser.production.expression.VariableReference;
-import com.declarative.music.parser.production.expression.arithmetic.AddExpression;
-import com.declarative.music.parser.production.expression.arithmetic.MinusUnaryExpression;
-import com.declarative.music.parser.production.expression.arithmetic.MulExpression;
-import com.declarative.music.parser.production.expression.arithmetic.PlusUnaryExpression;
+import com.declarative.music.parser.production.expression.arithmetic.*;
 import com.declarative.music.parser.production.expression.array.ArrayExpression;
 import com.declarative.music.parser.production.expression.array.ListComprehension;
 import com.declarative.music.parser.production.expression.array.RangeExpression;
 import com.declarative.music.parser.production.expression.lambda.FunctionCall;
+import com.declarative.music.parser.production.expression.lambda.LambdaCall;
 import com.declarative.music.parser.production.expression.lambda.LambdaExpression;
 import com.declarative.music.parser.production.expression.modifier.ModifierExpression;
 import com.declarative.music.parser.production.expression.music.ConvolutionExpression;
@@ -19,11 +18,11 @@ import com.declarative.music.parser.production.expression.music.ParallerExpressi
 import com.declarative.music.parser.production.expression.music.SequenceExpression;
 import com.declarative.music.parser.production.expression.pipe.InlineFuncCall;
 import com.declarative.music.parser.production.expression.pipe.PipeExpression;
-import com.declarative.music.parser.production.expression.relation.AndExpression;
-import com.declarative.music.parser.production.expression.relation.EqExpression;
-import com.declarative.music.parser.production.expression.relation.OrExpression;
+import com.declarative.music.parser.production.expression.relation.*;
+import com.declarative.music.parser.production.literal.BoolLiteral;
 import com.declarative.music.parser.production.literal.FloatLiteral;
 import com.declarative.music.parser.production.literal.IntLiteral;
+import com.declarative.music.parser.production.literal.StringLiter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -44,9 +43,13 @@ public class PrintVisitor implements Visitor {
         outputStream.write((indent(text) + "\n").getBytes());
     }
 
+    private void writeHeader(final Interpretable item) {
+        write("%s:".formatted(item.getClass().getSimpleName()));
+    }
+
     @Override
     public void visit(final AddExpression addExpression) {
-        write("addExpression:");
+        writeHeader(addExpression);
         indentation++;
         addExpression.left().accept(this);
         addExpression.right().accept(this);
@@ -129,7 +132,11 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final MulExpression mulExpression) {
-
+        writeHeader(mulExpression);
+        indentation++;
+        mulExpression.left().accept(this);
+        mulExpression.right().accept(this);
+        indentation--;
     }
 
     @Override
@@ -152,17 +159,38 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final ListComprehension listComprehension) {
-
+        writeHeader(listComprehension);
+        indentation++;
+        listComprehension.tempName().accept(this);
+        write("mapper: ");
+        indentation++;
+        listComprehension.mapper().accept(this);
+        indentation--;
+        listComprehension.iterable().accept(this);
+        indentation--;
     }
 
     @Override
     public void visit(final RangeExpression rangeExpression) {
-
+        writeHeader(rangeExpression);
+        indentation++;
+        rangeExpression.start().accept(this);
+        rangeExpression.end().accept(this);
+        indentation--;
     }
 
     @Override
     public void visit(final FunctionCall functionCall) {
+        writeHeader(functionCall);
+        indentation++;
+        write("name: %s".formatted(functionCall.name()));
+        write("arguments:");
+        indentation++;
 
+        for (final var expr : functionCall.arguments()) {
+            expr.accept(this);
+        }
+        indentation -= 2;
     }
 
     @Override
@@ -187,7 +215,11 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final ConvolutionExpression convolutionExpression) {
-
+        writeHeader(convolutionExpression);
+        indentation++;
+        convolutionExpression.left().accept(this);
+        convolutionExpression.right().accept(this);
+        indentation--;
     }
 
     @Override
@@ -235,17 +267,29 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final AndExpression andExpression) {
-
+        writeHeader(andExpression);
+        indentation++;
+        andExpression.left().accept(this);
+        andExpression.right().accept(this);
+        indentation--;
     }
 
     @Override
     public void visit(final EqExpression eqExpression) {
-
+        writeHeader(eqExpression);
+        indentation++;
+        eqExpression.left().accept(this);
+        eqExpression.right().accept(this);
+        indentation--;
     }
 
     @Override
     public void visit(final OrExpression orExpression) {
-
+        writeHeader(orExpression);
+        indentation++;
+        orExpression.left().accept(this);
+        orExpression.right().accept(this);
+        indentation--;
     }
 
     @Override
@@ -288,5 +332,191 @@ public class PrintVisitor implements Visitor {
     @Override
     public void visit(final FloatLiteral floatLiteral) {
         write("floatLiteral: %f".formatted(floatLiteral.value()));
+    }
+
+    private void writeAssigmentStatement(final AssignStmt statement) {
+        writeHeader(statement);
+        indentation++;
+        write("variable: %s".formatted(statement.identifier()));
+        statement.value().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final DivAssignStatement divAssignStatement) {
+        writeAssigmentStatement(divAssignStatement);
+    }
+
+    @Override
+    public void visit(final MinusAssignStatement minusAssignStatement) {
+        writeAssigmentStatement(minusAssignStatement);
+
+    }
+
+    @Override
+    public void visit(final ModuloAssignStatement moduloAssignStatement) {
+        writeAssigmentStatement(moduloAssignStatement);
+
+    }
+
+    @Override
+    public void visit(final MulAssignStatement mulAssignStatement) {
+        writeAssigmentStatement(mulAssignStatement);
+
+    }
+
+    @Override
+    public void visit(final ParalerAssignStatement paralerAssignStatement) {
+        writeAssigmentStatement(paralerAssignStatement);
+
+    }
+
+    @Override
+    public void visit(final PlusAssignStatement plusAssignStatement) {
+        writeAssigmentStatement(plusAssignStatement);
+
+    }
+
+    @Override
+    public void visit(final PowAssignStatement powAssignStatement) {
+        writeAssigmentStatement(powAssignStatement);
+
+    }
+
+    @Override
+    public void visit(final SequenceAssignStatement sequenceAssignStatement) {
+        writeAssigmentStatement(sequenceAssignStatement);
+
+    }
+
+    @Override
+    public void visit(final DivExpression divExpression) {
+        writeHeader(divExpression);
+        indentation++;
+        divExpression.left().accept(this);
+        divExpression.right().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final MinusExpression minusExpression) {
+        writeHeader(minusExpression);
+        indentation++;
+        minusExpression.left().accept(this);
+        minusExpression.right().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final ModuloExpression moduloExpression) {
+        writeHeader(moduloExpression);
+        indentation++;
+        moduloExpression.left().accept(this);
+        moduloExpression.right().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final PowExpression powExpression) {
+        writeHeader(powExpression);
+        indentation++;
+        powExpression.left().accept(this);
+        powExpression.right().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final LambdaCall lambdaCall) {
+        writeHeader(lambdaCall);
+        indentation++;
+        write("arguments:");
+        indentation++;
+
+        for (final var expr : lambdaCall.arguments()) {
+            expr.accept(this);
+        }
+        indentation -= 2;
+    }
+
+    @Override
+    public void visit(final GreaterEqExpression greaterEqExpression) {
+        writeHeader(greaterEqExpression);
+        indentation++;
+        greaterEqExpression.left().accept(this);
+        greaterEqExpression.right().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final GreaterExpression greaterExpression) {
+        writeHeader(greaterExpression);
+        indentation++;
+        greaterExpression.left().accept(this);
+        greaterExpression.right().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final LessEqExpression lessEqExpression) {
+        writeHeader(lessEqExpression);
+        indentation++;
+        lessEqExpression.left().accept(this);
+        lessEqExpression.right().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final LessExpression lessExpression) {
+        writeHeader(lessExpression);
+        indentation++;
+        lessExpression.left().accept(this);
+        lessExpression.right().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final NegateExpression negateExpression) {
+        writeHeader(negateExpression);
+        indentation++;
+        negateExpression.accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final NotEqExpression notEqExpression) {
+        writeHeader(notEqExpression);
+        indentation++;
+        notEqExpression.left().accept(this);
+        notEqExpression.right().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final BoolLiteral boolLiteral) {
+        write("boolLiteral: %s".formatted(boolLiteral.value()));
+    }
+
+    @Override
+    public void visit(final StringLiter stringLiter) {
+        write("stringLiter: %s".formatted(stringLiter.value()));
+
+    }
+
+    @Override
+    public void visit(final ForStatement forStatement) {
+        writeHeader(forStatement);
+        indentation++;
+        forStatement.declaration().accept(this);
+        forStatement.iterable().accept(this);
+        forStatement.instructions().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final ReturnStatement returnStatement) {
+        writeHeader(returnStatement);
+        indentation++;
+        returnStatement.value().accept(this);
+        indentation--;
     }
 }

@@ -1,4 +1,6 @@
 package com.declarative.music.parser.production.type;
 
-public record ArrayType(Type arrayType) implements Type {
+import com.declarative.music.lexer.token.Position;
+
+public record ArrayType(Type arrayType, Position position) implements Type {
 }
