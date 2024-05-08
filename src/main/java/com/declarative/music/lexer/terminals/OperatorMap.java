@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import java.util.Map;
 import java.util.Optional;
 
+
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class OperatorMap {
     private static final Map<String, OperatorEnum> operators = Map.ofEntries(
@@ -33,7 +34,10 @@ public class OperatorMap {
             Map.entry("!=", OperatorEnum.O_NEQ),
             Map.entry("+", OperatorEnum.O_PLUS),
             Map.entry("-", OperatorEnum.O_MINUS),
+            Map.entry("/=", OperatorEnum.O_DIVIDE_ASSIGN),
             Map.entry("|", OperatorEnum.O_SIM),
+            Map.entry("|=", OperatorEnum.O_SIM_ASSIGN),
+            Map.entry("!", OperatorEnum.O_NEGATE),
             Map.entry("+=", OperatorEnum.O_PLUS_ASSIGN));
 
     public static Optional<OperatorEnum> getOperator(final String operator) {

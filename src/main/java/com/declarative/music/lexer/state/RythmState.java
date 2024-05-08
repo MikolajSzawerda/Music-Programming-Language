@@ -22,7 +22,10 @@ public class RythmState extends LexerState {
         var nextChar = lexerContext.getNextStreamChar();
         var readChar = (char) nextChar;
         if (currentChar == 'd' && readChar != 'l') {
-            tokenBuilder.append(readChar);
+            if (Character.isLetterOrDigit(readChar)) {
+                tokenBuilder.append(readChar);
+                lexerContext.getNextStreamChar();
+            }
             lexerContext.stateTransition(new IdentifierState(lexerContext, tokenBuilder));
             return null;
         }

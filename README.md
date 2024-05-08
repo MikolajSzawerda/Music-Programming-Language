@@ -77,9 +77,9 @@ let x2 = ([0, 1, 2] |> concat [3,4] |> dot (1+3*4^7-*1+3/6*12) |>len)+2;
 ## EBNF
 
 ```
-Program             := {Statement ";"};
-Statement           := DeclOrAssig |
-                       Expression |
+Program             := {Statement};
+Statement           := DeclOrAssig  ";" |
+                       Expression  ";" |
                        IfStmt |
                        ForStmt;
 
@@ -100,12 +100,14 @@ ControlStatement    := IfStmt |
 
 PipeExpression      := "|>" inline_func_call;
 inline_func_call    := identifier [arguments_list];
-arguments_list      := Expression {"," Expression};                       
+arguments_list      := UnPipeableOrNested {"," UnPipeableOrNested};
+UnPipeableOrNested  := UnPipeableExpr | "(" Expression ")";           
 
 IfStmt              := "if" "(" Expression ")" Block ["else" IfStmt | Block];
 ForStmt             := "for" "(" Type identifier "in" Expression ")" Block;
 ReturnStmt          := "return" [Expression];
-ValueExpression     := MathExpr [ModifierExpr]  {PipeExpression}; 
+ValueExpression     := UnPipeableExpr {PipeExpression}; 
+UnPipeableExpr      := MathExpr [ModifierExpr]
 
 ModifierExpr        := "{" modifier_item {"," modifier_item } "}"; 
 modifier_item       := identifier "=" Expression; 
@@ -129,7 +131,7 @@ ComprExpr           := "<|" identifier Expression;
 Type                := LitType |
                        CpxType |
                        FuncType;
-FuncType            := "(" [type_list] ")" "->" (Type|"Void");
+FuncType            := "lam" (" [type_list] ")" "->" (Type|"Void");
 type_list           := Type {"," Type};
 
 LitType             := Int | Double |

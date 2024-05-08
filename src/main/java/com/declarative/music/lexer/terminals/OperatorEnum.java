@@ -25,6 +25,8 @@ public enum OperatorEnum {
     O_NEQ,
     O_PLUS,
     O_MINUS, O_DIVIDE,
+    O_DIVIDE_ASSIGN,
     O_SIM,
-    O_PLUS_ASSIGN
+    O_SIM_ASSIGN,
+    O_NEGATE, O_PLUS_ASSIGN
 }
