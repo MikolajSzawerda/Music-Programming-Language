@@ -64,7 +64,7 @@ pipeExpression:
                     noteExpression:
                         pitch: F
 declaration:
-    type: InferenceType[position=Position[line=3, characterNumber=0]]
+    type: inference
     name: a
     pipeExpression:
         inlineFuncCall: mel
@@ -81,7 +81,7 @@ declaration:
                 noteExpression:
                     pitch: D
 declaration:
-    type: InferenceType[position=Position[line=5, characterNumber=0]]
+    type: inference
     name: b
     pipeExpression:
         inlineFuncCall: track
@@ -102,11 +102,11 @@ declaration:
                         inlineFuncCall: repeat
                             arguments:
                                 castExpression:
-                                    type: SimpleType[type=Int, position=Position[line=6, characterNumber=22]]
+                                    type: Int
                                     floatLiteral: 2,000000
                         variableReference: a
 declaration:
-    type: InferenceType[position=Position[line=12, characterNumber=0]]
+    type: inference
     name: c
     pipeExpression:
         inlineFuncCall: head
@@ -120,15 +120,23 @@ declaration:
                     IntLiteral: 0
             stringLiter: song.mid
 declaration:
-    type: LambdaType[parameter=[SimpleType[type=Int, position=Position[line=16, characterNumber=4]], SimpleType[type=Int, position=Position[line=16, characterNumber=9]]], returnType=SimpleType[type=Int, position=Position[line=16, characterNumber=15]], position=Position[line=16, characterNumber=0]]
+    LambdaType:
+        returnType:
+            type: Int
+        parameters:
+            type: Int
+            type: Int
     name: NWD
 assigment:
     variable: NWD
     lambda:
         parameters:
-            a: SimpleType[type=Int, position=Position[line=18, characterNumber=11]]
-            b: SimpleType[type=Int, position=Position[line=18, characterNumber=18]]
-        returns: SimpleType[type=Int, position=Position[line=18, characterNumber=26]]
+            name: a
+            type: Int
+            name: b
+            type: Int
+        returns:
+            type: Int
         block:
             ifStatement
                 condition:
@@ -152,7 +160,8 @@ FunctionCall:
         IntLiteral: 1
         lambda:
             parameters:
-            returns: SimpleType[type=Int, position=Position[line=24, characterNumber=13]]
+            returns:
+                type: Int
             block:
                 FunctionCall:
                     name: b
@@ -163,13 +172,16 @@ FunctionCall:
                     arguments:
                         IntLiteral: 2
 declaration:
-    type: InferenceType[position=Position[line=25, characterNumber=0]]
+    type: inference
     name: randGen
     lambda:
         parameters:
-            scale: SimpleType[type=Scale, position=Position[line=25, characterNumber=19]]
-            rythm: SimpleType[type=Rythm, position=Position[line=25, characterNumber=32]]
-        returns: SimpleType[type=Phrase, position=Position[line=25, characterNumber=48]]
+            name: scale
+            type: Scale
+            name: rythm
+            type: Rythm
+        returns:
+            type: Phrase
         block:
             ifStatement
                 condition:
@@ -185,7 +197,7 @@ declaration:
                         inlineFuncCall: panic
                         stringLiter: Provided scale or rythm is empty
             declaration:
-                type: InferenceType[position=Position[line=30, characterNumber=4]]
+                type: inference
                 name: seed
                 AddExpression:
                     ModuloExpression:
@@ -199,7 +211,7 @@ declaration:
                         IntLiteral: 3
                     IntLiteral: 1
             declaration:
-                type: InferenceType[position=Position[line=31, characterNumber=4]]
+                type: inference
                 name: maxLen
                 pipeExpression:
                     inlineFuncCall: max
@@ -211,24 +223,24 @@ declaration:
                             inlineFuncCall: len
                             variableReference: rythm
             declaration:
-                type: InferenceType[position=Position[line=32, characterNumber=4]]
+                type: inference
                 name: lowestNote
                 pipeExpression:
                     inlineFuncCall: argmin
                     variableReference: scale
             declaration:
-                type: SimpleType[type=Template, position=Position[line=33, characterNumber=4]]
+                type: Template
                 name: form
             ForStatement:
                 declaration:
-                    type: SimpleType[type=Int, position=Position[line=34, characterNumber=8]]
+                    type: Int
                     name: i
                 RangeExpression:
                     IntLiteral: 1
                     variableReference: seed
                 block:
                     declaration:
-                        type: InferenceType[position=Position[line=35, characterNumber=8]]
+                        type: inference
                         name: line
                         pipeExpression:
                             inlineFuncCall: mel
@@ -240,9 +252,9 @@ declaration:
                                             name: rand
                                             arguments:
                                         variableReference: maxLen
-                                MulExpression:
-                                    RangeExpression:
-                                        IntLiteral: 1
+                                RangeExpression:
+                                    IntLiteral: 1
+                                    MulExpression:
                                         AddExpression:
                                             ModuloExpression:
                                                 FunctionCall:
@@ -250,7 +262,7 @@ declaration:
                                                     arguments:
                                                 IntLiteral: 4
                                             IntLiteral: 1
-                                    variableReference: maxLen
+                                        variableReference: maxLen
                     ParalerAssignStatement:
                         variable: form
                         variableReference: line
@@ -275,6 +287,26 @@ pipeExpression:
             pipeExpression:
                 inlineFuncCall: track
                     arguments:
+                        variableReference: Piano
+                variableReference: a
+            variableReference: b
+            LambdaCall:
+                FunctionCall:
+                    name: markov
+                    arguments:
+                        arrayExpression:
+                            stringLiter: song1.mid
+                            stringLiter: song2.mid
+                        IntLiteral: 1
+                arguments:
+                    noteExpression:
+                        pitch: C
+                        octave:
+                            IntLiteral: 4
+                        duration: q
+            pipeExpression:
+                inlineFuncCall: track
+                    arguments:
                         variableReference: BagPipe
                 pipeExpression:
                     inlineFuncCall: randGen
@@ -286,28 +318,15 @@ pipeExpression:
                                     duration: w
                                 noteExpression:
                                     duration: h
-                    pipeExpression:
-                        inlineFuncCall: track
-                            arguments:
-                                variableReference: Piano
-                                variableReference: b
-                                LambdaCall:
-                                    arguments:
-                                        noteExpression:
-                                            pitch: C
-                                            octave:
-                                                IntLiteral: 4
-                                            duration: q
-                                arrayExpression:
-                                    noteExpression:
-                                        pitch: C
-                                    noteExpression:
-                                        pitch: E
-                                    noteExpression:
-                                        pitch: G
-                        variableReference: a
+                    arrayExpression:
+                        noteExpression:
+                            pitch: C
+                        noteExpression:
+                            pitch: E
+                        noteExpression:
+                            pitch: G
 declaration:
-    type: InferenceType[position=Position[line=47, characterNumber=0]]
+    type: inference
     name: x2
     AddExpression:
         pipeExpression:

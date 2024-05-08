@@ -23,6 +23,10 @@ import com.declarative.music.parser.production.literal.BoolLiteral;
 import com.declarative.music.parser.production.literal.FloatLiteral;
 import com.declarative.music.parser.production.literal.IntLiteral;
 import com.declarative.music.parser.production.literal.StringLiter;
+import com.declarative.music.parser.production.type.ArrayType;
+import com.declarative.music.parser.production.type.InferenceType;
+import com.declarative.music.parser.production.type.LambdaType;
+import com.declarative.music.parser.production.type.SimpleType;
 
 
 public interface Visitor {
@@ -128,4 +132,12 @@ public interface Visitor {
     void visit(ForStatement forStatement);
 
     void visit(ReturnStatement returnStatement);
+
+    void visit(SimpleType simpleType);
+
+    void visit(LambdaType lambdaType);
+
+    void visit(InferenceType inferenceType);
+
+    void visit(ArrayType arrayType);
 }

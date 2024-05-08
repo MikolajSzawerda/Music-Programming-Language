@@ -40,7 +40,7 @@ let randGen = with(Scale scale, Rythm rythm) -> Phrase {
     return form>>scale*form>>rythm;
 };
     //Hello world
-[a |> track Piano, b, markov(["song1.mid", "song2.mid"], 1)((C, 4) q), [C, E, G] |> randGen [q, w, h] |> track BagPipe] |>
+[(a |> track Piano), b, markov(["song1.mid", "song2.mid"], 1)((C, 4) q), [C, E, G] |> randGen [q, w, h] |> track BagPipe] |>
     song 120, 60 |>
     export "demo2.mid";
     

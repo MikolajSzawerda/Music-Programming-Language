@@ -23,6 +23,10 @@ import com.declarative.music.parser.production.literal.BoolLiteral;
 import com.declarative.music.parser.production.literal.FloatLiteral;
 import com.declarative.music.parser.production.literal.IntLiteral;
 import com.declarative.music.parser.production.literal.StringLiter;
+import com.declarative.music.parser.production.type.ArrayType;
+import com.declarative.music.parser.production.type.InferenceType;
+import com.declarative.music.parser.production.type.LambdaType;
+import com.declarative.music.parser.production.type.SimpleType;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 
@@ -63,10 +67,14 @@ public class PrintVisitor implements Visitor {
         write("parameters:");
         indentation++;
         for (final var param : lambdaExpression.parameters().parameters()) {
-            write("%s: %s".formatted(param.name(), param.type()));
+            write("name: %s".formatted(param.name()));
+            param.type().accept(this);
         }
         indentation--;
-        write("returns: %s".formatted(lambdaExpression.returnType()));
+        write("returns:");
+        indentation++;
+        lambdaExpression.returnType().accept(this);
+        indentation--;
         lambdaExpression.instructions().accept(this);
         indentation--;
     }
@@ -92,7 +100,7 @@ public class PrintVisitor implements Visitor {
     public void visit(final Declaration declaration) {
         write("declaration:");
         indentation++;
-        write("type: %s".formatted(declaration.type()));
+        declaration.type().accept(this);
         write("name: %s".formatted(declaration.name()));
         if (declaration.value() == null) {
             indentation--;
@@ -296,7 +304,7 @@ public class PrintVisitor implements Visitor {
     public void visit(final CastExpresion castExpresion) {
         write("castExpression:");
         indentation++;
-        write("type: %s".formatted(castExpresion.type()));
+        castExpresion.type().accept(this);
         castExpresion.value().accept(this);
         indentation--;
     }
@@ -429,6 +437,7 @@ public class PrintVisitor implements Visitor {
     public void visit(final LambdaCall lambdaCall) {
         writeHeader(lambdaCall);
         indentation++;
+        lambdaCall.call().accept(this);
         write("arguments:");
         indentation++;
 
@@ -517,6 +526,40 @@ public class PrintVisitor implements Visitor {
         writeHeader(returnStatement);
         indentation++;
         returnStatement.value().accept(this);
+        indentation--;
+    }
+
+    @Override
+    public void visit(final SimpleType simpleType) {
+        write("type: %s".formatted(simpleType.type().name()));
+    }
+
+    @Override
+    public void visit(final LambdaType lambdaType) {
+        writeHeader(lambdaType);
+        indentation++;
+        write("returnType:");
+        indentation++;
+        lambdaType.returnType().accept(this);
+        indentation--;
+        write("parameters:");
+        indentation++;
+        for (final var t : lambdaType.parameter()) {
+            t.accept(this);
+        }
+        indentation -= 2;
+    }
+
+    @Override
+    public void visit(final InferenceType inferenceType) {
+        write("type: inference");
+    }
+
+    @Override
+    public void visit(final ArrayType arrayType) {
+        writeHeader(arrayType);
+        indentation++;
+        arrayType.accept(this);
         indentation--;
     }
 }

@@ -298,7 +298,7 @@ public class Parser {
                         OperatorEnum.O_LESS,
                         OperatorEnum.O_LESS_EQ,
                         OperatorEnum.O_GREATER,
-                        OperatorEnum.O_NEQ));
+                        OperatorEnum.O_NEQ, OperatorEnum.O_ARROW));
     }
 
     private Expression tryParseAddExpression() throws ParsingException, IOException {
@@ -311,7 +311,7 @@ public class Parser {
     }
 
     private Expression tryParseHExpression() throws ParsingException, IOException {
-        final var term = tryParseExpressionNode(this::tryParseLeaf, Set.of(OperatorEnum.O_ARROW, OperatorEnum.O_POW, OperatorEnum.O_DOUBLE_GR));
+        final var term = tryParseExpressionNode(this::tryParseLeaf, Set.of(OperatorEnum.O_POW, OperatorEnum.O_DOUBLE_GR));
         if (nextToken.type() == TokenType.T_AS) {
             final var position = nextToken.position();
             consumeToken();
