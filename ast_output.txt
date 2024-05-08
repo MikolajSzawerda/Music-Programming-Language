@@ -1,135 +1,135 @@
-parallerExpression:
-    sequenceExpression:
-        sequenceExpression:
-            noteExpression:
+ParallerExpression[l=0,c=1]:
+    SequenceExpression[l=0,c=1]:
+        SequenceExpression[l=0,c=1]:
+            NoteExpression[l=0,c=1]:
                 pitch: E
                 octave:
-                    IntLiteral: 4
+                    IntLiteral[l=0,c=5]: 4
                 duration: w
-            noteExpression:
+            NoteExpression[l=0,c=12]:
                 pitch: G
                 octave:
-                    IntLiteral: 4
+                    IntLiteral[l=0,c=16]: 4
                 duration: w
-        noteExpression:
+        NoteExpression[l=0,c=23]:
             pitch: D
             octave:
-                IntLiteral: 4
+                IntLiteral[l=0,c=27]: 4
             duration: w
-    sequenceExpression:
-        sequenceExpression:
-            noteExpression:
+    SequenceExpression[l=0,c=36]:
+        SequenceExpression[l=0,c=36]:
+            NoteExpression[l=0,c=36]:
                 pitch: C
                 octave:
-                    IntLiteral: 4
+                    IntLiteral[l=0,c=40]: 4
                 duration: w
-            noteExpression:
+            NoteExpression[l=0,c=47]:
                 pitch: D
                 octave:
-                    IntLiteral: 4
+                    IntLiteral[l=0,c=51]: 4
                 duration: w
-        noteExpression:
+        NoteExpression[l=0,c=58]:
             pitch: F
             octave:
-                IntLiteral: 4
+                IntLiteral[l=0,c=62]: 4
             duration: w
-pipeExpression:
+PipeExpression[l=1,c=0]:
     inlineFuncCall: harm
-    modifierExpression:
+    ModifierExpression[l=1,c=0]:
         modifier:
             name: dur
             value:
-                noteExpression:
+                NoteExpression[l=1,c=45]:
                     duration: w
             name: oct
             value:
-                IntLiteral: 4
-        arrayExpression:
-            pipeExpression:
+                IntLiteral[l=1,c=52]: 4
+        ArrayExpression[l=1,c=0]:
+            PipeExpression[l=1,c=2]:
                 inlineFuncCall: mel
-                arrayExpression:
-                    noteExpression:
+                ArrayExpression[l=1,c=2]:
+                    NoteExpression[l=1,c=3]:
                         pitch: E
-                    noteExpression:
+                    NoteExpression[l=1,c=6]:
                         pitch: G
-                    noteExpression:
+                    NoteExpression[l=1,c=9]:
                         pitch: D
-            pipeExpression:
+            PipeExpression[l=1,c=22]:
                 inlineFuncCall: mel
-                arrayExpression:
-                    noteExpression:
+                ArrayExpression[l=1,c=22]:
+                    NoteExpression[l=1,c=23]:
                         pitch: C
-                    noteExpression:
+                    NoteExpression[l=1,c=26]:
                         pitch: D
-                    noteExpression:
+                    NoteExpression[l=1,c=29]:
                         pitch: F
-declaration:
+Declaration[l=3,c=0]:
     type: inference
     name: a
-    pipeExpression:
+    PipeExpression[l=3,c=8]:
         inlineFuncCall: mel
-        modifierExpression:
+        ModifierExpression[l=3,c=8]:
             modifier:
                 name: oct
                 value:
-                    IntLiteral: 4
-            arrayExpression:
-                noteExpression:
+                    IntLiteral[l=3,c=22]: 4
+            ArrayExpression[l=3,c=8]:
+                NoteExpression[l=3,c=9]:
                     pitch: E
-                noteExpression:
+                NoteExpression[l=3,c=12]:
                     pitch: G
-                noteExpression:
+                NoteExpression[l=3,c=15]:
                     pitch: D
-declaration:
+Declaration[l=5,c=0]:
     type: inference
     name: b
-    pipeExpression:
+    PipeExpression[l=5,c=8]:
         inlineFuncCall: track
             arguments:
-                variableReference: Guitar
-        pipeExpression:
+                variableReference[l=10,c=14]: Guitar
+        PipeExpression[l=5,c=8]:
             inlineFuncCall: harm
-            pipeExpression:
+            PipeExpression[l=5,c=8]:
                 inlineFuncCall: concat
                     arguments:
-                        variableReference: a
-                pipeExpression:
+                        variableReference[l=8,c=15]: a
+                PipeExpression[l=5,c=8]:
                     inlineFuncCall: transpose
                         arguments:
-                            minusUnaryExpression:
-                                IntLiteral: 1
-                    pipeExpression:
+                            MinusUnaryExpression[l=7,c=19]:
+                                IntLiteral[l=7,c=19]: 1
+                    PipeExpression[l=5,c=8]:
                         inlineFuncCall: repeat
                             arguments:
-                                castExpression:
+                                CastExpresion[l=6,c=19]:
                                     type: Int
                                     floatLiteral: 2,000000
-                        variableReference: a
-declaration:
+                        variableReference[l=5,c=8]: a
+Declaration[l=12,c=0]:
     type: inference
     name: c
-    pipeExpression:
+    PipeExpression[l=12,c=8]:
         inlineFuncCall: head
             arguments:
-                plusUnaryExpression:
-                    IntLiteral: 100
-        pipeExpression:
+                PlusUnaryExpression[l=14,c=13]:
+                    IntLiteral[l=14,c=13]: 100
+        PipeExpression[l=12,c=8]:
             inlineFuncCall: open
                 arguments:
-                    variableReference: Track
-                    IntLiteral: 0
+                    variableReference[l=13,c=13]: Track
+                    IntLiteral[l=13,c=20]: 0
             stringLiter: song.mid
-declaration:
-    LambdaType:
+Declaration[l=16,c=0]:
+    LambdaType[l=16,c=0]:
         returnType:
             type: Int
         parameters:
             type: Int
             type: Int
     name: NWD
-assigment:
+AssigmentStatement[l=18,c=0]:
     variable: NWD
-    lambda:
+    LambdaExpression[l=18,c=6]:
         parameters:
             name: a
             type: Int
@@ -137,44 +137,44 @@ assigment:
             type: Int
         returns:
             type: Int
-        block:
-            ifStatement
+        Block[l=18,c=30]:
+            IfStatement[l=19,c=4]:
                 condition:
-                    NotEqExpression:
-                        variableReference: b
-                        IntLiteral: 0
-                block:
-                    ReturnStatement:
-                        FunctionCall:
+                    NotEqExpression[l=19,c=7]:
+                        variableReference[l=19,c=7]: b
+                        IntLiteral[l=19,c=10]: 0
+                Block[l=19,c=12]:
+                    ReturnStatement[l=20,c=8]:
+                        FunctionCall[l=20,c=15]:
                             name: NWD
                             arguments:
-                                variableReference: b
-                                ModuloExpression:
-                                    variableReference: a
-                                    variableReference: b
-            ReturnStatement:
-                variableReference: a
-FunctionCall:
+                                variableReference[l=20,c=19]: b
+                                ModuloExpression[l=20,c=22]:
+                                    variableReference[l=20,c=22]: a
+                                    variableReference[l=20,c=24]: b
+            ReturnStatement[l=22,c=4]:
+                variableReference[l=22,c=11]: a
+FunctionCall[l=24,c=0]:
     name: a
     arguments:
-        IntLiteral: 1
-        lambda:
+        IntLiteral[l=24,c=2]: 1
+        LambdaExpression[l=24,c=5]:
             parameters:
             returns:
                 type: Int
-            block:
-                FunctionCall:
+            Block[l=24,c=16]:
+                FunctionCall[l=24,c=17]:
                     name: b
                     arguments:
-                        IntLiteral: 1
-                FunctionCall:
+                        IntLiteral[l=24,c=19]: 1
+                FunctionCall[l=24,c=22]:
                     name: c
                     arguments:
-                        IntLiteral: 2
-declaration:
+                        IntLiteral[l=24,c=24]: 2
+Declaration[l=25,c=0]:
     type: inference
     name: randGen
-    lambda:
+    LambdaExpression[l=25,c=14]:
         parameters:
             name: scale
             type: Scale
@@ -182,181 +182,181 @@ declaration:
             type: Rythm
         returns:
             type: Phrase
-        block:
-            ifStatement
+        Block[l=25,c=55]:
+            IfStatement[l=26,c=4]:
                 condition:
-                    OrExpression:
-                        pipeExpression:
+                    OrExpression[l=26,c=8]:
+                        PipeExpression[l=26,c=8]:
                             inlineFuncCall: isEmpty
-                            variableReference: scale
-                        pipeExpression:
+                            variableReference[l=26,c=8]: scale
+                        PipeExpression[l=26,c=30]:
                             inlineFuncCall: isEmpty
-                            variableReference: rythm
-                block:
-                    pipeExpression:
+                            variableReference[l=26,c=30]: rythm
+                Block[l=26,c=48]:
+                    PipeExpression[l=27,c=8]:
                         inlineFuncCall: panic
                         stringLiter: Provided scale or rythm is empty
-            declaration:
+            Declaration[l=30,c=4]:
                 type: inference
                 name: seed
-                AddExpression:
-                    ModuloExpression:
-                        MulExpression:
-                            pipeExpression:
+                AddExpression[l=30,c=17]:
+                    ModuloExpression[l=30,c=17]:
+                        MulExpression[l=30,c=17]:
+                            PipeExpression[l=30,c=17]:
                                 inlineFuncCall: len
-                                variableReference: scale
-                            pipeExpression:
+                                variableReference[l=30,c=17]: scale
+                            PipeExpression[l=30,c=34]:
                                 inlineFuncCall: len
-                                variableReference: rythm
-                        IntLiteral: 3
-                    IntLiteral: 1
-            declaration:
+                                variableReference[l=30,c=34]: rythm
+                        IntLiteral[l=30,c=51]: 3
+                    IntLiteral[l=30,c=53]: 1
+            Declaration[l=31,c=4]:
                 type: inference
                 name: maxLen
-                pipeExpression:
+                PipeExpression[l=31,c=17]:
                     inlineFuncCall: max
-                    arrayExpression:
-                        pipeExpression:
+                    ArrayExpression[l=31,c=17]:
+                        PipeExpression[l=31,c=19]:
                             inlineFuncCall: len
-                            variableReference: scale
-                        pipeExpression:
+                            variableReference[l=31,c=19]: scale
+                        PipeExpression[l=31,c=34]:
                             inlineFuncCall: len
-                            variableReference: rythm
-            declaration:
+                            variableReference[l=31,c=34]: rythm
+            Declaration[l=32,c=4]:
                 type: inference
                 name: lowestNote
-                pipeExpression:
+                PipeExpression[l=32,c=21]:
                     inlineFuncCall: argmin
-                    variableReference: scale
-            declaration:
+                    variableReference[l=32,c=21]: scale
+            Declaration[l=33,c=4]:
                 type: Template
                 name: form
-            ForStatement:
-                declaration:
+            ForStatement[l=36,c=8]:
+                Declaration[l=34,c=8]:
                     type: Int
                     name: i
-                RangeExpression:
-                    IntLiteral: 1
-                    variableReference: seed
-                block:
-                    declaration:
+                RangeExpression[l=34,c=17]:
+                    IntLiteral[l=34,c=17]: 1
+                    variableReference[l=34,c=20]: seed
+                Block[l=34,c=25]:
+                    Declaration[l=35,c=8]:
                         type: inference
                         name: line
-                        pipeExpression:
+                        PipeExpression[l=35,c=19]:
                             inlineFuncCall: mel
-                            ListComprehension:
-                                variableReference: dumb_temp
+                            ListComprehension[l=35,c=19]:
+                                variableReference[l=35,c=39]: dumb_temp
                                 mapper:
-                                    ModuloExpression:
-                                        FunctionCall:
+                                    ModuloExpression[l=35,c=20]:
+                                        FunctionCall[l=35,c=20]:
                                             name: rand
                                             arguments:
-                                        variableReference: maxLen
-                                RangeExpression:
-                                    IntLiteral: 1
-                                    MulExpression:
-                                        AddExpression:
-                                            ModuloExpression:
-                                                FunctionCall:
+                                        variableReference[l=35,c=29]: maxLen
+                                RangeExpression[l=35,c=49]:
+                                    IntLiteral[l=35,c=49]: 1
+                                    MulExpression[l=35,c=53]:
+                                        AddExpression[l=35,c=53]:
+                                            ModuloExpression[l=35,c=53]:
+                                                FunctionCall[l=35,c=53]:
                                                     name: rand
                                                     arguments:
-                                                IntLiteral: 4
-                                            IntLiteral: 1
-                                        variableReference: maxLen
-                    ParalerAssignStatement:
+                                                IntLiteral[l=35,c=60]: 4
+                                            IntLiteral[l=35,c=62]: 1
+                                        variableReference[l=35,c=65]: maxLen
+                    ParalerAssignStatement[l=36,c=8]:
                         variable: form
-                        variableReference: line
-            ReturnStatement:
-                MulExpression:
-                    ConvolutionExpression:
-                        variableReference: form
-                        variableReference: scale
-                    ConvolutionExpression:
-                        variableReference: form
-                        variableReference: rythm
-pipeExpression:
+                        variableReference[l=36,c=16]: line
+            ReturnStatement[l=39,c=4]:
+                MulExpression[l=39,c=11]:
+                    ConvolutionExpression[l=39,c=11]:
+                        variableReference[l=39,c=11]: form
+                        variableReference[l=39,c=17]: scale
+                    ConvolutionExpression[l=39,c=23]:
+                        variableReference[l=39,c=23]: form
+                        variableReference[l=39,c=29]: rythm
+PipeExpression[l=42,c=0]:
     inlineFuncCall: export
         arguments:
             stringLiter: demo2.mid
-    pipeExpression:
+    PipeExpression[l=42,c=0]:
         inlineFuncCall: song
             arguments:
-                IntLiteral: 120
-                IntLiteral: 60
-        arrayExpression:
-            pipeExpression:
+                IntLiteral[l=43,c=9]: 120
+                IntLiteral[l=43,c=14]: 60
+        ArrayExpression[l=42,c=0]:
+            PipeExpression[l=42,c=2]:
                 inlineFuncCall: track
                     arguments:
-                        variableReference: Piano
-                variableReference: a
-            variableReference: b
-            LambdaCall:
-                FunctionCall:
+                        variableReference[l=42,c=13]: Piano
+                variableReference[l=42,c=2]: a
+            variableReference[l=42,c=21]: b
+            LambdaCall[l=42,c=24]:
+                FunctionCall[l=42,c=24]:
                     name: markov
                     arguments:
-                        arrayExpression:
+                        ArrayExpression[l=42,c=31]:
                             stringLiter: song1.mid
                             stringLiter: song2.mid
-                        IntLiteral: 1
+                        IntLiteral[l=42,c=59]: 1
                 arguments:
-                    noteExpression:
+                    NoteExpression[l=42,c=62]:
                         pitch: C
                         octave:
-                            IntLiteral: 4
+                            IntLiteral[l=42,c=66]: 4
                         duration: q
-            pipeExpression:
+            PipeExpression[l=42,c=73]:
                 inlineFuncCall: track
                     arguments:
-                        variableReference: BagPipe
-                pipeExpression:
+                        variableReference[l=42,c=113]: BagPipe
+                PipeExpression[l=42,c=73]:
                     inlineFuncCall: randGen
                         arguments:
-                            arrayExpression:
-                                noteExpression:
+                            ArrayExpression[l=42,c=94]:
+                                NoteExpression[l=42,c=95]:
                                     duration: q
-                                noteExpression:
+                                NoteExpression[l=42,c=98]:
                                     duration: w
-                                noteExpression:
+                                NoteExpression[l=42,c=101]:
                                     duration: h
-                    arrayExpression:
-                        noteExpression:
+                    ArrayExpression[l=42,c=73]:
+                        NoteExpression[l=42,c=74]:
                             pitch: C
-                        noteExpression:
+                        NoteExpression[l=42,c=77]:
                             pitch: E
-                        noteExpression:
+                        NoteExpression[l=42,c=80]:
                             pitch: G
-declaration:
+Declaration[l=47,c=0]:
     type: inference
     name: x2
-    AddExpression:
-        pipeExpression:
+    AddExpression[l=47,c=10]:
+        PipeExpression[l=47,c=10]:
             inlineFuncCall: len
-            pipeExpression:
+            PipeExpression[l=47,c=10]:
                 inlineFuncCall: dot
                     arguments:
-                        AddExpression:
-                            MinusExpression:
-                                AddExpression:
-                                    IntLiteral: 1
-                                    MulExpression:
-                                        IntLiteral: 3
-                                        PowExpression:
-                                            IntLiteral: 4
-                                            IntLiteral: 7
-                                IntLiteral: 1
-                            MulExpression:
-                                DivExpression:
-                                    IntLiteral: 3
-                                    IntLiteral: 6
-                                IntLiteral: 12
-                pipeExpression:
+                        AddExpression[l=47,c=44]:
+                            MinusExpression[l=47,c=44]:
+                                AddExpression[l=47,c=44]:
+                                    IntLiteral[l=47,c=44]: 1
+                                    MulExpression[l=47,c=46]:
+                                        IntLiteral[l=47,c=46]: 3
+                                        PowExpression[l=47,c=48]:
+                                            IntLiteral[l=47,c=48]: 4
+                                            IntLiteral[l=47,c=50]: 7
+                                IntLiteral[l=47,c=52]: 1
+                            MulExpression[l=47,c=54]:
+                                DivExpression[l=47,c=54]:
+                                    IntLiteral[l=47,c=54]: 3
+                                    IntLiteral[l=47,c=56]: 6
+                                IntLiteral[l=47,c=58]: 12
+                PipeExpression[l=47,c=10]:
                     inlineFuncCall: concat
                         arguments:
-                            arrayExpression:
-                                IntLiteral: 3
-                                IntLiteral: 4
-                    arrayExpression:
-                        IntLiteral: 0
-                        IntLiteral: 1
-                        IntLiteral: 2
-        IntLiteral: 2
+                            ArrayExpression[l=47,c=30]:
+                                IntLiteral[l=47,c=31]: 3
+                                IntLiteral[l=47,c=33]: 4
+                    ArrayExpression[l=47,c=10]:
+                        IntLiteral[l=47,c=11]: 0
+                        IntLiteral[l=47,c=14]: 1
+                        IntLiteral[l=47,c=17]: 2
+        IntLiteral[l=47,c=69]: 2

@@ -48,7 +48,7 @@ public class PrintVisitor implements Visitor {
     }
 
     private void writeHeader(final Interpretable item) {
-        write("%s:".formatted(item.getClass().getSimpleName()));
+        write("%s[l=%d,c=%d]:".formatted(item.getClass().getSimpleName(), item.position().line(), item.position().characterNumber()));
     }
 
     @Override
@@ -62,7 +62,7 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final LambdaExpression lambdaExpression) {
-        write("lambda:");
+        writeHeader(lambdaExpression);
         indentation++;
         write("parameters:");
         indentation++;
@@ -81,7 +81,7 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final AssigmentStatement assigmentStatement) {
-        write("assigment:");
+        writeHeader(assigmentStatement);
         indentation++;
         write("variable: %s".formatted(assigmentStatement.identifier()));
         assigmentStatement.value().accept(this);
@@ -90,7 +90,7 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final Block block) {
-        write("block:");
+        writeHeader(block);
         indentation++;
         block.statements().forEach(statement -> statement.accept(this));
         indentation--;
@@ -98,7 +98,7 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final Declaration declaration) {
-        write("declaration:");
+        writeHeader(declaration);
         indentation++;
         declaration.type().accept(this);
         write("name: %s".formatted(declaration.name()));
@@ -112,7 +112,7 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final IfStatement ifStatement) {
-        write("ifStatement");
+        writeHeader(ifStatement);
         indentation++;
         write("condition:");
         indentation++;
@@ -132,7 +132,7 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final MinusUnaryExpression minusUnaryExpression) {
-        write("minusUnaryExpression:");
+        writeHeader(minusUnaryExpression);
         indentation++;
         minusUnaryExpression.value().accept(this);
         indentation--;
@@ -149,7 +149,7 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final PlusUnaryExpression plusUnaryExpression) {
-        write("plusUnaryExpression:");
+        writeHeader(plusUnaryExpression);
         indentation++;
         plusUnaryExpression.value().accept(this);
         indentation--;
@@ -157,7 +157,7 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final ArrayExpression arrayExpression) {
-        write("arrayExpression:");
+        writeHeader(arrayExpression);
         indentation++;
         for (final var item : arrayExpression.items()) {
             item.accept(this);
@@ -203,7 +203,7 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final ModifierExpression modifierExpression) {
-        write("modifierExpression:");
+        writeHeader(modifierExpression);
         indentation++;
 
         write("modifier:");
@@ -232,7 +232,8 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final NoteExpression noteExpression) {
-        write("noteExpression:");
+        writeHeader(noteExpression);
+
         indentation++;
         if (noteExpression.pitch() != null) {
             write("pitch: %s".formatted(noteExpression.pitch()));
@@ -266,7 +267,7 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final PipeExpression pipeExpression) {
-        write("pipeExpression:");
+        writeHeader(pipeExpression);
         indentation++;
         pipeExpression.right().accept(this);
         pipeExpression.left().accept(this);
@@ -302,7 +303,7 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final CastExpresion castExpresion) {
-        write("castExpression:");
+        writeHeader(castExpresion);
         indentation++;
         castExpresion.type().accept(this);
         castExpresion.value().accept(this);
@@ -311,17 +312,21 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final VariableReference variableReference) {
-        write("variableReference: %s".formatted(variableReference.name()));
+        write("variableReference[l=%d,c=%d]: %s".formatted(variableReference.position().line(),
+                variableReference.position().characterNumber(), variableReference.name()));
     }
 
     @Override
     public void visit(final IntLiteral intLiteral) {
-        write("IntLiteral: %d".formatted(intLiteral.value()));
+        write("IntLiteral[l=%d,c=%d]: %d".formatted(
+                intLiteral.position().line(),
+                intLiteral.position().characterNumber(),
+                intLiteral.value()));
     }
 
     @Override
     public void visit(final SequenceExpression sequenceExpression) {
-        write("sequenceExpression:");
+        writeHeader(sequenceExpression);
         indentation++;
         sequenceExpression.left().accept(this);
         sequenceExpression.right().accept(this);
@@ -330,7 +335,7 @@ public class PrintVisitor implements Visitor {
 
     @Override
     public void visit(final ParallerExpression parallerExpression) {
-        write("parallerExpression:");
+        writeHeader(parallerExpression);
         indentation++;
         parallerExpression.left().accept(this);
         parallerExpression.right().accept(this);
