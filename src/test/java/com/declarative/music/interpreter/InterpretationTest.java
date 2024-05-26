@@ -10,8 +10,8 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.declarative.music.interpreter.values.IntReference;
-import com.declarative.music.interpreter.values.Reference;
+import com.declarative.music.interpreter.values.VariableReference;
+import com.declarative.music.interpreter.values.Variant;
 import com.declarative.music.lexer.token.Position;
 import com.declarative.music.parser.production.AssigmentStatement;
 import com.declarative.music.parser.production.Block;
@@ -20,7 +20,6 @@ import com.declarative.music.parser.production.IfStatement;
 import com.declarative.music.parser.production.Parameter;
 import com.declarative.music.parser.production.Parameters;
 import com.declarative.music.parser.production.ReturnStatement;
-import com.declarative.music.parser.production.expression.VariableReference;
 import com.declarative.music.parser.production.expression.arithmetic.AddExpression;
 import com.declarative.music.parser.production.expression.lambda.LambdaExpression;
 import com.declarative.music.parser.production.expression.pipe.InlineFuncCall;
@@ -36,13 +35,13 @@ import com.declarative.music.parser.production.type.Types;
 
 public class InterpretationTest
 {
-    private Interpreter tested;
+    private ValueInterpreter tested;
     private final Position POS = new Position(0, 0);
 
     @BeforeEach
     void init()
     {
-        tested = new Interpreter();
+        tested = new ValueInterpreter();
     }
 
     @Test
@@ -58,7 +57,8 @@ public class InterpretationTest
         var frame = tested.getManager().getGlobalFrame();
 
         // then
-        assertEquals(frame.getValue(variableName).map(Reference::getValue).orElseThrow(), variableValue);
+        assertEquals(frame.getValue(variableName).map(com.declarative.music.interpreter.values.VariableReference::getValue).orElseThrow(),
+            variableValue);
     }
 
     @Test
@@ -68,15 +68,15 @@ public class InterpretationTest
         var variableName = "a";
         var variableValue = 1;
         var newValue = 2;
-        var frame = new Frame(new HashMap<>(Map.of(variableName, new IntReference(variableName, variableValue))));
-        tested = new Interpreter(new ContextManager(frame));
+        var frame = new ValueFrame(new HashMap<>(Map.of(variableName, new VariableReference<Integer>(variableValue))));
+        tested = new ValueInterpreter(new ValueContextManager(frame));
         var stmt = new AssigmentStatement(variableName, new IntLiteral(newValue, POS), POS);
 
         // when
         stmt.accept(tested);
 
         // then
-        assertEquals(frame.getValue(variableName).map(Reference::getValue).orElseThrow(), newValue);
+        assertEquals(frame.getValue(variableName).map(com.declarative.music.interpreter.values.VariableReference::getValue).orElseThrow(), newValue);
     }
 
     @Test
@@ -86,8 +86,8 @@ public class InterpretationTest
         var variableName = "a";
         var variableValue = 1;
         var newValue = 2;
-        var frame = new Frame(new HashMap<>(Map.of(variableName, new IntReference(variableName, variableValue))));
-        tested = new Interpreter(new ContextManager(frame));
+        var frame = new ValueFrame(new HashMap<>(Map.of(variableName, new VariableReference<Integer>(variableValue))));
+        tested = new ValueInterpreter(new ValueContextManager(frame));
         var stmt = new IfStatement(
             new EqExpression(new IntLiteral(1, POS), new IntLiteral(1, POS)),
             new Block(List.of(new AssigmentStatement(variableName, new IntLiteral(newValue, POS), POS)), POS),
@@ -98,7 +98,7 @@ public class InterpretationTest
         stmt.accept(tested);
 
         // then
-        assertEquals(newValue, frame.getValue(variableName).map(Reference::getValue).orElseThrow());
+        assertEquals(newValue, frame.getValue(variableName).map(VariableReference::getValue).orElseThrow());
     }
 
     @Test
@@ -121,8 +121,8 @@ public class InterpretationTest
         var variableName = "a";
         var variableValue = 1;
         var newValue = "a";
-        var frame = new Frame(new HashMap<>(Map.of(variableName, new IntReference(variableName, variableValue))));
-        tested = new Interpreter(new ContextManager(frame));
+        var frame = new ValueFrame(new HashMap<>(Map.of(variableName, new VariableReference<Integer>(variableValue))));
+        tested = new ValueInterpreter(new ValueContextManager(frame));
         var stmt = new AssigmentStatement(variableName, new StringLiter(newValue, POS), POS);
 
         // when
@@ -143,7 +143,8 @@ public class InterpretationTest
         var frame = tested.getManager().getGlobalFrame();
 
         // then
-        assertEquals(frame.getValue(variableName).map(Reference::getValue).orElseThrow(), expectedValue);
+        assertEquals(frame.getValue(variableName).map(com.declarative.music.interpreter.values.VariableReference::getValue).orElseThrow(),
+            expectedValue);
     }
 
     @Test
@@ -179,19 +180,20 @@ public class InterpretationTest
     {
         // given
         var variableName = "a";
-        var lambda = new LambdaClousure(new LambdaExpression(
+        var lambda = new ValueLambdaClousure(new LambdaExpression(
             new Parameters(List.of(new Parameter(new SimpleType(Types.Int, POS), variableName))),
             new SimpleType(Types.Int, POS),
-            new Block(List.of(new ReturnStatement(new VariableReference(variableName, POS), POS)), POS),
+            new Block(List.of(new ReturnStatement(new com.declarative.music.parser.production.expression.VariableReference(variableName, POS), POS)),
+                POS),
             POS
-        ), new Frame());
-        tested.getManager().save("fun", lambda);
+        ), new ValueFrame());
+        tested.getManager().insert("fun", new Variant<>(lambda, ValueLambdaClousure.class));
         var stmt = new PipeExpression(new IntLiteral(1, POS), new InlineFuncCall("fun", List.of(), POS));
 
         // when
         stmt.accept(tested);
 
-        assertEquals(1, ((IntReference) tested.getCurrentValue()).getValue());
+        assertEquals(1, ((Variant<Integer>) tested.getCurrentValue()).value());
     }
 
 }

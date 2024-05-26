@@ -26,7 +26,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new Interpreter();
+        var interpreter = new ValueInterpreter();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -47,7 +47,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new Interpreter();
+        var interpreter = new ValueInterpreter();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -80,7 +80,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new Interpreter();
+        var interpreter = new ValueInterpreter();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -105,7 +105,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new Interpreter();
+        var interpreter = new ValueInterpreter();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -128,7 +128,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new Interpreter();
+        var interpreter = new ValueInterpreter();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -155,7 +155,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new Interpreter();
+        var interpreter = new ValueInterpreter();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -181,7 +181,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new Interpreter();
+        var interpreter = new ValueInterpreter();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -208,7 +208,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new Interpreter();
+        var interpreter = new ValueInterpreter();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -233,7 +233,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new Interpreter();
+        var interpreter = new ValueInterpreter();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -259,7 +259,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new Interpreter();
+        var interpreter = new ValueInterpreter();
         // when
         parser.parserProgram().accept(interpreter);
 
