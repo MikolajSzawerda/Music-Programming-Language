@@ -15,6 +15,7 @@ import com.declarative.music.parser.production.Block;
 import com.declarative.music.parser.production.Declaration;
 import com.declarative.music.parser.production.ForStatement;
 import com.declarative.music.parser.production.IfStatement;
+import com.declarative.music.parser.production.Parameters;
 import com.declarative.music.parser.production.Program;
 import com.declarative.music.parser.production.ReturnStatement;
 import com.declarative.music.parser.production.assign.DivAssignStatement;
@@ -26,6 +27,7 @@ import com.declarative.music.parser.production.assign.PlusAssignStatement;
 import com.declarative.music.parser.production.assign.PowAssignStatement;
 import com.declarative.music.parser.production.assign.SequenceAssignStatement;
 import com.declarative.music.parser.production.expression.CastExpresion;
+import com.declarative.music.parser.production.expression.Expression;
 import com.declarative.music.parser.production.expression.VariableReference;
 import com.declarative.music.parser.production.expression.arithmetic.AddExpression;
 import com.declarative.music.parser.production.expression.arithmetic.DivExpression;
@@ -241,16 +243,57 @@ public class Executor implements Visitor
     public void visit(final FunctionCall functionCall)
     {
         var lambda = manager.get(functionCall.name()).orElseThrow();
-        var clousure = (LambdaClousure) lambda.getValue();
-        var stmts = clousure.expression();
+        executeCall(functionCall.arguments(), (LambdaClousure) lambda.getValue());
+    }
 
-        var arguments = new HashMap<String, Variant>();
-        zip(stmts.parameters().parameters(), functionCall.arguments())
+    @Override
+    public void visit(final LambdaCall lambdaCall)
+    {
+        lambdaCall.call().accept(this);
+        var closure = currentValue.castTo(LambdaClousure.class);
+        executeCall(lambdaCall.arguments(), closure);
+
+    }
+
+    @Override
+    public void visit(final InlineFuncCall inlineFuncCall)
+    {
+        var lambda = (LambdaClousure) manager.get(inlineFuncCall.name()).orElseThrow().getValue();
+        var stmts = lambda.expression();
+        var arguments = new HashMap<String, Variant<?>>();
+        var params = stmts.parameters().parameters();
+        // TODO common logic with other calls
+        for (int i = 0; i < params.size(); i++)
+        {
+            arguments.put(params.get(i).name(), currentValue);
+            if (i < inlineFuncCall.arguments().size())
+            {
+                inlineFuncCall.arguments().get(i).accept(this);
+            }
+        }
+        manager.enterNewFrame();
+        arguments.forEach(manager::insert);
+        stmts.instructions().accept(this);
+        manager.leaveFrame();
+        returned = false;
+    }
+
+    private HashMap<String, Variant<?>> getArguments(final Parameters parameters, final List<Expression> args)
+    {
+        var arguments = new HashMap<String, Variant<?>>();
+        zip(parameters.parameters(), args)
             .forEach(entry -> {
                 entry.getValue().accept(this);
                 arguments.put(entry.getKey().name(), currentValue);
                 currentValue = null;
             });
+        return arguments;
+    }
+
+    private void executeCall(final List<Expression> args, final LambdaClousure clousure)
+    {
+        var stmts = clousure.expression();
+        final var arguments = getArguments(stmts.parameters(), args);
         manager.enterNewFrame(clousure.frame().copy());
         manager.startNewScope();
         arguments.forEach(manager::insert);
@@ -279,28 +322,6 @@ public class Executor implements Visitor
     {
         throw new UnsupportedOperationException("NoteExpression not implemented!");
 
-    }
-
-    @Override
-    public void visit(final InlineFuncCall inlineFuncCall)
-    {
-        var lambda = (LambdaClousure) manager.get(inlineFuncCall.name()).orElseThrow().getValue();
-        var stmts = lambda.expression();
-        var arguments = new HashMap<String, Variant>();
-        var params = stmts.parameters().parameters();
-        for (int i = 0; i < params.size(); i++)
-        {
-            arguments.put(params.get(i).name(), currentValue);
-            if (i < inlineFuncCall.arguments().size())
-            {
-                inlineFuncCall.arguments().get(i).accept(this);
-            }
-        }
-        manager.enterNewFrame();
-        arguments.forEach(manager::insert);
-        stmts.instructions().accept(this);
-        manager.leaveFrame();
-        returned = false;
     }
 
     @Override
@@ -457,28 +478,6 @@ public class Executor implements Visitor
     public void visit(final PowExpression powExpression)
     {
         throw new UnsupportedOperationException("PowExpression not implemented!");
-
-    }
-
-    @Override
-    public void visit(final LambdaCall lambdaCall)
-    {
-        lambdaCall.call().accept(this);
-        var closure = currentValue.castTo(LambdaClousure.class);
-        var stmts = closure.expression();
-        var arguments = new HashMap<String, Variant>();
-        zip(stmts.parameters().parameters(), lambdaCall.arguments())
-            .forEach(entry -> {
-                entry.getValue().accept(this);
-                arguments.put(entry.getKey().name(), currentValue);
-                currentValue = null;
-            });
-        manager.enterNewFrame(closure.frame());
-
-        arguments.forEach(manager::insert);
-        stmts.instructions().accept(this);
-        manager.leaveFrame();
-        returned = false;
 
     }
 
