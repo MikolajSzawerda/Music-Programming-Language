@@ -1,0 +1,25 @@
+{
+  "name": "soundtype",
+  "displayName": "SoundType",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.89.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "soundtype",
+      "aliases": ["SoundType", "soundtype"],
+      "extensions": [".st"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "soundtype",
+      "scopeName": "source.soundtype",
+      "path": "./syntaxes/soundtype.tmLanguage.json"
+    }]
+  }
+}
