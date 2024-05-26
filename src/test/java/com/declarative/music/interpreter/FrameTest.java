@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.declarative.music.interpreter.values.IntReference;
+import com.declarative.music.interpreter.values.VariableReference;
 
 
 class FrameTest
@@ -24,7 +24,7 @@ class FrameTest
         var varName = "a";
         var value = 10;
         // when
-        tested.saveValue(varName, new IntReference(value));
+        tested.saveValue(varName, new VariableReference<>(value));
 
         // then
         var varReference = tested.getValue(varName).orElseThrow();
@@ -37,11 +37,11 @@ class FrameTest
         // given
         var varName = "b";
         var value = 10;
-        tested.saveValue("a", new IntReference(1));
+        tested.saveValue("a", new VariableReference<>(1));
 
         // when
         tested.enterScope();
-        tested.saveValue(varName, new IntReference(value));
+        tested.saveValue(varName, new VariableReference<>(value));
 
         // then
         Assertions.assertEquals(tested.getValue(varName).orElseThrow().getValue(), value);
@@ -51,5 +51,4 @@ class FrameTest
         Assertions.assertFalse(tested.contains(varName));
         Assertions.assertEquals(tested.getValue("a").orElseThrow().getValue(), 1);
     }
-
 }

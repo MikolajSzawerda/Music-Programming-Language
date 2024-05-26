@@ -1,5 +1,6 @@
 package com.declarative.music.interpreter;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -10,6 +11,7 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.declarative.music.interpreter.values.LambdaClousure;
 import com.declarative.music.interpreter.values.VariableReference;
 import com.declarative.music.interpreter.values.Variant;
 import com.declarative.music.lexer.token.Position;
@@ -21,6 +23,9 @@ import com.declarative.music.parser.production.Parameter;
 import com.declarative.music.parser.production.Parameters;
 import com.declarative.music.parser.production.ReturnStatement;
 import com.declarative.music.parser.production.expression.arithmetic.AddExpression;
+import com.declarative.music.parser.production.expression.array.ArrayExpression;
+import com.declarative.music.parser.production.expression.array.ListComprehension;
+import com.declarative.music.parser.production.expression.array.RangeExpression;
 import com.declarative.music.parser.production.expression.lambda.LambdaExpression;
 import com.declarative.music.parser.production.expression.pipe.InlineFuncCall;
 import com.declarative.music.parser.production.expression.pipe.PipeExpression;
@@ -35,13 +40,13 @@ import com.declarative.music.parser.production.type.Types;
 
 public class InterpretationTest
 {
-    private ValueInterpreter tested;
+    private Executor tested;
     private final Position POS = new Position(0, 0);
 
     @BeforeEach
     void init()
     {
-        tested = new ValueInterpreter();
+        tested = new Executor();
     }
 
     @Test
@@ -68,8 +73,8 @@ public class InterpretationTest
         var variableName = "a";
         var variableValue = 1;
         var newValue = 2;
-        var frame = new ValueFrame(new HashMap<>(Map.of(variableName, new VariableReference<Integer>(variableValue))));
-        tested = new ValueInterpreter(new ValueContextManager(frame));
+        var frame = new Frame(new HashMap<>(Map.of(variableName, new VariableReference<Integer>(variableValue))));
+        tested = new Executor(new ContextManager(frame));
         var stmt = new AssigmentStatement(variableName, new IntLiteral(newValue, POS), POS);
 
         // when
@@ -86,8 +91,8 @@ public class InterpretationTest
         var variableName = "a";
         var variableValue = 1;
         var newValue = 2;
-        var frame = new ValueFrame(new HashMap<>(Map.of(variableName, new VariableReference<Integer>(variableValue))));
-        tested = new ValueInterpreter(new ValueContextManager(frame));
+        var frame = new Frame(new HashMap<>(Map.of(variableName, new VariableReference<Integer>(variableValue))));
+        tested = new Executor(new ContextManager(frame));
         var stmt = new IfStatement(
             new EqExpression(new IntLiteral(1, POS), new IntLiteral(1, POS)),
             new Block(List.of(new AssigmentStatement(variableName, new IntLiteral(newValue, POS), POS)), POS),
@@ -121,8 +126,8 @@ public class InterpretationTest
         var variableName = "a";
         var variableValue = 1;
         var newValue = "a";
-        var frame = new ValueFrame(new HashMap<>(Map.of(variableName, new VariableReference<Integer>(variableValue))));
-        tested = new ValueInterpreter(new ValueContextManager(frame));
+        var frame = new Frame(new HashMap<>(Map.of(variableName, new VariableReference<Integer>(variableValue))));
+        tested = new Executor(new ContextManager(frame));
         var stmt = new AssigmentStatement(variableName, new StringLiter(newValue, POS), POS);
 
         // when
@@ -180,20 +185,91 @@ public class InterpretationTest
     {
         // given
         var variableName = "a";
-        var lambda = new ValueLambdaClousure(new LambdaExpression(
+        var lambda = new LambdaClousure(new LambdaExpression(
             new Parameters(List.of(new Parameter(new SimpleType(Types.Int, POS), variableName))),
             new SimpleType(Types.Int, POS),
             new Block(List.of(new ReturnStatement(new com.declarative.music.parser.production.expression.VariableReference(variableName, POS), POS)),
                 POS),
             POS
-        ), new ValueFrame());
-        tested.getManager().insert("fun", new Variant<>(lambda, ValueLambdaClousure.class));
+        ), new Frame());
+        tested.getManager().insert("fun", new Variant<>(lambda, LambdaClousure.class));
         var stmt = new PipeExpression(new IntLiteral(1, POS), new InlineFuncCall("fun", List.of(), POS));
 
         // when
         stmt.accept(tested);
 
         assertEquals(1, ((Variant<Integer>) tested.getCurrentValue()).value());
+    }
+
+    @Test
+    void shouldHandleArrayExpression()
+    {
+        // given
+        var stmt = new ArrayExpression(List.of(
+            new IntLiteral(1, POS),
+            new IntLiteral(2, POS),
+            new com.declarative.music.parser.production.expression.VariableReference("a", POS)
+        ), POS);
+        tested.getManager().insert("a", new Variant<>(1, Integer.class));
+
+        // when
+        stmt.accept(tested);
+
+        // then
+        assertThat(tested.getCurrentValue().value())
+            .isEqualToComparingFieldByFieldRecursively(List.of(
+                new Variant<>(1, Integer.class),
+                new Variant<>(2, Integer.class),
+                new Variant<>(new VariableReference<>(1), VariableReference.class)
+            ));
+    }
+
+    @Test
+    void shouldHandleListComprehension_WithArrayIterable()
+    {
+        // given
+        var stmt = new ListComprehension(
+            new AddExpression(new com.declarative.music.parser.production.expression.VariableReference("x", POS), new IntLiteral(2, POS)),
+            new com.declarative.music.parser.production.expression.VariableReference("x", POS),
+            new ArrayExpression(List.of(
+                new IntLiteral(1, POS),
+                new IntLiteral(2, POS),
+                new com.declarative.music.parser.production.expression.VariableReference("a", POS)
+            ), POS), POS);
+        tested.getManager().insert("a", new Variant<>(10, Integer.class));
+
+        // when
+        stmt.accept(tested);
+
+        // then
+        assertThat(tested.getCurrentValue().value())
+            .isEqualToComparingFieldByFieldRecursively(List.of(
+                new Variant<>(3, Integer.class),
+                new Variant<>(4, Integer.class),
+                new Variant<>(12, Integer.class)
+            ));
+    }
+
+    @Test
+    void shouldHandleListComprehension()
+    {
+        // given
+        var stmt = new ListComprehension(
+            new AddExpression(new com.declarative.music.parser.production.expression.VariableReference("x", POS), new IntLiteral(2, POS)),
+            new com.declarative.music.parser.production.expression.VariableReference("x", POS),
+            new RangeExpression(new IntLiteral(1, POS), new IntLiteral(5, POS)), POS);
+
+        // when
+        stmt.accept(tested);
+
+        // then
+        assertThat(tested.getCurrentValue().value())
+            .isEqualToComparingFieldByFieldRecursively(List.of(
+                new Variant<>(3, Integer.class),
+                new Variant<>(4, Integer.class),
+                new Variant<>(5, Integer.class),
+                new Variant<>(6, Integer.class)
+            ));
     }
 
 }

@@ -1,11 +1,15 @@
 package com.declarative.music.interpreter;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.List;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import com.declarative.music.interpreter.values.Variant;
 import com.declarative.music.lexer.LexerImpl;
 import com.declarative.music.parser.Parser;
 import com.declarative.music.parser.exception.ParsingException;
@@ -26,7 +30,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new ValueInterpreter();
+        var interpreter = new Executor();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -47,7 +51,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new ValueInterpreter();
+        var interpreter = new Executor();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -80,7 +84,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new ValueInterpreter();
+        var interpreter = new Executor();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -105,7 +109,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new ValueInterpreter();
+        var interpreter = new Executor();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -128,7 +132,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new ValueInterpreter();
+        var interpreter = new Executor();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -155,7 +159,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new ValueInterpreter();
+        var interpreter = new Executor();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -181,7 +185,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new ValueInterpreter();
+        var interpreter = new Executor();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -208,7 +212,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new ValueInterpreter();
+        var interpreter = new Executor();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -233,7 +237,7 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new ValueInterpreter();
+        var interpreter = new Executor();
 
         // when
         parser.parserProgram().accept(interpreter);
@@ -259,11 +263,34 @@ public class ExecutionIntegrationTest
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
-        var interpreter = new ValueInterpreter();
+        var interpreter = new Executor();
         // when
         parser.parserProgram().accept(interpreter);
 
         // then
         Assertions.assertEquals(5, interpreter.getManager().getGlobalFrame().getValue("a").orElseThrow().getValue());
+    }
+
+    @Test
+    void shouldHanldeListComprehension() throws ParsingException, IOException
+    {
+        // given
+        final var code = """
+            let a = 10;
+            let arr = [x+2 <| x [1,2,a] ];
+            """;
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        var interpreter = new Executor();
+        // when
+        parser.parserProgram().accept(interpreter);
+
+        // then
+        assertThat(interpreter.getManager().getGlobalFrame().getValue("arr").orElseThrow().getValue())
+            .isEqualToComparingFieldByFieldRecursively(List.of(
+                new Variant<>(3, Integer.class),
+                new Variant<>(4, Integer.class),
+                new Variant<>(12, Integer.class)
+            ));
     }
 }

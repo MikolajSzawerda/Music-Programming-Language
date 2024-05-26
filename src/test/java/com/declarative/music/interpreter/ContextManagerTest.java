@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.declarative.music.interpreter.values.Variant;
+
 
 class ContextManagerTest
 {
@@ -22,7 +24,7 @@ class ContextManagerTest
         var varName = "a";
         var value = 10;
         // when
-        tested.save(varName, value);
+        tested.insert(varName, new Variant<>(value, Integer.class));
 
         // then
         var varReference = tested.get(varName).orElseThrow();
@@ -36,10 +38,10 @@ class ContextManagerTest
         var varName = "a";
         var value = 10;
         // when
-        tested.save(varName, value);
+        tested.insert(varName, new Variant<>(value, Integer.class));
         var varReference = tested.get(varName).orElseThrow();
         varReference.setValue(20);
-        tested.save(varName, 30);
+        tested.upsert(varName, new Variant<>(30, Integer.class));
 
         // then
         Assertions.assertEquals(varReference.getValue(), 30);
@@ -51,9 +53,9 @@ class ContextManagerTest
         // given
         var varName = "a";
         // when
-        tested.save(varName, 10);
+        tested.insert(varName, new Variant<>(10, Integer.class));
         tested.enterNewFrame();
-        tested.save(varName, 20);
+        tested.insert(varName, new Variant<>(20, Integer.class));
 
         // then
         var varReference = tested.get(varName).orElseThrow();
@@ -71,11 +73,11 @@ class ContextManagerTest
         var varName = "a";
 
         // when
-        tested.save(varName, 10);
+        tested.insert(varName, new Variant<>(10, Integer.class));
         tested.enterNewFrame();
-        tested.save(varName, 20);
+        tested.insert(varName, new Variant<>(20, Integer.class));
         tested.startNewScope();
-        tested.save("b", 30);
+        tested.insert("b", new Variant<>(30, Integer.class));
 
         // then
         var varReference = tested.get("b").orElseThrow();
@@ -90,5 +92,4 @@ class ContextManagerTest
         varReference = tested.get(varName).orElseThrow();
         Assertions.assertEquals(varReference.getValue(), 10);
     }
-
 }

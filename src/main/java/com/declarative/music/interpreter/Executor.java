@@ -2,10 +2,12 @@ package com.declarative.music.interpreter;
 
 import java.util.AbstractMap;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import com.declarative.music.interpreter.values.LambdaClousure;
 import com.declarative.music.interpreter.values.OperationRegistry;
 import com.declarative.music.interpreter.values.Variant;
 import com.declarative.music.parser.production.AssigmentStatement;
@@ -67,22 +69,22 @@ import com.declarative.music.parser.production.type.SimpleType;
 import lombok.Getter;
 
 
-public class ValueInterpreter implements Visitor
+public class Executor implements Visitor
 {
     @Getter
-    private final ValueContextManager manager;
+    private final ContextManager manager;
     @Getter
     private Variant<?> currentValue;
     private boolean returned = false;
 
-    public ValueInterpreter(final ValueContextManager manager)
+    public Executor(final ContextManager manager)
     {
         this.manager = manager;
     }
 
-    public ValueInterpreter()
+    public Executor()
     {
-        manager = new ValueContextManager();
+        manager = new ContextManager();
     }
 
     private final static OperationRegistry addRegistry = new OperationRegistry()
@@ -107,7 +109,7 @@ public class ValueInterpreter implements Visitor
     public void visit(final LambdaExpression lambdaExpression)
     {
         var frame = manager.getFrames().empty() ? manager.getGlobalFrame().copy() : manager.getFrames().peek().copy();
-        currentValue = new Variant<>(new ValueLambdaClousure(lambdaExpression, frame), ValueLambdaClousure.class);
+        currentValue = new Variant<>(new LambdaClousure(lambdaExpression, frame), LambdaClousure.class);
     }
 
     @Override
@@ -196,29 +198,50 @@ public class ValueInterpreter implements Visitor
     @Override
     public void visit(final ArrayExpression arrayExpression)
     {
-        throw new UnsupportedOperationException("ArrayExpression not implemented!");
+        var elements = new LinkedList<>();
+        arrayExpression.items().forEach(item -> {
+            item.accept(this);
+            elements.add(currentValue);
+        });
+        currentValue = new Variant<>(elements, List.class);
 
     }
 
     @Override
     public void visit(final ListComprehension listComprehension)
     {
-        throw new UnsupportedOperationException("ListComprehension not implemented!");
+        listComprehension.iterable().accept(this);
+        var results = new LinkedList<>();
+        var iterable = currentValue.castTo(List.class);
+        for (var i : iterable)
+        {
+            manager.startNewScope();
+            manager.insert(listComprehension.tempName().name(), (Variant<?>) i);
+            listComprehension.mapper().accept(this);
+            results.add(currentValue);
+            manager.leaveNewScope();
+        }
+        currentValue = new Variant<>(results, List.class);
 
     }
 
     @Override
     public void visit(final RangeExpression rangeExpression)
     {
-        throw new UnsupportedOperationException("RangeExpression not implemented!");
-
+        rangeExpression.start().accept(this);
+        var start = currentValue;
+        rangeExpression.end().accept(this);
+        var ints = IntStream.range(start.castTo(Integer.class), currentValue.castTo(Integer.class)).boxed()
+            .map(value -> new Variant<>(value, Integer.class))
+            .toList();
+        currentValue = new Variant<>(ints, List.class);
     }
 
     @Override
     public void visit(final FunctionCall functionCall)
     {
         var lambda = manager.get(functionCall.name()).orElseThrow();
-        var clousure = (ValueLambdaClousure) lambda.getValue();
+        var clousure = (LambdaClousure) lambda.getValue();
         var stmts = clousure.expression();
 
         var arguments = new HashMap<String, Variant>();
@@ -261,7 +284,7 @@ public class ValueInterpreter implements Visitor
     @Override
     public void visit(final InlineFuncCall inlineFuncCall)
     {
-        var lambda = (ValueLambdaClousure) manager.get(inlineFuncCall.name()).orElseThrow().getValue();
+        var lambda = (LambdaClousure) manager.get(inlineFuncCall.name()).orElseThrow().getValue();
         var stmts = lambda.expression();
         var arguments = new HashMap<String, Variant>();
         var params = stmts.parameters().parameters();
@@ -441,7 +464,7 @@ public class ValueInterpreter implements Visitor
     public void visit(final LambdaCall lambdaCall)
     {
         lambdaCall.call().accept(this);
-        var closure = currentValue.castTo(ValueLambdaClousure.class);
+        var closure = currentValue.castTo(LambdaClousure.class);
         var stmts = closure.expression();
         var arguments = new HashMap<String, Variant>();
         zip(stmts.parameters().parameters(), lambdaCall.arguments())

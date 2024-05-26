@@ -3,10 +3,8 @@ package com.declarative.music.interpreter;
 import java.util.Optional;
 import java.util.Stack;
 
-import com.declarative.music.interpreter.values.IntReference;
-import com.declarative.music.interpreter.values.LambdaReference;
-import com.declarative.music.interpreter.values.Reference;
-import com.declarative.music.interpreter.values.StringReference;
+import com.declarative.music.interpreter.values.VariableReference;
+import com.declarative.music.interpreter.values.Variant;
 
 import lombok.Getter;
 
@@ -27,78 +25,39 @@ public class ContextManager
         globalFrame = new Frame();
     }
 
-    public void save(String name, Object value)
+    public void upsert(String name, Variant<?> value)
     {
         var frame = frames.empty() ? globalFrame : frames.peek();
-        if (frame.contains(name) && frame.getValue(name).isPresent())
+        frame.getValue(name).filter(ref -> ref.getValue() != null).ifPresentOrElse(ref -> {
+            if (ref.getValue().getClass() != value.valueType())
+            {
+                throw new RuntimeException("INTERPRETATION ERROR");
+            }
+            ref.setValue(value.value());
+        }, () -> frame.saveValue(name, new VariableReference<>(value.value())));
+    }
+
+    void insert(String name, Variant<?> value)
+    {
+        var frame = frames.empty() ? globalFrame : frames.peek();
+        if (frame.scopeContains(name))
         {
-            frame.getValue(name).ifPresent(ref -> {
-                if (ref.getValue().getClass() != value.getClass())
-                {
-                    throw new RuntimeException("INTERPRETATION ERROR");
-                }
-                ref.setValue(value);
-            });
-            return;
+            throw new IllegalArgumentException("Variable name is already present in frame!");
         }
         if (value == null)
         {
             frame.saveValue(name, null);
             return;
         }
-        if (value.getClass() == Integer.class)
+        if (value.type() == VariableReference.class)
         {
-            frame.saveValue(name, new IntReference(name, (int) value));
-        }
-        else if (value.getClass() == String.class)
-        {
-            frame.saveValue(name, new StringReference(name, (String) value));
-        }
-        else if (value.getClass() == LambdaClousure.class)
-        {
-            frame.saveValue(name, new LambdaReference((LambdaClousure) value));
-        }
-        else if (value.getClass() == IntReference.class)
-        {
-            frame.saveValue(name, (IntReference) value);
-        }
-        else
-        {
-            throw new RuntimeException("INTERPRETATION ERROR unknown value");
-        }
-    }
-
-    void declare(String name, Object value)
-    {
-        var frame = frames.empty() ? globalFrame : frames.peek();
-        if (value == null)
-        {
-            frame.saveValue(name, null);
+            frame.saveValue(name, value.castTo(VariableReference.class));
             return;
         }
-        if (value.getClass() == Integer.class)
-        {
-            frame.saveValue(name, new IntReference(name, (int) value));
-        }
-        else if (value.getClass() == String.class)
-        {
-            frame.saveValue(name, new StringReference(name, (String) value));
-        }
-        else if (value.getClass() == LambdaClousure.class)
-        {
-            frame.saveValue(name, new LambdaReference((LambdaClousure) value));
-        }
-        else if (value.getClass() == IntReference.class)
-        {
-            frame.saveValue(name, (IntReference) value);
-        }
-        else
-        {
-            throw new RuntimeException("INTERPRETATION ERROR unknown value");
-        }
+        frame.saveValue(name, new VariableReference<>(value.value()));
     }
 
-    public Optional<Reference> get(String name)
+    public Optional<VariableReference> get(String name)
     {
         if (frames.empty())
         {

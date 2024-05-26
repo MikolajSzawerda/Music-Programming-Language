@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.declarative.music.interpreter.values.Reference;
+import com.declarative.music.interpreter.values.VariableReference;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,11 +15,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class Frame
 {
-    private final Map<String, Reference> variables;
+    private final Map<String, VariableReference> variables;
     private final Map<Integer, List<String>> scopes;
     private int currentScope = 0;
 
-    public Frame(final Map<String, Reference> variables)
+    public Frame(final Map<String, VariableReference> variables)
     {
         this.variables = variables;
         this.scopes = new HashMap<>();
@@ -36,22 +36,24 @@ public class Frame
         enterScope();
     }
 
-    public Optional<Reference> getValue(String name)
+    public Optional<VariableReference> getValue(String name)
     {
         return Optional.ofNullable(variables.get(name));
     }
 
     public Frame copy()
     {
+        var newScope = new HashMap<Integer, List<String>>();
+        scopes.forEach((k, v) -> newScope.put(k, new LinkedList<>(v)));
         var f = new Frame(
             new HashMap<>(variables),
-            new HashMap<>(scopes)
+            newScope
         );
         f.currentScope = Collections.max(scopes.keySet());
         return f;
     }
 
-    public void saveValue(String name, Reference value)
+    public void saveValue(String name, VariableReference value)
     {
         getValue(name).ifPresent(val -> {
             if (val.getClass() != value.getClass())
@@ -85,9 +87,9 @@ public class Frame
         return variables.containsKey(name);
     }
 
-    private record Scope(int scopeId, Reference value)
+    public boolean scopeContains(String name)
     {
-
+        return scopes.get(currentScope).contains(name);
     }
 
 }
