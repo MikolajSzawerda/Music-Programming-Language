@@ -293,4 +293,19 @@ public class ExecutionIntegrationTest
                 new Variant<>(12, Integer.class)
             ));
     }
+
+    //    @Test
+    void shouldHanldeMusicTree() throws ParsingException, IOException
+    {
+        // given
+        final var code = """
+            let music = (C, 4) q | (E, 4) q | (G, 4) q;
+            """;
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        var interpreter = new Executor();
+
+        // when
+        parser.parserProgram().accept(interpreter);
+    }
 }

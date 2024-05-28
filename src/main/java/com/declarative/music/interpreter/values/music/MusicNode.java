@@ -2,24 +2,12 @@ package com.declarative.music.interpreter.values.music;
 
 import java.util.List;
 
-import lombok.Data;
 
-
-@Data
-public class MusicNode
+public interface MusicNode
 {
-    private Note note;
-    private List<MusicNode> nexts;
+    void add(MusicNode node);
 
-    public MusicNode(Note note)
-    {
-        this.note = note;
-    }
+    List<MusicNode> getChildren();
 
-    public MusicNode addNote(Note note)
-    {
-        var node = new MusicNode(note);
-        nexts.add(node);
-        return node;
-    }
+    void collectNotes(List<Note> notes);
 }

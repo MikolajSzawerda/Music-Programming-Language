@@ -17,12 +17,17 @@ class MusicTreeTest
     }
 
     @Test
-    void shouldModelSeqenceOfNotes()
+    void shouldRepresentNoteSequence()
     {
-        var melody = List.of(
-            new Note(Pitch.C, 4, Rythm.e),
+        // given
+        var sequence = List.of(
+            new Note(Pitch.C, 4, Rythm.q),
             new Note(Pitch.E, 4, Rythm.q),
             new Note(Pitch.G, 4, Rythm.q)
         );
+
+        // when
+        tested.addSequence(sequence);
+
     }
 }
