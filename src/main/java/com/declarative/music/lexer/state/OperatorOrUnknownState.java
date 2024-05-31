@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.Set;
 
+
 public class OperatorOrUnknownState extends LexerState {
     private Position startPosition;
 
@@ -29,11 +30,12 @@ public class OperatorOrUnknownState extends LexerState {
                 .or(() -> tryBuildOperator('-', Set.of('>', '=')))
                 .or(() -> tryBuildOperator('=', Set.of('=')))
                 .or(() -> tryBuildOperator('&', Set.of('&', '=')))
-                .or(() -> tryBuildOperator('|', Set.of('>', '|')))
+                .or(() -> tryBuildOperator('|', Set.of('>', '|', '=')))
                 .or(() -> tryBuildOperator('*', Set.of('=')))
                 .or(() -> tryBuildOperator('^', Set.of('=')))
                 .or(() -> tryBuildOperator('%', Set.of('=')))
                 .or(() -> tryBuildOperator('!', Set.of('=')))
+                .or(() -> tryBuildOperator('/', Set.of('=')))
                 .or(() -> tryBuildOperator('+', Set.of('=')));
         lexerContext.stateTransition(new IdleState(lexerContext));
         return operator.orElseThrow(() -> new UnknownTokenTypeException(lexerContext.getCurrentPosition()));
@@ -60,7 +62,9 @@ public class OperatorOrUnknownState extends LexerState {
                 lexerContext.getNextStreamChar();
                 value += nextChar;
             }
-            return Optional.of(new Token(TokenType.T_OPERATOR, startPosition, OperatorMap.getOperator(value).orElseThrow(() -> new UnknownTokenTypeException(lexerContext.getCurrentPosition()))));
+            return Optional.of(new Token(TokenType.T_OPERATOR,
+                    startPosition,
+                    OperatorMap.getOperator(value).orElseThrow(() -> new UnknownTokenTypeException(lexerContext.getCurrentPosition()))));
         }
         return Optional.empty();
     }

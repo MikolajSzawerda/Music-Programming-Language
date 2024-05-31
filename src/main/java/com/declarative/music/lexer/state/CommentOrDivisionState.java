@@ -7,11 +7,11 @@ import com.declarative.music.lexer.token.TokenType;
 
 import java.io.IOException;
 
+
 public class CommentOrDivisionState extends LexerState {
     public CommentOrDivisionState(final LexerContext lexerContext) {
         super(lexerContext);
     }
-
 
     @Override
     public Token processNext() throws IOException {
@@ -23,6 +23,11 @@ public class CommentOrDivisionState extends LexerState {
             return null;
         }
         lexerContext.stateTransition(new IdleState(lexerContext));
+        if ((char) currentChar == '=') {
+            lexerContext.getNextStreamChar();
+            return new Token(TokenType.T_OPERATOR, startPosition, OperatorEnum.O_DIVIDE_ASSIGN);
+
+        }
         return new Token(TokenType.T_OPERATOR, startPosition, OperatorEnum.O_DIVIDE);
     }
 
