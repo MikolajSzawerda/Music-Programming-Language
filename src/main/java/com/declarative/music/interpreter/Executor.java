@@ -10,6 +10,10 @@ import java.util.stream.Stream;
 import com.declarative.music.interpreter.values.LambdaClousure;
 import com.declarative.music.interpreter.values.OperationRegistry;
 import com.declarative.music.interpreter.values.Variant;
+import com.declarative.music.interpreter.values.music.MusicNode;
+import com.declarative.music.interpreter.values.music.Note;
+import com.declarative.music.interpreter.values.music.Pitch;
+import com.declarative.music.interpreter.values.music.Rythm;
 import com.declarative.music.parser.production.AssigmentStatement;
 import com.declarative.music.parser.production.Block;
 import com.declarative.music.parser.production.Declaration;
@@ -320,7 +324,9 @@ public class Executor implements Visitor
     @Override
     public void visit(final NoteExpression noteExpression)
     {
-        throw new UnsupportedOperationException("NoteExpression not implemented!");
+        noteExpression.octave().accept(this);
+        var note = new Note(Pitch.valueOf(noteExpression.pitch()), currentValue.castTo(Integer.class), Rythm.valueOf(noteExpression.duration()));
+        currentValue = new Variant<>(List.of(note), List.class);
 
     }
 
@@ -378,7 +384,12 @@ public class Executor implements Visitor
     @Override
     public void visit(final SequenceExpression sequenceExpression)
     {
-        throw new UnsupportedOperationException("SequenceExpression not implemented!");
+        var results = new LinkedList<MusicNode>();
+        sequenceExpression.left().accept(this);
+        results.addAll(currentValue.castTo(List.class));
+        sequenceExpression.right().accept(this);
+        results.addAll(currentValue.castTo(List.class));
+        currentValue = new Variant<>(results, List.class);
 
     }
 

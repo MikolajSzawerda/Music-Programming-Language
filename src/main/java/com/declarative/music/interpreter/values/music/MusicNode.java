@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface MusicNode
 {
-    void add(MusicNode node);
+    MusicNode add(MusicNode node);
 
     List<MusicNode> getChildren();
 

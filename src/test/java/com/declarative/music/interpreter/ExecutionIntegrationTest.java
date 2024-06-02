@@ -294,7 +294,7 @@ public class ExecutionIntegrationTest
             ));
     }
 
-    //    @Test
+    @Test
     void shouldHanldeMusicTree() throws ParsingException, IOException
     {
         // given
@@ -307,5 +307,6 @@ public class ExecutionIntegrationTest
 
         // when
         parser.parserProgram().accept(interpreter);
+        interpreter.getCurrentValue();
     }
 }

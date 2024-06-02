@@ -8,17 +8,20 @@ import lombok.Data;
 @Data
 public class MusicTree
 {
-    private final Chord root = new Chord();
+    private Chord root = null;
 
     public void addSequence(List<Note> notes)
     {
-        var current = root;
-        for (var note : notes)
+        Chord current = root;
+        for (var note : notes.reversed())
         {
-            var newNode = new Chord();
-            newNode.add(note);
-            current.add(newNode);
-            current = newNode;
+            var newChord = new Chord(note);
+            if (current != null)
+            {
+                newChord.add(current);
+            }
+            current = newChord;
         }
+        root = current;
     }
 }

@@ -6,11 +6,13 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 
 @Data
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode
 public class Note implements MusicNode
 {
     private Pitch pitch;
@@ -18,7 +20,7 @@ public class Note implements MusicNode
     private Rythm duration;
 
     @Override
-    public void add(final MusicNode node)
+    public MusicNode add(final MusicNode node)
     {
         throw new UnsupportedOperationException("Note object doesn't contain other notes");
     }
