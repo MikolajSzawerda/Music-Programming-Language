@@ -4,5 +4,6 @@ public enum Pitch
 {
     C,
     E,
-    G
+    G,
+    D
 }
