@@ -27,6 +27,10 @@ public record Variant<T>(T value, @Getter Class<T> type)
 
     public <R> R castTo(Class<R> targetType)
     {
+        if (value instanceof VariableReference && targetType.isInstance(value()))
+        {
+            return targetType.cast(value());
+        }
         if (targetType.isInstance(value))
         {
             return targetType.cast(value);

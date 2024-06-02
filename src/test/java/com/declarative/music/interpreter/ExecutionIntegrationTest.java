@@ -310,4 +310,25 @@ public class ExecutionIntegrationTest
         parser.parserProgram().accept(interpreter);
         interpreter.getCurrentValue();
     }
+
+    @Test
+    void shouldHanldeBuiltInAtFunction() throws ParsingException, IOException
+    {
+        // given
+        final var code = """
+            let a = [1, 2, 3] |> at 1;
+            """;
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        var interpreter = new Executor();
+
+        // when
+        parser.parserProgram().accept(interpreter);
+
+        // then
+        assertThat(interpreter.getManager().getGlobalFrame().getValue("a").orElseThrow())
+            .isEqualToComparingFieldByFieldRecursively(
+                new Variant<>(2, Integer.class)
+            );
+    }
 }

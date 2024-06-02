@@ -38,6 +38,7 @@ import com.declarative.music.parser.production.expression.arithmetic.AddExpressi
 import com.declarative.music.parser.production.expression.array.ArrayExpression;
 import com.declarative.music.parser.production.expression.array.ListComprehension;
 import com.declarative.music.parser.production.expression.array.RangeExpression;
+import com.declarative.music.parser.production.expression.lambda.FunctionCall;
 import com.declarative.music.parser.production.expression.lambda.LambdaExpression;
 import com.declarative.music.parser.production.expression.music.NoteExpression;
 import com.declarative.music.parser.production.expression.music.ParallerExpression;
@@ -340,6 +341,27 @@ public class InterpretationTest
 
         // then
         assertThat(tested.getCurrentValue().value()).isEqualToComparingFieldByFieldRecursively(expectedTree);
+    }
+
+    @Test
+    void shouldHandleAtBuiltInMethod()
+    {
+        // given
+        var atFuncCall = new FunctionCall("at", List.of(
+            new com.declarative.music.parser.production.expression.VariableReference("arr", POS),
+            new IntLiteral(1, POS)
+        ), POS);
+        tested.getManager().insert("arr", new Variant<>(List.of(
+            new Variant<>(1, Integer.class),
+            new Variant<>(2, Integer.class),
+            new Variant<>(3, Integer.class)
+        ), List.class));
+
+        // when
+        atFuncCall.accept(tested);
+
+        // then
+        assertThat(tested.getCurrentValue()).isEqualTo(new Variant<>(2, Integer.class));
     }
 
 }

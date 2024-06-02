@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -22,6 +25,7 @@ import com.declarative.music.parser.production.Block;
 import com.declarative.music.parser.production.Declaration;
 import com.declarative.music.parser.production.ForStatement;
 import com.declarative.music.parser.production.IfStatement;
+import com.declarative.music.parser.production.Parameter;
 import com.declarative.music.parser.production.Parameters;
 import com.declarative.music.parser.production.Program;
 import com.declarative.music.parser.production.ReturnStatement;
@@ -74,6 +78,7 @@ import com.declarative.music.parser.production.type.ArrayType;
 import com.declarative.music.parser.production.type.InferenceType;
 import com.declarative.music.parser.production.type.LambdaType;
 import com.declarative.music.parser.production.type.SimpleType;
+import com.declarative.music.parser.production.type.Types;
 
 import lombok.Getter;
 
@@ -151,6 +156,21 @@ public class Executor implements Visitor
             c.getNodes().add(b);
             return c;
         }, Chord.class);
+
+    record BuiltInFunction(Parameters parameters, Consumer<Map<String, Variant<?>>> code)
+    {
+    }
+
+    private final Map<String, BuiltInFunction> builtinFunctions = Map.of(
+        "at", new BuiltInFunction(new Parameters(List.of(
+            new Parameter(new InferenceType(null), "array"),
+            new Parameter(new SimpleType(Types.Int, null), "index")
+        )), (arguments) -> {
+            var index = arguments.get("index").castTo(Integer.class);
+            var iterable = arguments.get("array").castTo(List.class);
+            currentValue = (Variant<?>) iterable.get(index);
+        })
+    );
 
     @Override
     public void visit(final AddExpression addExpression)
@@ -296,8 +316,16 @@ public class Executor implements Visitor
     @Override
     public void visit(final FunctionCall functionCall)
     {
-        var lambda = manager.get(functionCall.name()).orElseThrow();
-        executeCall(functionCall.arguments(), (LambdaClousure) lambda.getValue());
+        Optional.ofNullable(builtinFunctions.get(functionCall.name())).ifPresentOrElse(
+            func -> {
+                var arguments = getArguments(func.parameters(), functionCall.arguments());
+                func.code().accept(arguments);
+            },
+            () -> {
+                var lambda = manager.get(functionCall.name()).orElseThrow();
+                executeCall(functionCall.arguments(), (LambdaClousure) lambda.getValue());
+            }
+        );
     }
 
     @Override
@@ -312,24 +340,38 @@ public class Executor implements Visitor
     @Override
     public void visit(final InlineFuncCall inlineFuncCall)
     {
+        if (builtinFunctions.containsKey(inlineFuncCall.name()))
+        {
+            var func = builtinFunctions.get(inlineFuncCall.name());
+            var arguments = getInlineArguments(func.parameters.parameters(), inlineFuncCall.arguments());
+            func.code.accept(arguments);
+            return;
+        }
         var lambda = (LambdaClousure) manager.get(inlineFuncCall.name()).orElseThrow().getValue();
         var stmts = lambda.expression();
-        var arguments = new HashMap<String, Variant<?>>();
         var params = stmts.parameters().parameters();
+        var callArguments = inlineFuncCall.arguments();
         // TODO common logic with other calls
-        for (int i = 0; i < params.size(); i++)
-        {
-            arguments.put(params.get(i).name(), currentValue);
-            if (i < inlineFuncCall.arguments().size())
-            {
-                inlineFuncCall.arguments().get(i).accept(this);
-            }
-        }
+        final var arguments = getInlineArguments(params, callArguments);
         manager.enterNewFrame();
         arguments.forEach(manager::insert);
         stmts.instructions().accept(this);
         manager.leaveFrame();
         returned = false;
+    }
+
+    private HashMap<String, Variant<?>> getInlineArguments(final List<Parameter> params, final List<Expression> callArguments)
+    {
+        var arguments = new HashMap<String, Variant<?>>();
+        for (int i = 0; i < params.size(); i++)
+        {
+            arguments.put(params.get(i).name(), currentValue);
+            if (i < callArguments.size())
+            {
+                callArguments.get(i).accept(this);
+            }
+        }
+        return arguments;
     }
 
     private HashMap<String, Variant<?>> getArguments(final Parameters parameters, final List<Expression> args)
