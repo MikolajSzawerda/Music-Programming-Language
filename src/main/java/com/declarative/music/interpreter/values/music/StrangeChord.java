@@ -3,20 +3,20 @@ package com.declarative.music.interpreter.values.music;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 
 
-@RequiredArgsConstructor
-@Getter
-public class Chord implements MusicNode
+@NoArgsConstructor
+public class StrangeChord implements MusicNode
 {
-    private final List<MusicNode> nodes;
+    private MusicNode note;
 
-    public Chord()
+    public StrangeChord(final MusicNode note)
     {
-        nodes = new ArrayList<>();
+        this.note = note;
     }
+
+    private final List<MusicNode> nodes = new ArrayList<>();
 
     @Override
     public MusicNode add(final MusicNode node)
@@ -34,6 +34,6 @@ public class Chord implements MusicNode
     @Override
     public void collectNotes(final List<Note> notes)
     {
-
+        notes.forEach(node -> node.collectNotes(notes));
     }
 }

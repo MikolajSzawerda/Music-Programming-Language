@@ -4,16 +4,27 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.declarative.music.interpreter.values.LambdaClousure;
 import com.declarative.music.interpreter.values.VariableReference;
 import com.declarative.music.interpreter.values.Variant;
+import com.declarative.music.interpreter.values.music.Chord;
+import com.declarative.music.interpreter.values.music.MusicNode;
+import com.declarative.music.interpreter.values.music.Note;
+import com.declarative.music.interpreter.values.music.Phrase;
+import com.declarative.music.interpreter.values.music.Pitch;
+import com.declarative.music.interpreter.values.music.Rythm;
 import com.declarative.music.lexer.token.Position;
 import com.declarative.music.parser.production.AssigmentStatement;
 import com.declarative.music.parser.production.Block;
@@ -22,11 +33,15 @@ import com.declarative.music.parser.production.IfStatement;
 import com.declarative.music.parser.production.Parameter;
 import com.declarative.music.parser.production.Parameters;
 import com.declarative.music.parser.production.ReturnStatement;
+import com.declarative.music.parser.production.expression.Expression;
 import com.declarative.music.parser.production.expression.arithmetic.AddExpression;
 import com.declarative.music.parser.production.expression.array.ArrayExpression;
 import com.declarative.music.parser.production.expression.array.ListComprehension;
 import com.declarative.music.parser.production.expression.array.RangeExpression;
 import com.declarative.music.parser.production.expression.lambda.LambdaExpression;
+import com.declarative.music.parser.production.expression.music.NoteExpression;
+import com.declarative.music.parser.production.expression.music.ParallerExpression;
+import com.declarative.music.parser.production.expression.music.SequenceExpression;
 import com.declarative.music.parser.production.expression.pipe.InlineFuncCall;
 import com.declarative.music.parser.production.expression.pipe.PipeExpression;
 import com.declarative.music.parser.production.expression.relation.EqExpression;
@@ -41,7 +56,51 @@ import com.declarative.music.parser.production.type.Types;
 public class InterpretationTest
 {
     private Executor tested;
-    private final Position POS = new Position(0, 0);
+    private static final Position POS = new Position(0, 0);
+
+    private static SequenceExpression provideSequenceExpression()
+    {
+        return new SequenceExpression(
+            new NoteExpression("C", new IntLiteral(1, POS), "q", POS),
+            new NoteExpression("E", new IntLiteral(1, POS), "q", POS)
+        );
+    }
+
+    private static Phrase provideNoteSequence()
+    {
+        return new Phrase(List.of(
+            new Note(Pitch.C, 1, Rythm.q),
+            new Note(Pitch.E, 1, Rythm.q)
+        ));
+    }
+
+    private static ParallerExpression provideParallerExpression()
+    {
+        return new ParallerExpression(
+            new NoteExpression("C", new IntLiteral(1, POS), "q", POS),
+            new NoteExpression("E", new IntLiteral(1, POS), "q", POS)
+        );
+    }
+
+    private static Chord provideChord()
+    {
+        return new Chord(new ArrayList<>(List.of(
+            new Phrase(List.of(new Note(Pitch.C, 1, Rythm.q))),
+            new Phrase(List.of(new Note(Pitch.E, 1, Rythm.q)))
+        )));
+    }
+
+    private static Stream<Arguments> provideMusicExpressions()
+    {
+        return Stream.of(
+            Arguments.of(provideSequenceExpression(), provideNoteSequence()),
+            Arguments.of(provideParallerExpression(), provideChord()),
+            Arguments.of(new SequenceExpression(
+                provideParallerExpression(),
+                new NoteExpression("C", new IntLiteral(1, POS), "q", POS)
+            ), new Phrase(List.of(provideChord(), new Note(Pitch.C, 1, Rythm.q))))
+        );
+    }
 
     @BeforeEach
     void init()
@@ -270,6 +329,17 @@ public class InterpretationTest
                 new Variant<>(5, Integer.class),
                 new Variant<>(6, Integer.class)
             ));
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideMusicExpressions")
+    void shouldHandleMusicExpressions(Expression musicExpression, MusicNode expectedTree)
+    {
+        // when
+        musicExpression.accept(tested);
+
+        // then
+        assertThat(tested.getCurrentValue().value()).isEqualToComparingFieldByFieldRecursively(expectedTree);
     }
 
 }

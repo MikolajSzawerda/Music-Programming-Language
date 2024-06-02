@@ -299,7 +299,8 @@ public class ExecutionIntegrationTest
     {
         // given
         final var code = """
-            let music = (C, 4) q | (E, 4) q | (G, 4) q;
+            let music = ((C, 4) q | (E, 4) q | (G, 4) q) &
+            ((C, 4) q & (E, 4) q | (G, 4) q);
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);

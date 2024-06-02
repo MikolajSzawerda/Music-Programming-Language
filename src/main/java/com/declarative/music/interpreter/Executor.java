@@ -1,6 +1,7 @@
 package com.declarative.music.interpreter;
 
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -10,8 +11,10 @@ import java.util.stream.Stream;
 import com.declarative.music.interpreter.values.LambdaClousure;
 import com.declarative.music.interpreter.values.OperationRegistry;
 import com.declarative.music.interpreter.values.Variant;
+import com.declarative.music.interpreter.values.music.Chord;
 import com.declarative.music.interpreter.values.music.MusicNode;
 import com.declarative.music.interpreter.values.music.Note;
+import com.declarative.music.interpreter.values.music.Phrase;
 import com.declarative.music.interpreter.values.music.Pitch;
 import com.declarative.music.interpreter.values.music.Rythm;
 import com.declarative.music.parser.production.AssigmentStatement;
@@ -101,6 +104,53 @@ public class Executor implements Visitor
         .register(Integer.class, Integer.class, (a, b) -> a > b, Boolean.class);
     private final static OperationRegistry minusRegistry = new OperationRegistry()
         .register(Integer.class, Integer.class, (a, b) -> a - b, Integer.class);
+    private final static OperationRegistry sequenceRegistry = new OperationRegistry()
+        .register(Phrase.class, Phrase.class, (a, b) -> {
+            a.getNodes().addAll(b.getNodes());
+            return a;
+        }, Phrase.class)
+        .register(Chord.class, Phrase.class, (a, b) -> {
+            var c = new Phrase();
+            c.getNodes().add(a);
+            c.getNodes().addAll(b.getNodes());
+            return c;
+        }, Phrase.class)
+        .register(Phrase.class, Chord.class, (a, b) -> {
+            a.getNodes().add(b);
+            return a;
+        }, Phrase.class)
+        .register(Chord.class, Chord.class, (a, b) -> {
+            var c = new Phrase();
+            c.getNodes().add(a);
+            c.getNodes().add(b);
+            return c;
+        }, Phrase.class);
+
+    private final static OperationRegistry chordRegistry = new OperationRegistry()
+        .register(Chord.class, Chord.class, (a, b) -> {
+            var c = new Chord();
+            c.getNodes().add(a);
+            c.getNodes().add(b);
+            return c;
+        }, Chord.class)
+        .register(Chord.class, Phrase.class, (a, b) -> {
+            var c = new Chord();
+            c.getNodes().add(a);
+            c.getNodes().add(b);
+            return c;
+        }, Chord.class)
+        .register(Phrase.class, Chord.class, (a, b) -> {
+            var c = new Chord();
+            c.getNodes().add(a);
+            c.getNodes().add(b);
+            return c;
+        }, Chord.class)
+        .register(Phrase.class, Phrase.class, (a, b) -> {
+            var c = new Chord();
+            c.getNodes().add(a);
+            c.getNodes().add(b);
+            return c;
+        }, Chord.class);
 
     @Override
     public void visit(final AddExpression addExpression)
@@ -322,15 +372,6 @@ public class Executor implements Visitor
     }
 
     @Override
-    public void visit(final NoteExpression noteExpression)
-    {
-        noteExpression.octave().accept(this);
-        var note = new Note(Pitch.valueOf(noteExpression.pitch()), currentValue.castTo(Integer.class), Rythm.valueOf(noteExpression.duration()));
-        currentValue = new Variant<>(List.of(note), List.class);
-
-    }
-
-    @Override
     public void visit(final PipeExpression pipeExpression)
     {
         pipeExpression.left().accept(this);
@@ -382,22 +423,30 @@ public class Executor implements Visitor
     }
 
     @Override
+    public void visit(final NoteExpression noteExpression)
+    {
+        noteExpression.octave().accept(this);
+        var note = new Note(Pitch.valueOf(noteExpression.pitch()), currentValue.castTo(Integer.class), Rythm.valueOf(noteExpression.duration()));
+        currentValue = new Variant<>(new Phrase(new ArrayList<MusicNode>(List.of(note))), Phrase.class);
+
+    }
+
+    @Override
     public void visit(final SequenceExpression sequenceExpression)
     {
-        var results = new LinkedList<MusicNode>();
         sequenceExpression.left().accept(this);
-        results.addAll(currentValue.castTo(List.class));
+        var left = currentValue;
         sequenceExpression.right().accept(this);
-        results.addAll(currentValue.castTo(List.class));
-        currentValue = new Variant<>(results, List.class);
-
+        currentValue = sequenceRegistry.apply("seq", left, currentValue);
     }
 
     @Override
     public void visit(final ParallerExpression parallerExpression)
     {
-        throw new UnsupportedOperationException("ParallerExpression not implemented!");
-
+        parallerExpression.left().accept(this);
+        var left = currentValue;
+        parallerExpression.right().accept(this);
+        currentValue = chordRegistry.apply("par", left, currentValue);
     }
 
     @Override

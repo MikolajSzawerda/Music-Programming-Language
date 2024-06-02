@@ -29,20 +29,20 @@ class MusicTreeTest
         );
         tested.addSequence(sequence);
         var result = tested.getRoot();
-        var chord = new Chord(new Note(Pitch.C, 4, Rythm.q))
+        var chord = new StrangeChord(new Note(Pitch.C, 4, Rythm.q))
             .add(
-                new Chord(new Note(Pitch.E, 4, Rythm.q))
-                    .add(new Chord(new Note(Pitch.G, 4, Rythm.q)))
+                new StrangeChord(new Note(Pitch.E, 4, Rythm.q))
+                    .add(new StrangeChord(new Note(Pitch.G, 4, Rythm.q)))
             );
         assertThat(result).isEqualToComparingFieldByFieldRecursively(chord);
     }
 
-    private Chord createNoteSequenceTree(List<Note> notes)
+    private StrangeChord createNoteSequenceTree(List<Note> notes)
     {
-        Chord current = null;
+        StrangeChord current = null;
         for (var note : notes.reversed())
         {
-            var newChord = new Chord(note);
+            var newChord = new StrangeChord(note);
             if (current != null)
             {
                 newChord.add(current);

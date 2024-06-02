@@ -9,11 +9,11 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public class Chord implements MusicNode
+public class Phrase implements MusicNode
 {
     private final List<MusicNode> nodes;
 
-    public Chord()
+    public Phrase()
     {
         nodes = new ArrayList<>();
     }
@@ -21,7 +21,7 @@ public class Chord implements MusicNode
     @Override
     public MusicNode add(final MusicNode node)
     {
-        nodes.add(node);
+        nodes.addAll(node.getChildren());
         return this;
     }
 
