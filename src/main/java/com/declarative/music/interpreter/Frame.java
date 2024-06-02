@@ -1,6 +1,5 @@
 package com.declarative.music.interpreter;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,42 +14,34 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class Frame
 {
-    private final Map<String, VariableReference> variables;
-    private final Map<Integer, List<String>> scopes;
-    private int currentScope = 0;
+    private final List<Map<String, VariableReference>> scopes;
 
     public Frame(final Map<String, VariableReference> variables)
     {
-        this.variables = variables;
-        this.scopes = new HashMap<>();
-        enterScope();
-        variables.forEach((k, v) -> {
-            scopes.get(currentScope).add(k);
-        });
+        scopes = new LinkedList<>();
+        scopes.addFirst(new HashMap<>(variables));
     }
 
     public Frame()
     {
-        variables = new HashMap<>();
-        this.scopes = new HashMap<>();
+        this.scopes = new LinkedList<>();
         enterScope();
     }
 
     public Optional<VariableReference> getValue(String name)
     {
-        return Optional.ofNullable(variables.get(name));
+        return scopes.stream()
+            .filter(scope -> scope.containsKey(name))
+            .filter(scope -> scope.get(name) != null)
+            .map(scope -> scope.get(name))
+            .findFirst();
     }
 
     public Frame copy()
     {
-        var newScope = new HashMap<Integer, List<String>>();
-        scopes.forEach((k, v) -> newScope.put(k, new LinkedList<>(v)));
-        var f = new Frame(
-            new HashMap<>(variables),
-            newScope
-        );
-        f.currentScope = Collections.max(scopes.keySet());
-        return f;
+        var newScope = new LinkedList<Map<String, VariableReference>>();
+        scopes.forEach(scope -> newScope.add(new HashMap<>(scope)));
+        return new Frame(newScope);
     }
 
     public void saveValue(String name, VariableReference value)
@@ -58,38 +49,36 @@ public class Frame
         getValue(name).ifPresent(val -> {
             if (val.getClass() != value.getClass())
             {
-                throw new RuntimeException("INTERPRETATION ERROR");
+                throw new RuntimeException("INTERPRETATION ERROR required %s provided %s"
+                    .formatted(val.getClass().getSimpleName(), value.getClass().getSimpleName()));
             }
         });
-        variables.put(name, value);
-        scopes.get(currentScope).add(name);
+        scopes.getFirst().put(name, value);
     }
 
     public void enterScope()
     {
-        currentScope++;
-        scopes.put(currentScope, new LinkedList<>());
+        scopes.addFirst(new HashMap<>());
     }
 
     public void leaveScope()
     {
-        if (currentScope == 1)
+        if (scopes.isEmpty())
         {
             throw new IllegalStateException("You are trying to leave scope that was not started");
         }
-        scopes.get(currentScope).forEach(variables::remove);
-        scopes.remove(currentScope);
-        currentScope--;
+        scopes.removeFirst();
     }
 
     public boolean contains(String name)
     {
-        return variables.containsKey(name);
+        return scopes.stream()
+            .anyMatch(scope -> scope.containsKey(name));
     }
 
     public boolean scopeContains(String name)
     {
-        return scopes.get(currentScope).contains(name);
+        return scopes.getFirst().containsKey(name);
     }
 
 }

@@ -32,6 +32,24 @@ class FrameTest
     }
 
     @Test
+    void shouldSaveVariablesWithSameName_WhenInDifferentScope()
+    {
+        // given
+        var varName = "a";
+        var value = 10;
+
+        // when
+        tested.saveValue(varName, new VariableReference<>(value));
+        tested.enterScope();
+        tested.saveValue(varName, new VariableReference<>(value + 1));
+        tested.leaveScope();
+
+        // then
+        var varReference = tested.getValue(varName).orElseThrow();
+        Assertions.assertEquals(varReference.getValue(), value);
+    }
+
+    @Test
     void shouldSaveAndGetVariable_afterEnteringScope()
     {
         // given

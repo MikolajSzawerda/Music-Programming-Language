@@ -31,7 +31,8 @@ public class ContextManager
         frame.getValue(name).filter(ref -> ref.getValue() != null).ifPresentOrElse(ref -> {
             if (ref.getValue().getClass() != value.valueType())
             {
-                throw new RuntimeException("INTERPRETATION ERROR");
+                throw new RuntimeException("INTERPRETATION ERROR required %s provided %s"
+                    .formatted(ref.getValue().getClass().getSimpleName(), value.valueType().getSimpleName()));
             }
             ref.setValue(value.value());
         }, () -> frame.saveValue(name, new VariableReference<>(value.value())));

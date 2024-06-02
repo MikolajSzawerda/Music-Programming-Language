@@ -1,6 +1,7 @@
 package com.declarative.music.interpreter;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -330,5 +331,51 @@ public class ExecutionIntegrationTest
             .isEqualToComparingFieldByFieldRecursively(
                 new Variant<>(2, Integer.class)
             );
+    }
+
+    @Test
+    void shouldThrow_WhenWrongValueTypeAssigment() throws ParsingException, IOException
+    {
+        // given
+        final var code = """
+            let a = 1;
+            a = 2.0;
+            """;
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        var interpreter = new Executor();
+
+        // when
+        assertThatThrownBy(() -> parser.parserProgram().accept(interpreter))
+            .hasMessageStartingWith("INTERPRETATION ERROR required Integer provided Double");
+
+    }
+
+    @Test
+    void shouldHandleVariablesWithSameName_WhenInDifferentScope() throws ParsingException, IOException
+    {
+        // given
+        final var code = """
+            let a = 1;
+            if(1==1){
+                let a = 2;
+                if(2==2){
+                    let a = 3;
+                }
+            }
+            """;
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        var interpreter = new Executor();
+
+        // when
+        parser.parserProgram().accept(interpreter);
+
+        // then
+        assertThat(interpreter.getManager().getGlobalFrame().getValue("a").orElseThrow())
+            .isEqualToComparingFieldByFieldRecursively(
+                new Variant<>(1, Integer.class)
+            );
+
     }
 }

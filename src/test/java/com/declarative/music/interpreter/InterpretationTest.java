@@ -192,7 +192,7 @@ public class InterpretationTest
 
         // when
         assertThatThrownBy(() -> stmt.accept(tested))
-            .hasMessageStartingWith("INTERPRETATION ERROR");
+            .hasMessageStartingWith("INTERPRETATION ERROR required Integer provided String");
     }
 
     @Test
