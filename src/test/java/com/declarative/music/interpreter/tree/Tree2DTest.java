@@ -16,8 +16,8 @@ class Tree2DTest
         var a = new Variant<>(10, Integer.class);
         var b = new SequenceNode<Integer>();
         var c = new GroupNode<Integer>();
-        c.accept(new Variant<>(10, Integer.class));
-        b.accept(a);
+//        c.accept(new Variant<>(10, Integer.class));
+//        b.accept(a);
         b.accept(c);
     }
 
@@ -27,8 +27,8 @@ class Tree2DTest
         var a = new Variant<>(new Note(Pitch.C, 4, Rythm.q), Note.class);
         var b = new SequenceNode<Note>();
         var c = new GroupNode<Note>();
-        c.accept(new Variant<>(new Note(Pitch.C, 4, Rythm.q), Note.class));
-        b.accept(a);
+//        c.accept(new Variant<>(new Note(Pitch.C, 4, Rythm.q), Note.class));
+//        b.accept(a);
         b.accept(c);
     }
 

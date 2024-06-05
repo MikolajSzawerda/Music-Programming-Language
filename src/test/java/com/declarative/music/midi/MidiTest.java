@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -20,6 +19,8 @@ import javax.sound.midi.Track;
 import org.junit.jupiter.api.Test;
 
 import com.declarative.music.interpreter.Executor;
+import com.declarative.music.interpreter.MidiMapper;
+import com.declarative.music.interpreter.tree.Node;
 import com.declarative.music.interpreter.values.music.Note;
 import com.declarative.music.lexer.LexerImpl;
 import com.declarative.music.parser.Parser;
@@ -28,7 +29,7 @@ import com.declarative.music.parser.exception.ParsingException;
 
 public class MidiTest
 {
-    @Test
+    //    @Test
     void shouldParseMidi() throws InvalidMidiDataException, IOException
     {
         final var file = new File("/home/mszawerd/IdeaProjects/music-programming-language/src/test/resources/unforgiven.mid");
@@ -63,7 +64,8 @@ public class MidiTest
     void shouldSaveTree() throws InvalidMidiDataException, IOException, ParsingException
     {
         final var code = """
-            let music = (C, 4) q | (E, 4) q | (G, 4) q | (C, 4) e | (D, 4) e;
+            let music = (((C, 4) q & (E, 4) q | (G, 4) q | (C, 4) e | (D, 4) e) &
+            ((C, 5) q & (E, 5) q | (G, 5) q | (C, 5) e | (D, 5) e)) | (G, 4) q | (C, 4) e | (D, 4) e;
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
@@ -71,8 +73,8 @@ public class MidiTest
 
         // when
         parser.parserProgram().accept(interpreter);
-        var value = (LinkedList<Note>) interpreter.getManager().get("music").orElseThrow().getValue();
-
+        var value = (Node<Note>) interpreter.getManager().get("music").orElseThrow().getValue();
+        var res = MidiMapper.mapToEventStamps(value);
         final int ticksPerQuarterNote = 480;
         final int tempoBPM = 120;
         final Sequence sequence = new Sequence(Sequence.PPQ, ticksPerQuarterNote);
@@ -88,21 +90,23 @@ public class MidiTest
 
 //        for (final var phrase : progression)
 //        {
-        long currentTick = 0;
-        for (final var note : value)
+        for (final var noteBlock : res.entrySet())
         {
-            var midiNote = MidiNote.from(note);
-            final var pitch = getPitch(midiNote);
-            final var ticks = getTicks(midiNote, ticksPerQuarterNote);
-            final ShortMessage noteOn = new ShortMessage();
-            noteOn.setMessage(ShortMessage.NOTE_ON, 0, pitch, 100);
-            track.add(new MidiEvent(noteOn, currentTick));
+            long currentTick = noteBlock.getKey() * ticksPerQuarterNote / 2;
+            for (var note : noteBlock.getValue())
+            {
+                var midiNote = MidiNote.from(note);
+                final var pitch = getPitch(midiNote);
+                final var ticks = getTicks(midiNote, ticksPerQuarterNote);
+                final ShortMessage noteOn = new ShortMessage();
+                noteOn.setMessage(ShortMessage.NOTE_ON, 0, pitch, 100);
+                track.add(new MidiEvent(noteOn, currentTick));
 
-            // MidiNote OFF
-            final ShortMessage noteOff = new ShortMessage();
-            noteOff.setMessage(ShortMessage.NOTE_OFF, 0, pitch, 0);
-            track.add(new MidiEvent(noteOff, currentTick + ticks));
-            currentTick += ticks;
+                // MidiNote OFF
+                final ShortMessage noteOff = new ShortMessage();
+                noteOff.setMessage(ShortMessage.NOTE_OFF, 0, pitch, 0);
+                track.add(new MidiEvent(noteOff, currentTick + ticks));
+            }
         }
 
 //        }

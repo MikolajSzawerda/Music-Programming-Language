@@ -2,12 +2,10 @@ package com.declarative.music.interpreter.values;
 
 import java.util.Objects;
 
-import com.declarative.music.interpreter.tree.SimpleNode;
-
 import lombok.Getter;
 
 
-public final class Variant<T> extends SimpleNode<T>
+public final class Variant<T>
 {
     private final T value;
     @Getter
@@ -15,7 +13,6 @@ public final class Variant<T> extends SimpleNode<T>
 
     public Variant(T value, Class<T> type)
     {
-        super(value);
         this.value = value;
         this.type = type;
     }
