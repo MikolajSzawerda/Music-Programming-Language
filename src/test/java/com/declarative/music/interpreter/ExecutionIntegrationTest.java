@@ -309,7 +309,6 @@ public class ExecutionIntegrationTest
 
         // when
         parser.parserProgram().accept(interpreter);
-        interpreter.getCurrentValue();
     }
 
     @Test
@@ -325,7 +324,6 @@ public class ExecutionIntegrationTest
 
         // when
         parser.parserProgram().accept(interpreter);
-        interpreter.getCurrentValue();
     }
 
     @Test
@@ -341,7 +339,6 @@ public class ExecutionIntegrationTest
 
         // when
         parser.parserProgram().accept(interpreter);
-        interpreter.getCurrentValue();
     }
 
     @Test
@@ -380,11 +377,30 @@ public class ExecutionIntegrationTest
         parser.parserProgram().accept(interpreter);
 
         // then
-        lexer.getCurrentStreamChar();
-//        assertThat(interpreter.getManager().getGlobalFrame().getValue("a").orElseThrow())
-//            .isEqualToComparingFieldByFieldRecursively(
-//                new Variant<>(2, Integer.class)
-//            );
+    }
+
+    @Test
+    void shouldHanldeForLoop() throws ParsingException, IOException
+    {
+        // given
+        final var code = """
+            Int acc=0;
+            for(Int a in [1,2,3,2+2]){
+                acc=acc+a;
+            }
+            """;
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        var interpreter = new Executor();
+
+        // when
+        parser.parserProgram().accept(interpreter);
+
+        // then
+        assertThat(interpreter.getManager().getGlobalFrame().getValue("acc").orElseThrow())
+            .isEqualToComparingFieldByFieldRecursively(
+                new Variant<>(10, Integer.class)
+            );
     }
 
     @Test

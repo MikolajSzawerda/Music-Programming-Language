@@ -13,6 +13,6 @@ public class IndexNode extends SimpleNode<Integer>
     @Override
     public Integer getValue()
     {
-        return null;
+        return value;
     }
 }

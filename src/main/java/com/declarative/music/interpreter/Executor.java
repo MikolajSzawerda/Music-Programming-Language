@@ -1,5 +1,6 @@
 package com.declarative.music.interpreter;
 
+import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.util.AbstractMap;
 import java.util.HashMap;
@@ -11,7 +12,10 @@ import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import javax.sound.midi.InvalidMidiDataException;
+
 import com.declarative.music.interpreter.tree.GroupNode;
+import com.declarative.music.interpreter.tree.Node;
 import com.declarative.music.interpreter.tree.NodeAppenderVisitor;
 import com.declarative.music.interpreter.tree.NodeFactory;
 import com.declarative.music.interpreter.tree.SequenceNode;
@@ -28,6 +32,8 @@ import com.declarative.music.interpreter.values.music.Pitch;
 import com.declarative.music.interpreter.values.music.Rythm;
 import com.declarative.music.interpreter.values.template.IndexNode;
 import com.declarative.music.interpreter.values.template.TemplateFactory;
+import com.declarative.music.interpreter.values.template.TemplateFiller;
+import com.declarative.music.midi.MidiRenderer;
 import com.declarative.music.parser.production.AssigmentStatement;
 import com.declarative.music.parser.production.Block;
 import com.declarative.music.parser.production.Declaration;
@@ -143,6 +149,22 @@ public class Executor implements Visitor
                 sequence.accept((NodeAppenderVisitor<Note>) node.value());
             }
             currentValue = new Variant<>((Phrase) sequence, Phrase.class);
+        }),
+        "export", new BuiltInFunction(new Parameters(List.of(
+            new Parameter(new InferenceType(null), "midiTree"),
+            new Parameter(new SimpleType(Types.String, null), "fileName")
+        )), (arguments) -> {
+            var index = (Node<Note>) arguments.get("midiTree").castTo(Node.class);
+            var fileName = arguments.get("fileName").castTo(String.class);
+            try
+            {
+                MidiRenderer.renderAndSaveMidi(index, fileName, 120);
+            }
+            catch (InvalidMidiDataException | IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+            currentValue = null;
         })
     );
 
@@ -406,7 +428,11 @@ public class Executor implements Visitor
     @Override
     public void visit(final ConvolutionExpression convolutionExpression)
     {
-        throw new UnsupportedOperationException("ConvolutionExpression not implemented!");
+        convolutionExpression.left().accept(this);
+        var left = currentValue.castTo(Node.class);
+        currentValue = null;
+        convolutionExpression.right().accept(this);
+        currentValue = new Variant<>(new TemplateFiller(currentValue.castTo(List.class)).applyTemplate(left), Node.class);
 
     }
 
@@ -516,17 +542,28 @@ public class Executor implements Visitor
         {
             return (NodeFactory<T>) new TemplateFactory();
         }
-        if (getGenericType(value) == Note.class)
+        if (getGenericType(value).orElse(null) == Note.class)
         {
             return (NodeFactory<T>) new MusicFactory();
+        }
+        if (value instanceof GroupNode<?> || value instanceof SequenceNode<?>)
+        {
+            return (NodeFactory<T>) new TemplateFactory();
         }
 
         throw new UnsupportedOperationException("Unknown factory");
     }
 
-    private <T> Class<T> getGenericType(T value)
+    private <T> Optional<Class<T>> getGenericType(T value)
     {
-        return (Class<T>) ((ParameterizedType) value.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        try
+        {
+            return Optional.of((Class<T>) ((ParameterizedType) value.getClass().getGenericSuperclass()).getActualTypeArguments()[0]);
+        }
+        catch (ClassCastException exception)
+        {
+            return Optional.empty();
+        }
     }
 
     @Override
@@ -680,7 +717,18 @@ public class Executor implements Visitor
     @Override
     public void visit(final ForStatement forStatement)
     {
-        throw new UnsupportedOperationException("ForStatement not implemented!");
+        forStatement.iterable().accept(this);
+        var iterable = currentValue.castTo(List.class);
+        currentValue = null;
+        var varName = forStatement.declaration().name();
+
+        for (var item : iterable)
+        {
+            manager.startNewScope();
+            manager.insert(varName, (Variant<?>) item);
+            forStatement.instructions().accept(this);
+            manager.leaveNewScope();
+        }
 
     }
 

@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TemplateFiller
 {
-    private final List<Variant<Note>> musicList;
+    private final List<Variant<NoteNode>> musicList;
 
     public Node<Note> applyTemplate(Node<Integer> templateTree)
     {
@@ -29,7 +29,7 @@ public class TemplateFiller
         if (node instanceof IndexNode)
         {
             Integer idx = ((IndexNode) node).getValue();
-            return new NoteNode(musicList.get(idx).value());
+            return new NoteNode(musicList.get(idx).value().getValue());
         }
         if (node instanceof SequenceNode<Integer>)
         {
