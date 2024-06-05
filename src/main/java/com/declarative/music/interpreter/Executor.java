@@ -116,20 +116,73 @@ public class Executor implements Visitor
         manager = new ContextManager();
     }
 
-    private final static OperationRegistry addRegistry = new OperationRegistry()
-        .register(Integer.class, Integer.class, Integer::sum, Integer.class);
-    private final static OperationRegistry eqRegistry = new OperationRegistry()
-        .register(Integer.class, Integer.class, Integer::equals, Boolean.class);
-    private final static OperationRegistry greaterRegistry = new OperationRegistry()
-        .register(Integer.class, Integer.class, (a, b) -> a > b, Boolean.class);
-    private final static OperationRegistry minusRegistry = new OperationRegistry()
-        .register(Integer.class, Integer.class, (a, b) -> a - b, Integer.class);
+    private Variant<?> currentValueAndDestroy()
+    {
+        var value = currentValue;
+        currentValue = null;
+        return value;
+    }
+
+    private final static Map<String, OperationRegistry> REGISTRY = Map.ofEntries(
+        Map.entry(AddExpression.class.getSimpleName(), new OperationRegistry()
+            .register(Integer.class, Integer.class, Integer::sum, Integer.class)
+            .register(Double.class, Double.class, Double::sum, Double.class)
+            .register(String.class, String.class, String::concat, String.class)),
+        Map.entry(MinusExpression.class.getSimpleName(), new OperationRegistry()
+            .register(Integer.class, Integer.class, (a, b) -> a - b, Integer.class)
+            .register(Double.class, Double.class, (a, b) -> a - b, Double.class)),
+        Map.entry(MulExpression.class.getSimpleName(), new OperationRegistry()
+            .register(Integer.class, Integer.class, (a, b) -> a * b, Integer.class)
+            .register(Double.class, Double.class, (a, b) -> a * b, Double.class)
+            .register(String.class, Integer.class, String::repeat, String.class)),
+        Map.entry(ModuloExpression.class.getSimpleName(), new OperationRegistry()
+            .register(Integer.class, Integer.class, (a, b) -> a % b, Integer.class)
+            .register(Double.class, Double.class, (a, b) -> a % b, Double.class)),
+        Map.entry(PowExpression.class.getSimpleName(), new OperationRegistry()
+            .register(Integer.class, Integer.class, (a, b) -> (int) Math.pow(a, b), Integer.class)
+            .register(Double.class, Double.class, Math::pow, Double.class)),
+        Map.entry(EqExpression.class.getSimpleName(), new OperationRegistry()
+            .register(Integer.class, Integer.class, Integer::equals, Boolean.class)
+            .register(Double.class, Double.class, Double::equals, Boolean.class)
+            .register(Boolean.class, Boolean.class, Boolean::equals, Boolean.class)
+            .register(String.class, String.class, String::equals, Boolean.class)),
+        Map.entry(GreaterExpression.class.getSimpleName(), new OperationRegistry()
+            .register(Integer.class, Integer.class, (a, b) -> a > b, Boolean.class)
+            .register(Double.class, Double.class, (a, b) -> a > b, Boolean.class)
+            .register(String.class, String.class, (a, b) -> a.length() > b.length(), Boolean.class)),
+        Map.entry(GreaterEqExpression.class.getSimpleName(), new OperationRegistry()
+            .register(Integer.class, Integer.class, (a, b) -> a >= b, Boolean.class)
+            .register(Double.class, Double.class, (a, b) -> a >= b, Boolean.class)
+            .register(String.class, String.class, (a, b) -> a.length() >= b.length(), Boolean.class)),
+        Map.entry(LessExpression.class.getSimpleName(), new OperationRegistry()
+            .register(Integer.class, Integer.class, (a, b) -> a < b, Boolean.class)
+            .register(Double.class, Double.class, (a, b) -> a < b, Boolean.class)
+            .register(String.class, String.class, (a, b) -> a.length() < b.length(), Boolean.class)),
+        Map.entry(LessEqExpression.class.getSimpleName(), new OperationRegistry()
+            .register(Integer.class, Integer.class, (a, b) -> a <= b, Boolean.class)
+            .register(Double.class, Double.class, (a, b) -> a <= b, Boolean.class)
+            .register(String.class, String.class, (a, b) -> a.length() <= b.length(), Boolean.class)),
+        Map.entry(NotEqExpression.class.getSimpleName(), new OperationRegistry()
+            .register(Integer.class, Integer.class, (a, b) -> !a.equals(b), Boolean.class)
+            .register(Double.class, Double.class, (a, b) -> !a.equals(b), Boolean.class)
+            .register(Boolean.class, Boolean.class, (a, b) -> !a.equals(b), Boolean.class)
+            .register(String.class, String.class, (a, b) -> !a.equals(b), Boolean.class)),
+        Map.entry(AndExpression.class.getSimpleName(), new OperationRegistry()
+            .register(Boolean.class, Boolean.class, (a, b) -> a && b, Boolean.class)),
+        Map.entry(OrExpression.class.getSimpleName(), new OperationRegistry()
+            .register(Boolean.class, Boolean.class, (a, b) -> a || b, Boolean.class))
+    );
 
     record BuiltInFunction(Parameters parameters, Consumer<Map<String, Variant<?>>> code)
     {
     }
 
     private final Map<String, BuiltInFunction> builtinFunctions = Map.of(
+        "print", new BuiltInFunction(new Parameters(List.of(
+            new Parameter(new InferenceType(null), "value")
+        )), (arguments) -> {
+            System.out.println(arguments.get("value").value().toString());
+        }),
         "at", new BuiltInFunction(new Parameters(List.of(
             new Parameter(new InferenceType(null), "array"),
             new Parameter(new SimpleType(Types.Int, null), "index")
@@ -172,9 +225,9 @@ public class Executor implements Visitor
     public void visit(final AddExpression addExpression)
     {
         addExpression.left().accept(this);
-        var left = currentValue;
+        var left = currentValueAndDestroy();
         addExpression.right().accept(this);
-        currentValue = addRegistry.apply("add", left, currentValue);
+        currentValue = REGISTRY.get(addExpression.getClass().getSimpleName()).apply(addExpression.getClass().getSimpleName(), left, currentValue);
     }
 
     @Override
@@ -193,7 +246,6 @@ public class Executor implements Visitor
             throw new RuntimeException("INTERPRETATION ERROR");
         }
 
-        // TODO throw when doesn't exists
         manager.upsert(assigmentStatement.identifier(), currentValue);
         currentValue = null;
     }
@@ -228,9 +280,9 @@ public class Executor implements Visitor
     public void visit(final IfStatement ifStatement)
     {
         ifStatement.condition().accept(this);
-        if (currentValue.castTo(Boolean.class))
+        var value = currentValueAndDestroy();
+        if (value.castTo(Boolean.class))
         {
-            currentValue = null;
             ifStatement.instructions().accept(this);
         }
         else if (ifStatement.otherwise() != null)
@@ -256,7 +308,10 @@ public class Executor implements Visitor
     @Override
     public void visit(final MulExpression mulExpression)
     {
-        throw new UnsupportedOperationException("MulExpression not implemented!");
+        mulExpression.left().accept(this);
+        var left = currentValueAndDestroy();
+        mulExpression.right().accept(this);
+        currentValue = REGISTRY.get(mulExpression.getClass().getSimpleName()).apply(mulExpression.getClass().getSimpleName(), left, currentValue);
 
     }
 
@@ -411,7 +466,6 @@ public class Executor implements Visitor
             results.put(item.name(), currentValue);
             currentValue = null;
         }
-        //TODO all modifiers
         var updateValues = ((List<Variant<?>>) notes).stream()
             .map(val -> val.castTo(NoteNode.class))
             .peek(node -> node.modifier = NoteModifier.builder()
@@ -446,7 +500,10 @@ public class Executor implements Visitor
     @Override
     public void visit(final AndExpression andExpression)
     {
-        throw new UnsupportedOperationException("AndExpression not implemented!");
+        andExpression.left().accept(this);
+        var left = currentValueAndDestroy();
+        andExpression.right().accept(this);
+        currentValue = REGISTRY.get(andExpression.getClass().getSimpleName()).apply(andExpression.getClass().getSimpleName(), left, currentValue);
 
     }
 
@@ -455,15 +512,18 @@ public class Executor implements Visitor
     {
 
         eqExpression.left().accept(this);
-        var left = currentValue;
+        var left = currentValueAndDestroy();
         eqExpression.right().accept(this);
-        currentValue = eqRegistry.apply("eq", left, currentValue);
+        currentValue = REGISTRY.get(eqExpression.getClass().getSimpleName()).apply("eq", left, currentValue);
     }
 
     @Override
     public void visit(final OrExpression orExpression)
     {
-        throw new UnsupportedOperationException("OrExpression not implemented!");
+        orExpression.left().accept(this);
+        var left = currentValueAndDestroy();
+        orExpression.right().accept(this);
+        currentValue = REGISTRY.get(orExpression.getClass().getSimpleName()).apply(orExpression.getClass().getSimpleName(), left, currentValue);
 
     }
 
@@ -576,7 +636,6 @@ public class Executor implements Visitor
     public void visit(final DivAssignStatement divAssignStatement)
     {
         throw new UnsupportedOperationException("DivAssignStatement not implemented!");
-
     }
 
     @Override
@@ -631,7 +690,10 @@ public class Executor implements Visitor
     @Override
     public void visit(final DivExpression divExpression)
     {
-        throw new UnsupportedOperationException("DivExpression not implemented!");
+        divExpression.left().accept(this);
+        var left = currentValueAndDestroy();
+        divExpression.right().accept(this);
+        currentValue = REGISTRY.get(divExpression.getClass().getSimpleName()).apply(divExpression.getClass().getSimpleName(), left, currentValue);
 
     }
 
@@ -639,51 +701,69 @@ public class Executor implements Visitor
     public void visit(final MinusExpression minusExpression)
     {
         minusExpression.left().accept(this);
-        var left = currentValue;
+        var left = currentValueAndDestroy();
         minusExpression.right().accept(this);
-        currentValue = minusRegistry.apply("minus", left, currentValue);
+        currentValue = REGISTRY.get(minusExpression.getClass().getSimpleName()).apply("min", left, currentValue);
     }
 
     @Override
     public void visit(final ModuloExpression moduloExpression)
     {
-        throw new UnsupportedOperationException("ModuloExpression not implemented!");
+        moduloExpression.left().accept(this);
+        var left = currentValueAndDestroy();
+        moduloExpression.right().accept(this);
+        currentValue =
+            REGISTRY.get(moduloExpression.getClass().getSimpleName()).apply(moduloExpression.getClass().getSimpleName(), left, currentValue);
 
     }
 
     @Override
     public void visit(final PowExpression powExpression)
     {
-        throw new UnsupportedOperationException("PowExpression not implemented!");
+        powExpression.left().accept(this);
+        var left = currentValueAndDestroy();
+        powExpression.right().accept(this);
+        currentValue = REGISTRY.get(powExpression.getClass().getSimpleName()).apply(powExpression.getClass().getSimpleName(), left, currentValue);
 
     }
 
     @Override
     public void visit(final GreaterEqExpression greaterEqExpression)
     {
-        throw new UnsupportedOperationException("GreaterEqExpression not implemented!");
+        greaterEqExpression.left().accept(this);
+        var left = currentValueAndDestroy();
+        greaterEqExpression.right().accept(this);
+        currentValue =
+            REGISTRY.get(greaterEqExpression.getClass().getSimpleName()).apply(greaterEqExpression.getClass().getSimpleName(), left, currentValue);
     }
 
     @Override
     public void visit(final GreaterExpression greaterExpression)
     {
         greaterExpression.left().accept(this);
-        var left = currentValue;
+        var left = currentValueAndDestroy();
         greaterExpression.right().accept(this);
-        currentValue = greaterRegistry.apply("minus", left, currentValue);
+        currentValue = REGISTRY.get(greaterExpression.getClass().getSimpleName()).apply("gr", left, currentValue);
     }
 
     @Override
     public void visit(final LessEqExpression lessEqExpression)
     {
-        throw new UnsupportedOperationException("LessEqExpression not implemented!");
+        lessEqExpression.left().accept(this);
+        var left = currentValueAndDestroy();
+        lessEqExpression.right().accept(this);
+        currentValue =
+            REGISTRY.get(lessEqExpression.getClass().getSimpleName()).apply(lessEqExpression.getClass().getSimpleName(), left, currentValue);
 
     }
 
     @Override
     public void visit(final LessExpression lessExpression)
     {
-        throw new UnsupportedOperationException("LessExpression not implemented!");
+        lessExpression.left().accept(this);
+        var left = currentValueAndDestroy();
+        lessExpression.right().accept(this);
+        currentValue = REGISTRY.get(lessExpression.getClass().getSimpleName()).apply(lessExpression.getClass().getSimpleName(), left, currentValue);
 
     }
 
@@ -697,15 +777,17 @@ public class Executor implements Visitor
     @Override
     public void visit(final NotEqExpression notEqExpression)
     {
-        throw new UnsupportedOperationException("NotEqExpression not implemented!");
+        notEqExpression.left().accept(this);
+        var left = currentValueAndDestroy();
+        notEqExpression.right().accept(this);
+        currentValue = REGISTRY.get(notEqExpression.getClass().getSimpleName()).apply(notEqExpression.getClass().getSimpleName(), left, currentValue);
 
     }
 
     @Override
     public void visit(final BoolLiteral boolLiteral)
     {
-        throw new UnsupportedOperationException("BoolLiteral not implemented!");
-
+        currentValue = new Variant<>(boolLiteral.value(), Boolean.class);
     }
 
     @Override

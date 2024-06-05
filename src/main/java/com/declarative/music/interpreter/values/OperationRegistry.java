@@ -24,7 +24,8 @@ public class OperationRegistry
         {
             return operationFunc.apply(left, right);
         }
-        throw new IllegalStateException("INTERPRETATION ERROR Unsupported types for operation: " + operation);
+        throw new IllegalStateException(
+            "INTERPRETATION ERROR Unsupported types: " + left.valueType() + " " + right.valueType() + " for operation: " + operation);
     }
 
     private String generateKey(Class<?> leftType, Class<?> rightType)
