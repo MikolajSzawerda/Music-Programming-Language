@@ -313,6 +313,38 @@ public class ExecutionIntegrationTest
     }
 
     @Test
+    void shouldHanldeTemplateTree() throws ParsingException, IOException
+    {
+        // given
+        final var code = """
+            let temp = 0 | 1 & 2;
+            """;
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        var interpreter = new Executor();
+
+        // when
+        parser.parserProgram().accept(interpreter);
+        interpreter.getCurrentValue();
+    }
+
+    @Test
+    void shouldHanldeConvolutionOperator() throws ParsingException, IOException
+    {
+        // given
+        final var code = """
+            let temp = (2 | 0 & 1) >> [C, E, G];
+            """;
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        var interpreter = new Executor();
+
+        // when
+        parser.parserProgram().accept(interpreter);
+        interpreter.getCurrentValue();
+    }
+
+    @Test
     void shouldHanldeBuiltInAtFunction() throws ParsingException, IOException
     {
         // given

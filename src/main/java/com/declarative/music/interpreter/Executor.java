@@ -1,5 +1,6 @@
 package com.declarative.music.interpreter;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -25,6 +26,8 @@ import com.declarative.music.interpreter.values.music.NoteNode;
 import com.declarative.music.interpreter.values.music.Phrase;
 import com.declarative.music.interpreter.values.music.Pitch;
 import com.declarative.music.interpreter.values.music.Rythm;
+import com.declarative.music.interpreter.values.template.IndexNode;
+import com.declarative.music.interpreter.values.template.TemplateFactory;
 import com.declarative.music.parser.production.AssigmentStatement;
 import com.declarative.music.parser.production.Block;
 import com.declarative.music.parser.production.Declaration;
@@ -386,11 +389,12 @@ public class Executor implements Visitor
             results.put(item.name(), currentValue);
             currentValue = null;
         }
-
+        //TODO all modifiers
         var updateValues = ((List<Variant<?>>) notes).stream()
             .map(val -> val.castTo(NoteNode.class))
             .peek(node -> node.modifier = NoteModifier.builder()
                 .withRythm(Optional.ofNullable(results.get("dur")).map(v -> v.castTo(NoteNode.class).getValue().getDuration()).orElse(null))
+                .withOctave(Optional.ofNullable(results.get("oct")).map(v -> v.castTo(Integer.class)).orElse(4))
                 .build()
             )
             .map(val -> new Variant<>(val, NoteNode.class))
@@ -460,10 +464,11 @@ public class Executor implements Visitor
     @Override
     public void visit(final NoteExpression noteExpression)
     {
-        Optional.ofNullable(noteExpression.octave()).ifPresent(expr -> expr.accept(this));
         var noteBuilder = Note.builder();
         Optional.ofNullable(noteExpression.pitch()).ifPresent(val -> noteBuilder.pitch(Pitch.valueOf(val)));
+        Optional.ofNullable(noteExpression.octave()).ifPresent(expr -> expr.accept(this));
         Optional.ofNullable(currentValue).ifPresent(val -> noteBuilder.octave(val.castTo(Integer.class)));
+        currentValue = null;
         Optional.ofNullable(noteExpression.duration()).ifPresent(val -> noteBuilder.duration(Rythm.valueOf(noteExpression.duration())));
         currentValue = new Variant<>(musicFactory.createSimpleNode(noteBuilder.build()), SimpleNode.class);
 
@@ -474,23 +479,54 @@ public class Executor implements Visitor
     {
         sequenceExpression.left().accept(this);
         var left = currentValue;
+        currentValue = null;
         sequenceExpression.right().accept(this);
-        var sequence = musicFactory.createSequence();
-        sequence.accept((NodeAppenderVisitor<Note>) left.value());
-        sequence.accept((NodeAppenderVisitor<Note>) currentValue.value());
+        var sequence = getFactory(left.value()).createSequence();
+        sequence.accept(castToNodeAppenderVisitor(left));
+        sequence.accept(castToNodeAppenderVisitor(currentValue));
         currentValue = new Variant<>(sequence, SequenceNode.class);
     }
 
     @Override
     public void visit(final ParallerExpression parallerExpression)
     {
-        var siblings = musicFactory.createGroup();
         parallerExpression.left().accept(this);
         var left = currentValue;
+        currentValue = null;
+        var siblings = getFactory(left.value()).createGroup();
         parallerExpression.right().accept(this);
-        siblings.accept((NodeAppenderVisitor<Note>) left.value());
-        siblings.accept((NodeAppenderVisitor<Note>) currentValue.value());
+        siblings.accept(castToNodeAppenderVisitor(left));
+        siblings.accept(castToNodeAppenderVisitor(currentValue));
         currentValue = new Variant<>(siblings, GroupNode.class);
+    }
+
+    private NodeAppenderVisitor castToNodeAppenderVisitor(Variant<?> obj)
+    {
+        if (obj.value() instanceof Integer)
+        {
+            return new IndexNode(obj.castTo(Integer.class));
+        }
+        return (NodeAppenderVisitor) obj.value();
+
+    }
+
+    private <T> NodeFactory<T> getFactory(T value)
+    {
+        if (value instanceof Integer)
+        {
+            return (NodeFactory<T>) new TemplateFactory();
+        }
+        if (getGenericType(value) == Note.class)
+        {
+            return (NodeFactory<T>) new MusicFactory();
+        }
+
+        throw new UnsupportedOperationException("Unknown factory");
+    }
+
+    private <T> Class<T> getGenericType(T value)
+    {
+        return (Class<T>) ((ParameterizedType) value.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
     }
 
     @Override

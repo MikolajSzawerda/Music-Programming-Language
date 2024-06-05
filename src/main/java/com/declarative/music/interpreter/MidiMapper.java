@@ -27,10 +27,11 @@ public class MidiMapper
 
     private static int traverseTree(Node<Note> node, TreeMap<Integer, List<Note>> map, int startTime)
     {
-        if (node instanceof final NoteNode note)
+        if (node instanceof final NoteNode noteNode)
         {
-            map.computeIfAbsent(startTime, k -> new ArrayList<>()).add(((NoteNode) node).getValue());
-            return calcDuration(note.getValue());
+            var note = noteNode.getValue();
+            map.computeIfAbsent(startTime, k -> new ArrayList<>()).add(note);
+            return calcDuration(note);
         }
         if (node instanceof GroupNode<Note>)
         {

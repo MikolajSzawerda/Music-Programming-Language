@@ -8,7 +8,7 @@ import lombok.Getter;
 
 
 @Getter
-public abstract class SimpleNode<T> implements Node<T>, NodeAppenderVisitor<T>
+public abstract class SimpleNode<T> implements Node<T>
 {
     protected final T value;
     //TODO abstract

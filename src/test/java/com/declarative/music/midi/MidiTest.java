@@ -64,8 +64,8 @@ public class MidiTest
     void shouldSaveTree() throws InvalidMidiDataException, IOException, ParsingException
     {
         final var code = """
-            let music = (((C, 4) q & (E, 4) q | (G, 4) q | (C, 4) e | (D, 4) e) &
-            ((C, 5) q & (E, 5) q | (G, 5) q | (C, 5) e | (D, 5) e)) | (G, 4) q | (C, 4) e | (D, 4) e;
+            let music = ([C, E, G]{dur=q, oct=3} |> mel) &
+            ([C, E, G]{dur=e, oct=2} |> mel);
             """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
