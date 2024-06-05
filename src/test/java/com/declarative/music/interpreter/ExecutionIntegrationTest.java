@@ -334,6 +334,28 @@ public class ExecutionIntegrationTest
     }
 
     @Test
+    void shouldHanldeModifierExpression() throws ParsingException, IOException
+    {
+        // given
+        final var code = """
+            let a = [C, E, G]{dur=q} |> mel;
+            """;
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        var interpreter = new Executor();
+
+        // when
+        parser.parserProgram().accept(interpreter);
+
+        // then
+        lexer.getCurrentStreamChar();
+//        assertThat(interpreter.getManager().getGlobalFrame().getValue("a").orElseThrow())
+//            .isEqualToComparingFieldByFieldRecursively(
+//                new Variant<>(2, Integer.class)
+//            );
+    }
+
+    @Test
     void shouldThrow_WhenWrongValueTypeAssigment() throws ParsingException, IOException
     {
         // given

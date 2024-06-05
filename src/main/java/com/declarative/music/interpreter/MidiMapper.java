@@ -9,6 +9,7 @@ import com.declarative.music.interpreter.tree.GroupNode;
 import com.declarative.music.interpreter.tree.Node;
 import com.declarative.music.interpreter.tree.SequenceNode;
 import com.declarative.music.interpreter.values.music.Note;
+import com.declarative.music.interpreter.values.music.NoteNode;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -26,10 +27,10 @@ public class MidiMapper
 
     private static int traverseTree(Node<Note> node, TreeMap<Integer, List<Note>> map, int startTime)
     {
-        if (node instanceof final Note note)
+        if (node instanceof final NoteNode note)
         {
-            map.computeIfAbsent(startTime, k -> new ArrayList<>()).add((Note) node);
-            return calcDuration(note);
+            map.computeIfAbsent(startTime, k -> new ArrayList<>()).add(((NoteNode) node).getValue());
+            return calcDuration(note.getValue());
         }
         if (node instanceof GroupNode<Note>)
         {
@@ -63,27 +64,5 @@ public class MidiMapper
             case q -> 2;
             case null, default -> 0;
         };
-    }
-
-    private static int calculateDuration(Node<Note> node)
-    {
-        if (node instanceof final Note note)
-        {
-            return switch (note.getDuration())
-            {
-                case e -> 1;
-                case q -> 2;
-                case null, default -> 0;
-            };
-        }
-        else
-        {
-            int totalDuration = 0;
-            for (Node<Note> child : node.getChildren())
-            {
-                totalDuration += calculateDuration(child);
-            }
-            return totalDuration;
-        }
     }
 }

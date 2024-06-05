@@ -12,11 +12,17 @@ import java.util.stream.Stream;
 
 import com.declarative.music.interpreter.tree.GroupNode;
 import com.declarative.music.interpreter.tree.NodeAppenderVisitor;
+import com.declarative.music.interpreter.tree.NodeFactory;
 import com.declarative.music.interpreter.tree.SequenceNode;
+import com.declarative.music.interpreter.tree.SimpleNode;
 import com.declarative.music.interpreter.values.LambdaClousure;
 import com.declarative.music.interpreter.values.OperationRegistry;
 import com.declarative.music.interpreter.values.Variant;
+import com.declarative.music.interpreter.values.music.MusicFactory;
 import com.declarative.music.interpreter.values.music.Note;
+import com.declarative.music.interpreter.values.music.NoteModifier;
+import com.declarative.music.interpreter.values.music.NoteNode;
+import com.declarative.music.interpreter.values.music.Phrase;
 import com.declarative.music.interpreter.values.music.Pitch;
 import com.declarative.music.interpreter.values.music.Rythm;
 import com.declarative.music.parser.production.AssigmentStatement;
@@ -88,6 +94,7 @@ public class Executor implements Visitor
     private final ContextManager manager;
     @Getter
     private Variant<?> currentValue;
+    private final NodeFactory<Note> musicFactory = new MusicFactory();
     private boolean returned = false;
 
     public Executor(final ContextManager manager)
@@ -121,6 +128,18 @@ public class Executor implements Visitor
             var index = arguments.get("index").castTo(Integer.class);
             var iterable = arguments.get("array").castTo(List.class);
             currentValue = (Variant<?>) iterable.get(index);
+        }),
+        "mel", new BuiltInFunction(new Parameters(List.of(
+            new Parameter(new InferenceType(null), "array")
+        )), (arguments) -> {
+            var iterable = arguments.get("array").castTo(List.class);
+            var sequence = musicFactory.createSequence();
+            for (var item : iterable)
+            {
+                var node = (Variant<?>) item;
+                sequence.accept((NodeAppenderVisitor<Note>) node.value());
+            }
+            currentValue = new Variant<>((Phrase) sequence, Phrase.class);
         })
     );
 
@@ -230,6 +249,7 @@ public class Executor implements Visitor
         arrayExpression.items().forEach(item -> {
             item.accept(this);
             elements.add(currentValue);
+            currentValue = null;
         });
         currentValue = new Variant<>(elements, List.class);
 
@@ -354,7 +374,28 @@ public class Executor implements Visitor
     @Override
     public void visit(final ModifierExpression modifierExpression)
     {
-        throw new UnsupportedOperationException("ModifierExpression not implemented!");
+        modifierExpression.modified().accept(this);
+        var variant = currentValue;
+        var notes = variant.castTo(List.class);
+
+        currentValue = null;
+        var results = new HashMap<String, Variant<?>>();
+        for (var item : modifierExpression.modifier().modifiers())
+        {
+            item.expression().accept(this);
+            results.put(item.name(), currentValue);
+            currentValue = null;
+        }
+
+        var updateValues = ((List<Variant<?>>) notes).stream()
+            .map(val -> val.castTo(NoteNode.class))
+            .peek(node -> node.modifier = NoteModifier.builder()
+                .withRythm(Optional.ofNullable(results.get("dur")).map(v -> v.castTo(NoteNode.class).getValue().getDuration()).orElse(null))
+                .build()
+            )
+            .map(val -> new Variant<>(val, NoteNode.class))
+            .toList();
+        currentValue = new Variant<>(updateValues, List.class);
 
     }
 
@@ -419,9 +460,12 @@ public class Executor implements Visitor
     @Override
     public void visit(final NoteExpression noteExpression)
     {
-        noteExpression.octave().accept(this);
-        var note = new Note(Pitch.valueOf(noteExpression.pitch()), currentValue.castTo(Integer.class), Rythm.valueOf(noteExpression.duration()));
-        currentValue = new Variant<>(note, Note.class);
+        Optional.ofNullable(noteExpression.octave()).ifPresent(expr -> expr.accept(this));
+        var noteBuilder = Note.builder();
+        Optional.ofNullable(noteExpression.pitch()).ifPresent(val -> noteBuilder.pitch(Pitch.valueOf(val)));
+        Optional.ofNullable(currentValue).ifPresent(val -> noteBuilder.octave(val.castTo(Integer.class)));
+        Optional.ofNullable(noteExpression.duration()).ifPresent(val -> noteBuilder.duration(Rythm.valueOf(noteExpression.duration())));
+        currentValue = new Variant<>(musicFactory.createSimpleNode(noteBuilder.build()), SimpleNode.class);
 
     }
 
@@ -431,7 +475,7 @@ public class Executor implements Visitor
         sequenceExpression.left().accept(this);
         var left = currentValue;
         sequenceExpression.right().accept(this);
-        var sequence = new SequenceNode<Note>();
+        var sequence = musicFactory.createSequence();
         sequence.accept((NodeAppenderVisitor<Note>) left.value());
         sequence.accept((NodeAppenderVisitor<Note>) currentValue.value());
         currentValue = new Variant<>(sequence, SequenceNode.class);
@@ -440,7 +484,7 @@ public class Executor implements Visitor
     @Override
     public void visit(final ParallerExpression parallerExpression)
     {
-        var siblings = new GroupNode<Note>();
+        var siblings = musicFactory.createGroup();
         parallerExpression.left().accept(this);
         var left = currentValue;
         parallerExpression.right().accept(this);

@@ -2,21 +2,30 @@ package com.declarative.music.interpreter.tree;
 
 import java.util.List;
 
-import lombok.AllArgsConstructor;
+import com.declarative.music.interpreter.values.music.NoteModifier;
+
 import lombok.Getter;
 
 
 @Getter
-@AllArgsConstructor
-public class SimpleNode<T> implements Node<T>, NodeAppenderVisitor<T>
+public abstract class SimpleNode<T> implements Node<T>, NodeAppenderVisitor<T>
 {
-    private T value;
+    protected final T value;
+    //TODO abstract
+    public NoteModifier modifier;
+
+    protected SimpleNode(T value)
+    {
+        this.value = value;
+    }
 
     @Override
     public List<Node<T>> getSiblings()
     {
         throw new UnsupportedOperationException("This is simple node!");
     }
+
+    public abstract T getValue();
 
     @Override
     public List<Node<T>> getChildren()

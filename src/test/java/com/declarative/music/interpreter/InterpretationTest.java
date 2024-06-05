@@ -23,6 +23,7 @@ import com.declarative.music.interpreter.values.LambdaClousure;
 import com.declarative.music.interpreter.values.VariableReference;
 import com.declarative.music.interpreter.values.Variant;
 import com.declarative.music.interpreter.values.music.Note;
+import com.declarative.music.interpreter.values.music.NoteNode;
 import com.declarative.music.interpreter.values.music.Pitch;
 import com.declarative.music.interpreter.values.music.Rythm;
 import com.declarative.music.lexer.token.Position;
@@ -70,8 +71,8 @@ public class InterpretationTest
     private static SequenceNode<Note> provideNoteSequence()
     {
         return new SequenceNode<>(List.of(
-            new Note(Pitch.C, 1, Rythm.q),
-            new Note(Pitch.E, 1, Rythm.q)
+            new NoteNode(new Note(Pitch.C, 1, Rythm.q)),
+            new NoteNode(new Note(Pitch.E, 1, Rythm.q))
         ));
     }
 
@@ -86,8 +87,8 @@ public class InterpretationTest
     private static GroupNode<Note> provideChord()
     {
         return new GroupNode<>(new ArrayList<>(List.of(
-            new Note(Pitch.C, 1, Rythm.q),
-            new Note(Pitch.E, 1, Rythm.q)
+            new NoteNode(new Note(Pitch.C, 1, Rythm.q)),
+            new NoteNode(new Note(Pitch.E, 1, Rythm.q))
         )));
     }
 
@@ -99,7 +100,7 @@ public class InterpretationTest
             Arguments.of(new SequenceExpression(
                 provideParallerExpression(),
                 new NoteExpression("C", new IntLiteral(1, POS), "q", POS)
-            ), new SequenceNode<Note>(List.of(provideChord(), new Note(Pitch.C, 1, Rythm.q))))
+            ), new SequenceNode<>(List.of(provideChord(), new NoteNode(new Note(Pitch.C, 1, Rythm.q)))))
         );
     }
 
@@ -334,7 +335,7 @@ public class InterpretationTest
 
     @ParameterizedTest
     @MethodSource("provideMusicExpressions")
-    void shouldHandleMusicExpressions(Expression musicExpression, Node<Note> expectedTree)
+    void shouldHandleMusicExpressions(Expression musicExpression, Node<NoteNode> expectedTree)
     {
         // when
         musicExpression.accept(tested);
