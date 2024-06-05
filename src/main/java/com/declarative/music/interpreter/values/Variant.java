@@ -1,12 +1,25 @@
 package com.declarative.music.interpreter.values;
 
+import java.util.Objects;
+
+import com.declarative.music.interpreter.tree.SimpleNode;
+
 import lombok.Getter;
 
 
-public record Variant<T>(T value, @Getter Class<T> type)
+public final class Variant<T> extends SimpleNode<T>
 {
+    private final T value;
+    @Getter
+    private final Class<T> type;
 
-    @Override
+    public Variant(T value, Class<T> type)
+    {
+        super(value);
+        this.value = value;
+        this.type = type;
+    }
+
     public T value()
     {
         if (value instanceof VariableReference)
@@ -52,5 +65,33 @@ public record Variant<T>(T value, @Getter Class<T> type)
     {
         return value.toString();
     }
+
+    public Class<T> type()
+    {
+        return type;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj == this)
+        {
+            return true;
+        }
+        if (obj == null || obj.getClass() != this.getClass())
+        {
+            return false;
+        }
+        var that = (Variant) obj;
+        return Objects.equals(this.value, that.value) &&
+            Objects.equals(this.type, that.type);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(value, type);
+    }
+
 }
 

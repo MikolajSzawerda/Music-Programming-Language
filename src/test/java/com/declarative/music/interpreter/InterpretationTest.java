@@ -16,13 +16,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import com.declarative.music.interpreter.tree.GroupNode;
+import com.declarative.music.interpreter.tree.Node;
+import com.declarative.music.interpreter.tree.SequenceNode;
 import com.declarative.music.interpreter.values.LambdaClousure;
 import com.declarative.music.interpreter.values.VariableReference;
 import com.declarative.music.interpreter.values.Variant;
-import com.declarative.music.interpreter.values.music.Chord;
-import com.declarative.music.interpreter.values.music.MusicNode;
 import com.declarative.music.interpreter.values.music.Note;
-import com.declarative.music.interpreter.values.music.Phrase;
 import com.declarative.music.interpreter.values.music.Pitch;
 import com.declarative.music.interpreter.values.music.Rythm;
 import com.declarative.music.lexer.token.Position;
@@ -67,9 +67,9 @@ public class InterpretationTest
         );
     }
 
-    private static Phrase provideNoteSequence()
+    private static SequenceNode<Note> provideNoteSequence()
     {
-        return new Phrase(List.of(
+        return new SequenceNode<>(List.of(
             new Note(Pitch.C, 1, Rythm.q),
             new Note(Pitch.E, 1, Rythm.q)
         ));
@@ -83,11 +83,11 @@ public class InterpretationTest
         );
     }
 
-    private static Chord provideChord()
+    private static GroupNode<Note> provideChord()
     {
-        return new Chord(new ArrayList<>(List.of(
-            new Phrase(List.of(new Note(Pitch.C, 1, Rythm.q))),
-            new Phrase(List.of(new Note(Pitch.E, 1, Rythm.q)))
+        return new GroupNode<>(new ArrayList<>(List.of(
+            new Note(Pitch.C, 1, Rythm.q),
+            new Note(Pitch.E, 1, Rythm.q)
         )));
     }
 
@@ -99,7 +99,7 @@ public class InterpretationTest
             Arguments.of(new SequenceExpression(
                 provideParallerExpression(),
                 new NoteExpression("C", new IntLiteral(1, POS), "q", POS)
-            ), new Phrase(List.of(provideChord(), new Note(Pitch.C, 1, Rythm.q))))
+            ), new SequenceNode<Note>(List.of(provideChord(), new Note(Pitch.C, 1, Rythm.q))))
         );
     }
 
@@ -334,7 +334,7 @@ public class InterpretationTest
 
     @ParameterizedTest
     @MethodSource("provideMusicExpressions")
-    void shouldHandleMusicExpressions(Expression musicExpression, MusicNode expectedTree)
+    void shouldHandleMusicExpressions(Expression musicExpression, Node<Note> expectedTree)
     {
         // when
         musicExpression.accept(tested);
