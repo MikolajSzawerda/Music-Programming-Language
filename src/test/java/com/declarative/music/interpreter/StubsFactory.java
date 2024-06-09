@@ -1,12 +1,6 @@
 package com.declarative.music.interpreter;
 
-import com.declarative.music.interpreter.tree.GroupNode;
-import com.declarative.music.interpreter.tree.SequenceNode;
 import com.declarative.music.interpreter.values.Variant;
-import com.declarative.music.interpreter.values.music.Note;
-import com.declarative.music.interpreter.values.music.NoteNode;
-import com.declarative.music.interpreter.values.music.Pitch;
-import com.declarative.music.interpreter.values.music.Rythm;
 import com.declarative.music.lexer.token.Position;
 import com.declarative.music.parser.production.Block;
 import com.declarative.music.parser.production.Parameter;
@@ -15,9 +9,6 @@ import com.declarative.music.parser.production.expression.CastExpresion;
 import com.declarative.music.parser.production.expression.Expression;
 import com.declarative.music.parser.production.expression.arithmetic.*;
 import com.declarative.music.parser.production.expression.lambda.LambdaExpression;
-import com.declarative.music.parser.production.expression.music.NoteExpression;
-import com.declarative.music.parser.production.expression.music.ParallerExpression;
-import com.declarative.music.parser.production.expression.music.SequenceExpression;
 import com.declarative.music.parser.production.expression.relation.*;
 import com.declarative.music.parser.production.literal.BoolLiteral;
 import com.declarative.music.parser.production.literal.FloatLiteral;
@@ -28,51 +19,11 @@ import com.declarative.music.parser.production.type.Types;
 import org.junit.jupiter.params.provider.Arguments;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
 public class StubsFactory {
     static final Position POS = new Position(0, 0);
-
-    static SequenceExpression provideSequenceExpression() {
-        return new SequenceExpression(
-                new NoteExpression("C", new IntLiteral(1, POS), "q", POS),
-                new NoteExpression("E", new IntLiteral(1, POS), "q", POS)
-        );
-    }
-
-    static SequenceNode<Note> provideNoteSequence() {
-        return new SequenceNode<>(List.of(
-                new NoteNode(new Note(Pitch.C, 1, Rythm.q)),
-                new NoteNode(new Note(Pitch.E, 1, Rythm.q))
-        ));
-    }
-
-    static ParallerExpression provideParallerExpression() {
-        return new ParallerExpression(
-                new NoteExpression("C", new IntLiteral(1, POS), "q", POS),
-                new NoteExpression("E", new IntLiteral(1, POS), "q", POS)
-        );
-    }
-
-    static GroupNode<Note> provideChord() {
-        return new GroupNode<>(new ArrayList<>(List.of(
-                new NoteNode(new Note(Pitch.C, 1, Rythm.q)),
-                new NoteNode(new Note(Pitch.E, 1, Rythm.q))
-        )));
-    }
-
-    static Stream<Arguments> provideMusicExpressions() {
-        return Stream.of(
-                Arguments.of(provideSequenceExpression(), provideNoteSequence()),
-                Arguments.of(provideParallerExpression(), provideChord()),
-                Arguments.of(new SequenceExpression(
-                        provideParallerExpression(),
-                        new NoteExpression("C", new IntLiteral(1, POS), "q", POS)
-                ), new SequenceNode<>(List.of(provideChord(), new NoteNode(new Note(Pitch.C, 1, Rythm.q)))))
-        );
-    }
 
     private static Expression createExpression(Class<?> expressionType, Class<?> literalType, Object leftValue, Object rightValue) {
         try {

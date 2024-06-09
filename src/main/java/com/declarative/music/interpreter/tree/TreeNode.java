@@ -117,24 +117,4 @@ public class TreeNode<T, V extends TreeNode<T, V>> implements Node<T> {
     public List<Node<T>> getChildren() {
         return null;
     }
-
-    @Override
-    public void accept(NodeAppenderVisitor<T> visitor) {
-
-    }
-
-    @Override
-    public void visit(SequenceNode<T> node) {
-
-    }
-
-    @Override
-    public void visit(GroupNode<T> node) {
-
-    }
-
-    @Override
-    public void visit(SimpleNode<T> tSimpleNode) {
-
-    }
 }

@@ -1,13 +1,11 @@
 package com.declarative.music.interpreter;
 
-import com.declarative.music.interpreter.tree.*;
+import com.declarative.music.interpreter.tree.SimpleNode;
 import com.declarative.music.interpreter.values.LambdaClousure;
 import com.declarative.music.interpreter.values.OperationRegistry;
 import com.declarative.music.interpreter.values.Variant;
 import com.declarative.music.interpreter.values.music.*;
-import com.declarative.music.interpreter.values.template.IndexNode;
 import com.declarative.music.interpreter.values.template.IndexTree;
-import com.declarative.music.interpreter.values.template.TemplateFactory;
 import com.declarative.music.midi.MidiRenderer;
 import com.declarative.music.parser.production.*;
 import com.declarative.music.parser.production.assign.*;
@@ -38,7 +36,6 @@ import lombok.Getter;
 
 import javax.sound.midi.InvalidMidiDataException;
 import java.io.IOException;
-import java.lang.reflect.ParameterizedType;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
@@ -50,7 +47,6 @@ public class Executor implements Visitor {
     private final ContextManager manager;
     @Getter
     private Variant<?> currentValue;
-    private final NodeFactory<Note> musicFactory = new MusicFactory();
     private boolean returned = false;
 
     public Executor(final ContextManager manager) {
@@ -792,36 +788,6 @@ public class Executor implements Visitor {
         parallerExpression.right().accept(this);
         currentValue = REGISTRY.get(parallerExpression.getClass().getSimpleName())
                 .apply(parallerExpression.getClass().getSimpleName(), left, currentValue);
-    }
-
-    private NodeAppenderVisitor castToNodeAppenderVisitor(Variant<?> obj) {
-        if (obj.value() instanceof Integer) {
-            return new IndexNode(obj.castTo(Integer.class));
-        }
-        return (NodeAppenderVisitor) obj.value();
-
-    }
-
-    private <T> NodeFactory<T> getFactory(T value) {
-        if (value instanceof Integer) {
-            return (NodeFactory<T>) new TemplateFactory();
-        }
-        if (getGenericType(value).orElse(null) == Note.class) {
-            return (NodeFactory<T>) new MusicFactory();
-        }
-        if (value instanceof GroupNode<?> || value instanceof SequenceNode<?>) {
-            return (NodeFactory<T>) new TemplateFactory();
-        }
-
-        throw new UnsupportedOperationException("Unknown factory");
-    }
-
-    private <T> Optional<Class<T>> getGenericType(T value) {
-        try {
-            return Optional.of((Class<T>) ((ParameterizedType) value.getClass().getGenericSuperclass()).getActualTypeArguments()[0]);
-        } catch (ClassCastException exception) {
-            return Optional.empty();
-        }
     }
 
 
