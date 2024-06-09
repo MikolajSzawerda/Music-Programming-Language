@@ -33,7 +33,7 @@ public class TreeNode<T, V extends TreeNode<T, V>> implements Node<T> {
             var newRoot = new GroupNode<T>();
             newRoot.nodes.add(root);
             if (nodeValue instanceof GroupNode<T> groupNode) {
-                newRoot.nodes.addAll(groupNode.getSiblings());
+                newRoot.nodes.addAll(groupNode.getChildren());
             } else {
                 newRoot.nodes.add(nodeValue);
             }
@@ -94,7 +94,7 @@ public class TreeNode<T, V extends TreeNode<T, V>> implements Node<T> {
         }
         if (node instanceof GroupNode<T> groupNode) {
             var group = new GroupNode<R>();
-            for (var child : groupNode.getSiblings()) {
+            for (var child : groupNode.getChildren()) {
                 group.nodes.add(traverseNode(child, leafMapper));
             }
             return group;
@@ -106,11 +106,6 @@ public class TreeNode<T, V extends TreeNode<T, V>> implements Node<T> {
     public V appendToSequence(T value) {
         appendToSequence(new SimpleNode<>(value));
         return self();
-    }
-
-    @Override
-    public List<Node<T>> getSiblings() {
-        return null;
     }
 
     @Override

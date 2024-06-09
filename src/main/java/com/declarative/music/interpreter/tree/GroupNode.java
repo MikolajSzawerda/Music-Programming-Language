@@ -14,12 +14,7 @@ public class GroupNode<T> extends AbstractNode<T> {
     }
 
     @Override
-    public List<Node<T>> getSiblings() {
-        return nodes;
-    }
-
-    @Override
     public List<Node<T>> getChildren() {
-        return List.of(this);
+        return nodes;
     }
 }

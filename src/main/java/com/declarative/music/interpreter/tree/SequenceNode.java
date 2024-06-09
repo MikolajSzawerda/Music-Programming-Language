@@ -15,11 +15,6 @@ public class SequenceNode<T> extends AbstractNode<T> {
     }
 
     @Override
-    public List<Node<T>> getSiblings() {
-        return List.of(this);
-    }
-
-    @Override
     public List<Node<T>> getChildren() {
         return nodes;
     }

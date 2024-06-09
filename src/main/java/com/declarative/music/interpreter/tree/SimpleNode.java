@@ -18,11 +18,6 @@ public class SimpleNode<T> implements Node<T> {
     }
 
     @Override
-    public List<Node<T>> getSiblings() {
-        throw new UnsupportedOperationException("This is simple node!");
-    }
-
-    @Override
     public List<Node<T>> getChildren() {
         throw new UnsupportedOperationException("This is simple node!");
     }

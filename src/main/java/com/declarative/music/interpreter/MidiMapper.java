@@ -28,7 +28,7 @@ public class MidiMapper {
         }
         if (node instanceof GroupNode<Note>) {
             int maxDur = 0;
-            for (Node<Note> sibling : node.getSiblings()) {
+            for (Node<Note> sibling : node.getChildren()) {
                 var dur = traverseTree(sibling, map, startTime);
                 maxDur = Math.max(dur, maxDur);
             }
