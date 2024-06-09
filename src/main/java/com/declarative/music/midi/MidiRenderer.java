@@ -22,9 +22,10 @@ public class MidiRenderer {
         final MidiEvent tempoEvent = new MidiEvent(tempoMeta, 0);
         tempoTrack.add(tempoEvent);
         final var track = sequence.createTrack();
-
+        long currentTick = 0;
+        long maxTick = 0;
         for (final var noteBlock : res.entrySet()) {
-            long currentTick = noteBlock.getKey() * ticksPerQuarterNote / 2;
+            currentTick = maxTick;
             for (var note : noteBlock.getValue()) {
                 var midiNote = MidiNote.from(note);
                 final var pitch = getPitch(midiNote);
@@ -38,6 +39,7 @@ public class MidiRenderer {
                 final ShortMessage noteOff = new ShortMessage();
                 noteOff.setMessage(ShortMessage.NOTE_OFF, 0, pitch, 0);
                 track.add(new MidiEvent(noteOff, currentTick + ticks));
+                maxTick = Math.max(maxTick, currentTick + ticks);
             }
         }
 
@@ -50,8 +52,14 @@ public class MidiRenderer {
 
     private static int getTicks(final MidiNote note, final int quoter) {
         return switch (note.duration()) {
+            case dl -> quoter * 16;
+            case l -> quoter * 8;
+            case w -> quoter * 4;
+            case h -> quoter * 2;
             case q -> quoter;
             case e -> quoter / 2;
+            case s -> quoter / 4;
+            case t -> quoter / 8;
         };
     }
 }

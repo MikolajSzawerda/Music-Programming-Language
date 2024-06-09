@@ -7,6 +7,13 @@
 - silne statyczne typowanie
 - obiekty są mutowalne i przekazywane przez referencję
 
+## Instrukcja użytkownika
+
+```shell
+./gradlew clean build
+java -jar build/libs/music-programming-language.jar -f simple.hs
+```
+
 ### Funkcje
 
 - reprezentacja zapisu nutowego(w postaci drzewiastej)

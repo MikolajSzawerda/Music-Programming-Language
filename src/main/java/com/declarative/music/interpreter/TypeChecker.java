@@ -82,6 +82,10 @@ public class TypeChecker implements Visitor {
                     new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "array"),
                     new Parameter(new SimpleType(Types.Int, null), "index")
             )), new com.declarative.music.parser.production.type.InferenceType(null)),
+            "transpose", new BuiltInFunction(new Parameters(List.of(
+                    new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "tree"),
+                    new Parameter(new SimpleType(Types.Int, null), "index")
+            )), new SimpleType(Types.Phrase, null)),
             "mel", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "array")
             )), new SimpleType(Types.Phrase, null)),

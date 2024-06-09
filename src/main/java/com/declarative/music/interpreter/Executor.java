@@ -165,6 +165,28 @@ public class Executor implements Visitor {
                 }
                 currentValue = new Variant<>(sequence, MusicTree.class);
             }),
+            "transpose", new BuiltInFunction(new Parameters(List.of(
+                    new Parameter(new InferenceType(null), "tree"),
+                    new Parameter(new SimpleType(Types.Int, null), "value")
+            )), (arguments) -> {
+                var tree = arguments.get("tree").castTo(MusicTree.class);
+                var index = arguments.get("value").castTo(Integer.class);
+                var transposedNode = tree.map((node) -> {
+                    var currentNote = node.getValue();
+                    var pitch = currentNote.getPitch() == null ? node.modifier.getPitch() : currentNote.getPitch();
+                    var duration = currentNote.getDuration() == null ? node.modifier.getRythm() : currentNote.getDuration();
+                    var octave = currentNote.getOctave() == null ? node.modifier.getOctave() : currentNote.getOctave();
+                    var note = new Note(
+                            pitch,
+                            octave + index,
+                            duration
+                    );
+                    var newNode = new SimpleNode<>(note);
+                    newNode.modifier = node.modifier;
+                    return newNode;
+                });
+                currentValue = new Variant<>(new MusicTree(transposedNode), MusicTree.class);
+            }),
             "export", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new InferenceType(null), "midiTree"),
                     new Parameter(new SimpleType(Types.String, null), "fileName")
@@ -790,7 +812,13 @@ public class Executor implements Visitor {
     @Override
     public void visit(final NoteExpression noteExpression) {
         var noteBuilder = Note.builder();
-        Optional.ofNullable(noteExpression.pitch()).ifPresent(val -> noteBuilder.pitch(Pitch.valueOf(val)));
+        Optional.ofNullable(noteExpression.pitch()).ifPresent(val -> {
+            if (val.contains("#")) {
+                noteBuilder.pitch(Pitch.valueOf(val.replace("#", "_SHARP")));
+                return;
+            }
+            noteBuilder.pitch(Pitch.valueOf(val));
+        });
         Optional.ofNullable(noteExpression.octave()).ifPresent(expr -> expr.accept(this));
         Optional.ofNullable(currentValue).ifPresent(val -> noteBuilder.octave(val.castTo(Integer.class)));
         currentValue = null;

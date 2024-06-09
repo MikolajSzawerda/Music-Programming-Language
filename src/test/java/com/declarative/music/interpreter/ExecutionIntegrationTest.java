@@ -464,7 +464,7 @@ public class ExecutionIntegrationTest {
         final var code = """
                 let a = 1;
                 print(a);
-                let b = (C, 4) q;
+                let b = (C#, 4) q;
                 print(b);
                 let c = (C, 4) q | (D, 4) e;
                 print(c);

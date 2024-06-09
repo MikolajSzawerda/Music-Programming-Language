@@ -6,6 +6,7 @@ import com.declarative.music.interpreter.tree.SequenceNode;
 import com.declarative.music.interpreter.tree.SimpleNode;
 import com.declarative.music.interpreter.values.music.MusicTree;
 import com.declarative.music.interpreter.values.music.Note;
+import com.declarative.music.interpreter.values.music.Rythm;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -24,7 +25,7 @@ public class MidiMapper {
         if (node instanceof final SimpleNode<Note> noteNode) {
             var note = enrichNoteWithModifier(noteNode);
             map.computeIfAbsent(startTime, k -> new ArrayList<>()).add(note);
-            return calcDuration(note);
+            return Rythm.values().length - note.getDuration().ordinal() + 1;
         }
         if (node instanceof GroupNode<Note>) {
             int maxDur = 0;
