@@ -1,14 +1,23 @@
 package com.declarative.music.interpreter;
 
 import com.declarative.music.interpreter.values.Variant;
+import com.declarative.music.interpreter.values.music.MusicTree;
+import com.declarative.music.interpreter.values.music.Note;
+import com.declarative.music.interpreter.values.music.Pitch;
+import com.declarative.music.interpreter.values.music.Rythm;
+import com.declarative.music.interpreter.values.template.IndexTree;
 import com.declarative.music.lexer.token.Position;
 import com.declarative.music.parser.production.Block;
 import com.declarative.music.parser.production.Parameter;
 import com.declarative.music.parser.production.Parameters;
+import com.declarative.music.parser.production.assign.*;
 import com.declarative.music.parser.production.expression.CastExpresion;
 import com.declarative.music.parser.production.expression.Expression;
 import com.declarative.music.parser.production.expression.arithmetic.*;
 import com.declarative.music.parser.production.expression.lambda.LambdaExpression;
+import com.declarative.music.parser.production.expression.music.NoteExpression;
+import com.declarative.music.parser.production.expression.music.ParallerExpression;
+import com.declarative.music.parser.production.expression.music.SequenceExpression;
 import com.declarative.music.parser.production.expression.relation.*;
 import com.declarative.music.parser.production.literal.BoolLiteral;
 import com.declarative.music.parser.production.literal.FloatLiteral;
@@ -24,6 +33,7 @@ import java.util.stream.Stream;
 
 public class StubsFactory {
     static final Position POS = new Position(0, 0);
+    static final String VAR_NAME = "testVar";
 
     private static Expression createExpression(Class<?> expressionType, Class<?> literalType, Object leftValue, Object rightValue) {
         try {
@@ -216,6 +226,260 @@ public class StubsFactory {
                         new Block(List.of(), POS),
                         POS
                 ), Types.Int)
+        );
+    }
+
+    static Stream<Arguments> provideBinaryAssigments() {
+        return Stream.of(
+                Arguments.of(new Variant<>(1, Integer.class), new PlusAssignStatement(VAR_NAME, new IntLiteral(1, POS), POS), new Variant<>(2, Integer.class)),
+                Arguments.of(new Variant<>(2, Integer.class), new DivAssignStatement(VAR_NAME, new IntLiteral(2, POS), POS), new Variant<>(1, Integer.class)),
+                Arguments.of(new Variant<>(5, Integer.class), new ModuloAssignStatement(VAR_NAME, new IntLiteral(2, POS), POS), new Variant<>(1, Integer.class)),
+                Arguments.of(new Variant<>(2, Integer.class), new MulAssignStatement(VAR_NAME, new IntLiteral(2, POS), POS), new Variant<>(4, Integer.class)),
+                Arguments.of(new Variant<>(2, Integer.class), new PowAssignStatement(VAR_NAME, new IntLiteral(2, POS), POS), new Variant<>(4, Integer.class)),
+                Arguments.of(
+                        new Variant<>(new MusicTree()
+                                .appendToSequence(createNote(Pitch.C)), MusicTree.class),
+                        new SequenceAssignStatement(
+                                VAR_NAME,
+                                new NoteExpression("E", new IntLiteral(4, POS), "q", POS),
+                                POS
+                        ),
+                        new Variant<>(new MusicTree()
+                                .appendToSequence(createNote(Pitch.C))
+                                .appendToSequence(createNote(Pitch.E)), MusicTree.class)),
+                Arguments.of(
+                        new Variant<>(new MusicTree()
+                                .appendToSequence(createNote(Pitch.C)), MusicTree.class),
+                        new ParalerAssignStatement(
+                                VAR_NAME,
+                                new NoteExpression("E", new IntLiteral(4, POS), "q", POS),
+                                POS
+                        ),
+                        new Variant<>(new MusicTree()
+                                .appendToGroup(createNote(Pitch.C))
+                                .appendToGroup(createNote(Pitch.E)), MusicTree.class)),
+                Arguments.of(new Variant<>(1, Integer.class), new MinusAssignStatement(VAR_NAME, new IntLiteral(1, POS), POS), new Variant<>(0, Integer.class))
+        );
+    }
+
+    private static NoteExpression createNoteExpression(String pitch) {
+        return new NoteExpression(pitch, new IntLiteral(4, POS), "q", POS);
+    }
+
+
+    private static Note createNote(Pitch pitch) {
+        return new Note(pitch, 4, Rythm.q);
+    }
+
+    public static Stream<Arguments> provideNoteExpressions() {
+        return Stream.of(
+                //C | E
+                Arguments.of(new SequenceExpression(
+                                createNoteExpression("C"),
+                                createNoteExpression("E")
+                        ), new Variant<>(
+                                new MusicTree()
+                                        .appendToSequence(createNote(Pitch.C))
+                                        .appendToSequence(createNote(Pitch.E)), MusicTree.class)
+                ),
+                // C | (E | G)
+                Arguments.of(new SequenceExpression(
+                                createNoteExpression("C"),
+                                new SequenceExpression(
+                                        createNoteExpression("E"),
+                                        createNoteExpression("G")
+                                )
+                        ), new Variant<>(
+                                new MusicTree()
+                                        .appendToSequence(createNote(Pitch.C))
+                                        .appendToSequence(createNote(Pitch.E))
+                                        .appendToSequence(createNote(Pitch.G)), MusicTree.class)
+                ),
+                //C & (E & G)
+                Arguments.of(new ParallerExpression(
+                                createNoteExpression("C"),
+                                new ParallerExpression(
+                                        createNoteExpression("E"),
+                                        createNoteExpression("G")
+                                )
+                        ), new Variant<>(
+                                new MusicTree()
+                                        .appendToGroup(createNote(Pitch.C))
+                                        .appendToGroup(createNote(Pitch.E))
+                                        .appendToGroup(createNote(Pitch.G)), MusicTree.class)
+                ),
+                //(C | E) & G
+                Arguments.of(new ParallerExpression(
+                                new SequenceExpression(
+                                        createNoteExpression("C"),
+                                        createNoteExpression("E")
+                                ),
+                                createNoteExpression("G")
+
+                        ), new Variant<>(
+                                new MusicTree()
+                                        .appendToGroup(
+                                                new MusicTree()
+                                                        .appendToSequence(createNote(Pitch.C))
+                                                        .appendToSequence(createNote(Pitch.E))
+                                        )
+                                        .appendToGroup(createNote(Pitch.G)), MusicTree.class)
+                ),
+                //C | E & G
+                Arguments.of(new SequenceExpression(
+
+                                createNoteExpression("C"),
+                                new ParallerExpression(
+                                        createNoteExpression("E"),
+                                        createNoteExpression("G")
+                                )
+
+                        ), new Variant<>(
+                                new MusicTree()
+                                        .appendToSequence(createNote(Pitch.C))
+                                        .appendToSequence(
+                                                new MusicTree()
+                                                        .appendToGroup(createNote(Pitch.E))
+                                                        .appendToGroup(createNote(Pitch.G))
+                                        )
+                                , MusicTree.class)
+                ),
+                //(C | E) & (G | E)
+                Arguments.of(new ParallerExpression(
+
+                                new SequenceExpression(
+                                        createNoteExpression("C"),
+                                        createNoteExpression("E")
+                                ),
+                                new SequenceExpression(
+                                        createNoteExpression("G"),
+                                        createNoteExpression("E")
+                                )
+
+                        ), new Variant<>(
+                                new MusicTree()
+                                        .appendToSequence(
+                                                new MusicTree()
+                                                        .appendToGroup(createNote(Pitch.C))
+                                                        .appendToGroup(createNote(Pitch.E))
+                                        )
+                                        .appendToSequence(
+                                                new MusicTree()
+                                                        .appendToGroup(createNote(Pitch.G))
+                                                        .appendToGroup(createNote(Pitch.E))
+                                        )
+                                , MusicTree.class)
+                ),
+                //C & E | G & E
+                Arguments.of(new SequenceExpression(
+
+                                new ParallerExpression(
+                                        createNoteExpression("C"),
+                                        createNoteExpression("E")
+                                ),
+                                new ParallerExpression(
+                                        createNoteExpression("G"),
+                                        createNoteExpression("E")
+                                )
+
+                        ), new Variant<>(
+                                new MusicTree()
+                                        .appendToGroup(
+                                                new MusicTree()
+                                                        .appendToSequence(createNote(Pitch.C))
+                                                        .appendToSequence(createNote(Pitch.E))
+                                        )
+                                        .appendToGroup(
+                                                new MusicTree()
+                                                        .appendToSequence(createNote(Pitch.G))
+                                                        .appendToSequence(createNote(Pitch.E))
+                                        )
+                                , MusicTree.class)
+                ),
+                //C & E
+                Arguments.of(new ParallerExpression(
+                                createNoteExpression("C"),
+                                createNoteExpression("E")
+                        ), new Variant<>(
+                                new MusicTree()
+                                        .appendToGroup(createNote(Pitch.C))
+                                        .appendToGroup(createNote(Pitch.E)), MusicTree.class)
+                )
+        );
+    }
+
+    static Stream<Arguments> provideIndexExpressions() {
+        return Stream.of(
+                //0 | 1
+                Arguments.of(new SequenceExpression(
+                                new IntLiteral(0, POS),
+                                new IntLiteral(1, POS)
+                        ), new Variant<>(
+                                new IndexTree()
+                                        .appendToSequence(0)
+                                        .appendToSequence(1), IndexTree.class)
+                ),
+                // 0 | (1 | 2)
+                Arguments.of(new SequenceExpression(
+                                new IntLiteral(0, POS),
+                                new SequenceExpression(
+                                        new IntLiteral(1, POS),
+                                        new IntLiteral(2, POS)
+                                )
+                        ), new Variant<>(
+                                new IndexTree()
+                                        .appendToSequence(0)
+                                        .appendToSequence(1)
+                                        .appendToSequence(2), IndexTree.class)
+                ),
+                //0 & (1 & 2)
+                Arguments.of(new ParallerExpression(
+                                new IntLiteral(0, POS),
+                                new ParallerExpression(
+                                        new IntLiteral(1, POS),
+                                        new IntLiteral(2, POS)
+                                )
+                        ), new Variant<>(
+                                new IndexTree()
+                                        .appendToGroup(0)
+                                        .appendToGroup(1)
+                                        .appendToGroup(2), IndexTree.class)
+                ),
+                //(C | E) & (G | E)
+                Arguments.of(new ParallerExpression(
+
+                                new SequenceExpression(
+                                        new IntLiteral(0, POS),
+                                        new IntLiteral(1, POS)
+                                ),
+                                new SequenceExpression(
+                                        new IntLiteral(2, POS),
+                                        new IntLiteral(3, POS)
+                                )
+
+                        ), new Variant<>(
+                                new IndexTree()
+                                        .appendToSequence(
+                                                new IndexTree()
+                                                        .appendToGroup(0)
+                                                        .appendToGroup(1)
+                                        )
+                                        .appendToSequence(
+                                                new IndexTree()
+                                                        .appendToGroup(2)
+                                                        .appendToGroup(3)
+                                        )
+                                , IndexTree.class)
+                ),
+                //0 & 1
+                Arguments.of(new ParallerExpression(
+                                new IntLiteral(0, POS),
+                                new IntLiteral(1, POS)
+                        ), new Variant<>(
+                                new IndexTree()
+                                        .appendToGroup(0)
+                                        .appendToGroup(1), IndexTree.class)
+                )
         );
     }
 }

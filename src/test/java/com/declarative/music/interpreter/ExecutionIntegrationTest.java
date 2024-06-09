@@ -219,7 +219,7 @@ public class ExecutionIntegrationTest {
     void shouldHanldeLambdaCall() throws ParsingException, IOException {
         // given
         final var code = """
-                let fun = with(Int x)->Int{
+                let fun = with(Int x)->lam(Int)->Int{
                     return (
                     with(Int a)->Int{
                         return a;
@@ -427,7 +427,7 @@ public class ExecutionIntegrationTest {
 
         // when
         assertThatThrownBy(() -> parser.parserProgram().accept(interpreter))
-                .hasMessageStartingWith("INTERPRETATION ERROR required Integer provided Double");
+                .hasMessageStartingWith("SEMANTIC ERROR cannot assign value of DoubleType to variable of IntType");
 
     }
 
@@ -456,5 +456,25 @@ public class ExecutionIntegrationTest {
                         new Variant<>(1, Integer.class)
                 );
 
+    }
+
+    @Test
+    void shouldPrintObjects() throws ParsingException, IOException {
+        // given
+        final var code = """
+                let a = 1;
+                print(a);
+                let b = (C, 4) q;
+                print(b);
+                let c = (C, 4) q | (D, 4) e;
+                print(c);
+                print(0 |(1+a));
+                """;
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        var interpreter = new Executor();
+
+        // when
+        parser.parserProgram().accept(interpreter);
     }
 }

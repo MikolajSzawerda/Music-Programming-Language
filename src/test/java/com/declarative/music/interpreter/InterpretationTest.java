@@ -3,14 +3,8 @@ package com.declarative.music.interpreter;
 import com.declarative.music.interpreter.values.LambdaClousure;
 import com.declarative.music.interpreter.values.VariableReference;
 import com.declarative.music.interpreter.values.Variant;
-import com.declarative.music.interpreter.values.music.MusicTree;
-import com.declarative.music.interpreter.values.music.Note;
-import com.declarative.music.interpreter.values.music.Pitch;
-import com.declarative.music.interpreter.values.music.Rythm;
-import com.declarative.music.interpreter.values.template.IndexTree;
 import com.declarative.music.lexer.token.Position;
 import com.declarative.music.parser.production.*;
-import com.declarative.music.parser.production.assign.*;
 import com.declarative.music.parser.production.expression.Expression;
 import com.declarative.music.parser.production.expression.arithmetic.AddExpression;
 import com.declarative.music.parser.production.expression.arithmetic.MinusUnaryExpression;
@@ -20,9 +14,6 @@ import com.declarative.music.parser.production.expression.array.ListComprehensio
 import com.declarative.music.parser.production.expression.array.RangeExpression;
 import com.declarative.music.parser.production.expression.lambda.FunctionCall;
 import com.declarative.music.parser.production.expression.lambda.LambdaExpression;
-import com.declarative.music.parser.production.expression.music.NoteExpression;
-import com.declarative.music.parser.production.expression.music.ParallerExpression;
-import com.declarative.music.parser.production.expression.music.SequenceExpression;
 import com.declarative.music.parser.production.expression.pipe.InlineFuncCall;
 import com.declarative.music.parser.production.expression.pipe.PipeExpression;
 import com.declarative.music.parser.production.expression.relation.EqExpression;
@@ -53,247 +44,32 @@ public class InterpretationTest {
     private static final Position POS = new Position(0, 0);
     private static final String VAR_NAME = "testVar";
 
-    private static Stream<Arguments> provideBinaryAssigments() {
+    private static Stream<Arguments> provideFunctionCalls() {
         return Stream.of(
-                Arguments.of(new Variant<>(1, Integer.class), new PlusAssignStatement(VAR_NAME, new IntLiteral(1, POS), POS), new Variant<>(2, Integer.class)),
-                Arguments.of(new Variant<>(2, Integer.class), new DivAssignStatement(VAR_NAME, new IntLiteral(2, POS), POS), new Variant<>(1, Integer.class)),
-                Arguments.of(new Variant<>(5, Integer.class), new ModuloAssignStatement(VAR_NAME, new IntLiteral(2, POS), POS), new Variant<>(1, Integer.class)),
-                Arguments.of(new Variant<>(2, Integer.class), new MulAssignStatement(VAR_NAME, new IntLiteral(2, POS), POS), new Variant<>(4, Integer.class)),
-                Arguments.of(new Variant<>(2, Integer.class), new PowAssignStatement(VAR_NAME, new IntLiteral(2, POS), POS), new Variant<>(4, Integer.class)),
-                Arguments.of(
-                        new Variant<>(new MusicTree()
-                                .appendToSequence(createNote(Pitch.C)), MusicTree.class),
-                        new SequenceAssignStatement(
-                                VAR_NAME,
-                                new NoteExpression("E", new IntLiteral(4, POS), "q", POS),
-                                POS
-                        ),
-                        new Variant<>(new MusicTree()
-                                .appendToSequence(createNote(Pitch.C))
-                                .appendToSequence(createNote(Pitch.E)), MusicTree.class)),
-                Arguments.of(
-                        new Variant<>(new MusicTree()
-                                .appendToSequence(createNote(Pitch.C)), MusicTree.class),
-                        new ParalerAssignStatement(
-                                VAR_NAME,
-                                new NoteExpression("E", new IntLiteral(4, POS), "q", POS),
-                                POS
-                        ),
-                        new Variant<>(new MusicTree()
-                                .appendToGroup(createNote(Pitch.C))
-                                .appendToGroup(createNote(Pitch.E)), MusicTree.class)),
-                Arguments.of(new Variant<>(1, Integer.class), new MinusAssignStatement(VAR_NAME, new IntLiteral(1, POS), POS), new Variant<>(0, Integer.class))
-        );
-    }
-
-    public static Stream<Arguments> provideNoteExpressions() {
-        return Stream.of(
-                //C | E
-                Arguments.of(new SequenceExpression(
-                                createNoteExpression("C"),
-                                createNoteExpression("E")
-                        ), new Variant<>(
-                                new MusicTree()
-                                        .appendToSequence(createNote(Pitch.C))
-                                        .appendToSequence(createNote(Pitch.E)), MusicTree.class)
-                ),
-                // C | (E | G)
-                Arguments.of(new SequenceExpression(
-                                createNoteExpression("C"),
-                                new SequenceExpression(
-                                        createNoteExpression("E"),
-                                        createNoteExpression("G")
-                                )
-                        ), new Variant<>(
-                                new MusicTree()
-                                        .appendToSequence(createNote(Pitch.C))
-                                        .appendToSequence(createNote(Pitch.E))
-                                        .appendToSequence(createNote(Pitch.G)), MusicTree.class)
-                ),
-                //C & (E & G)
-                Arguments.of(new ParallerExpression(
-                                createNoteExpression("C"),
-                                new ParallerExpression(
-                                        createNoteExpression("E"),
-                                        createNoteExpression("G")
-                                )
-                        ), new Variant<>(
-                                new MusicTree()
-                                        .appendToGroup(createNote(Pitch.C))
-                                        .appendToGroup(createNote(Pitch.E))
-                                        .appendToGroup(createNote(Pitch.G)), MusicTree.class)
-                ),
-                //(C | E) & G
-                Arguments.of(new ParallerExpression(
-                                new SequenceExpression(
-                                        createNoteExpression("C"),
-                                        createNoteExpression("E")
-                                ),
-                                createNoteExpression("G")
-
-                        ), new Variant<>(
-                                new MusicTree()
-                                        .appendToGroup(
-                                                new MusicTree()
-                                                        .appendToSequence(createNote(Pitch.C))
-                                                        .appendToSequence(createNote(Pitch.E))
-                                        )
-                                        .appendToGroup(createNote(Pitch.G)), MusicTree.class)
-                ),
-                //C | E & G
-                Arguments.of(new SequenceExpression(
-
-                                createNoteExpression("C"),
-                                new ParallerExpression(
-                                        createNoteExpression("E"),
-                                        createNoteExpression("G")
-                                )
-
-                        ), new Variant<>(
-                                new MusicTree()
-                                        .appendToSequence(createNote(Pitch.C))
-                                        .appendToSequence(
-                                                new MusicTree()
-                                                        .appendToGroup(createNote(Pitch.E))
-                                                        .appendToGroup(createNote(Pitch.G))
-                                        )
-                                , MusicTree.class)
-                ),
-                //(C | E) & (G | E)
-                Arguments.of(new ParallerExpression(
-
-                                new SequenceExpression(
-                                        createNoteExpression("C"),
-                                        createNoteExpression("E")
-                                ),
-                                new SequenceExpression(
-                                        createNoteExpression("G"),
-                                        createNoteExpression("E")
-                                )
-
-                        ), new Variant<>(
-                                new MusicTree()
-                                        .appendToSequence(
-                                                new MusicTree()
-                                                        .appendToGroup(createNote(Pitch.C))
-                                                        .appendToGroup(createNote(Pitch.E))
-                                        )
-                                        .appendToSequence(
-                                                new MusicTree()
-                                                        .appendToGroup(createNote(Pitch.G))
-                                                        .appendToGroup(createNote(Pitch.E))
-                                        )
-                                , MusicTree.class)
-                ),
-                //C & E | G & E
-                Arguments.of(new SequenceExpression(
-
-                                new ParallerExpression(
-                                        createNoteExpression("C"),
-                                        createNoteExpression("E")
-                                ),
-                                new ParallerExpression(
-                                        createNoteExpression("G"),
-                                        createNoteExpression("E")
-                                )
-
-                        ), new Variant<>(
-                                new MusicTree()
-                                        .appendToGroup(
-                                                new MusicTree()
-                                                        .appendToSequence(createNote(Pitch.C))
-                                                        .appendToSequence(createNote(Pitch.E))
-                                        )
-                                        .appendToGroup(
-                                                new MusicTree()
-                                                        .appendToSequence(createNote(Pitch.G))
-                                                        .appendToSequence(createNote(Pitch.E))
-                                        )
-                                , MusicTree.class)
-                ),
-                //C & E
-                Arguments.of(new ParallerExpression(
-                                createNoteExpression("C"),
-                                createNoteExpression("E")
-                        ), new Variant<>(
-                                new MusicTree()
-                                        .appendToGroup(createNote(Pitch.C))
-                                        .appendToGroup(createNote(Pitch.E)), MusicTree.class)
+                Arguments.of(new FunctionCall("fun", List.of(new IntLiteral(1, POS)), POS)),
+                Arguments.of(new PipeExpression(
+                        new IntLiteral(1, POS),
+                        new InlineFuncCall("fun", List.of(), POS))
                 )
         );
     }
 
-    private static Stream<Arguments> provideIndexExpressions() {
+    private static Stream<Arguments> provideWrongArgumentTypeFunctionCalls() {
         return Stream.of(
-                //0 | 1
-                Arguments.of(new SequenceExpression(
-                                new IntLiteral(0, POS),
-                                new IntLiteral(1, POS)
-                        ), new Variant<>(
-                                new IndexTree()
-                                        .appendToSequence(0)
-                                        .appendToSequence(1), IndexTree.class)
-                ),
-                // 0 | (1 | 2)
-                Arguments.of(new SequenceExpression(
-                                new IntLiteral(0, POS),
-                                new SequenceExpression(
-                                        new IntLiteral(1, POS),
-                                        new IntLiteral(2, POS)
-                                )
-                        ), new Variant<>(
-                                new IndexTree()
-                                        .appendToSequence(0)
-                                        .appendToSequence(1)
-                                        .appendToSequence(2), IndexTree.class)
-                ),
-                //0 & (1 & 2)
-                Arguments.of(new ParallerExpression(
-                                new IntLiteral(0, POS),
-                                new ParallerExpression(
-                                        new IntLiteral(1, POS),
-                                        new IntLiteral(2, POS)
-                                )
-                        ), new Variant<>(
-                                new IndexTree()
-                                        .appendToGroup(0)
-                                        .appendToGroup(1)
-                                        .appendToGroup(2), IndexTree.class)
-                ),
-                //(C | E) & (G | E)
-                Arguments.of(new ParallerExpression(
+                Arguments.of(new FunctionCall("fun", List.of(new FloatLiteral(1.0, POS)), POS)),
+                Arguments.of(new PipeExpression(
+                        new FloatLiteral(1.0, POS),
+                        new InlineFuncCall("fun", List.of(), POS))
+                )
+        );
+    }
 
-                                new SequenceExpression(
-                                        new IntLiteral(0, POS),
-                                        new IntLiteral(1, POS)
-                                ),
-                                new SequenceExpression(
-                                        new IntLiteral(2, POS),
-                                        new IntLiteral(3, POS)
-                                )
-
-                        ), new Variant<>(
-                                new IndexTree()
-                                        .appendToSequence(
-                                                new IndexTree()
-                                                        .appendToGroup(0)
-                                                        .appendToGroup(1)
-                                        )
-                                        .appendToSequence(
-                                                new IndexTree()
-                                                        .appendToGroup(2)
-                                                        .appendToGroup(3)
-                                        )
-                                , IndexTree.class)
-                ),
-                //0 & 1
-                Arguments.of(new ParallerExpression(
-                                new IntLiteral(0, POS),
-                                new IntLiteral(1, POS)
-                        ), new Variant<>(
-                                new IndexTree()
-                                        .appendToGroup(0)
-                                        .appendToGroup(1), IndexTree.class)
+    private static Stream<Arguments> provideWrongNumberOfArgumentsFunctionCalls() {
+        return Stream.of(
+                Arguments.of(new FunctionCall("fun", List.of(new IntLiteral(1, POS), new IntLiteral(1, POS)), POS)),
+                Arguments.of(new PipeExpression(
+                        new IntLiteral(1, POS),
+                        new InlineFuncCall("fun", List.of(new IntLiteral(1, POS)), POS))
                 )
         );
     }
@@ -399,7 +175,7 @@ public class InterpretationTest {
 
     //region Binary assigment
     @ParameterizedTest
-    @MethodSource("provideBinaryAssigments")
+    @MethodSource("com.declarative.music.interpreter.StubsFactory#provideBinaryAssigments")
     void shouldExecuteExpressionWithAssigment(Variant<?> initialValue, Statement binaryAssignStmt, Variant<?> expectedValue) {
         // given
         tested.getManager().insert(VAR_NAME, initialValue);
@@ -415,17 +191,9 @@ public class InterpretationTest {
     //endregion
 
     //region Music and Index tree
-    private static NoteExpression createNoteExpression(String pitch) {
-        return new NoteExpression(pitch, new IntLiteral(4, POS), "q", POS);
-    }
-
-
-    private static Note createNote(Pitch pitch) {
-        return new Note(pitch, 4, Rythm.q);
-    }
 
     @ParameterizedTest
-    @MethodSource("provideNoteExpressions")
+    @MethodSource("com.declarative.music.interpreter.StubsFactory#provideNoteExpressions")
     void shouldHandleMusicTreeExpression(Expression noteExpression, Variant<?> expectedTree) {
         // when
         noteExpression.accept(tested);
@@ -435,7 +203,7 @@ public class InterpretationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideIndexExpressions")
+    @MethodSource("com.declarative.music.interpreter.StubsFactory#provideIndexExpressions")
     void shouldHandleIndexTreeExpression(Expression indexExpression, Variant<?> expectedTree) {
         // when
         indexExpression.accept(tested);
@@ -443,6 +211,119 @@ public class InterpretationTest {
         // then
         assertThat(tested.getCurrentValue()).isEqualToComparingFieldByFieldRecursively(expectedTree);
     }
+    //endregion
+
+    //region Lambda Expressions and Call
+
+    private static LambdaExpression createIdentityFunction() {
+        return new LambdaExpression(
+                new Parameters(List.of(new Parameter(new SimpleType(Types.Int, POS), "a"))),
+                new SimpleType(Types.Int, POS),
+                new Block(List.of(
+                        new ReturnStatement(new com.declarative.music.parser.production.expression.VariableReference("a", POS), POS)
+                ), POS),
+                POS
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideFunctionCalls")
+    void shouldCallFunction(Expression functionCall) {
+        // given
+        var stmt = new Declaration(new InferenceType(POS), "fun", createIdentityFunction());
+        stmt.accept(tested);
+
+        //when
+        functionCall.accept(tested);
+
+        // then
+        assertThat(tested.getCurrentValue().value()).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideWrongArgumentTypeFunctionCalls")
+    void shouldThrow_WhenWrongTypeOfArguments(Expression functionCall) {
+        // given
+        var stmt = new Declaration(new InferenceType(POS), "fun", createIdentityFunction());
+        stmt.accept(tested);
+
+        //when
+        assertThatThrownBy(() -> functionCall.accept(tested))
+                .hasMessageStartingWith("INTERPRETATION ERROR wrong argument type expected Integer got Double");
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideWrongNumberOfArgumentsFunctionCalls")
+    void shouldThrow_WhenWrongNumberOfArguments(Expression functionCall) {
+        // given
+        var stmt = new Declaration(new InferenceType(POS), "fun", createIdentityFunction());
+        stmt.accept(tested);
+
+        //when
+        assertThatThrownBy(() -> functionCall.accept(tested))
+                .hasMessageStartingWith("INTERPRETATION ERROR wrong number of arguments expected 1 got 2");
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideFunctionCalls")
+    void shouldHandleFunction_WithInferenceParameters(Expression functionCall) {
+        // given
+        var inferenceFunction = new LambdaExpression(
+                new Parameters(List.of(new Parameter(new InferenceType(POS), "a"))),
+                new InferenceType(POS),
+                new Block(List.of(
+                        new ReturnStatement(new com.declarative.music.parser.production.expression.VariableReference("a", POS), POS)
+                ), POS),
+                POS
+        );
+
+        var stmt = new Declaration(new InferenceType(POS), "fun", inferenceFunction);
+        stmt.accept(tested);
+
+        //when
+        functionCall.accept(tested);
+
+        // then
+        assertThat(tested.getCurrentValue().value()).isEqualTo(1);
+    }
+//
+//    @Test
+//    void shouldThrow_WhenWrongReturnType() {
+//        // given
+//        var func = new LambdaExpression(
+//                new Parameters(List.of(new Parameter(new SimpleType(Types.Int, POS), "a"))),
+//                new SimpleType(Types.Double, POS),
+//                new Block(List.of(
+//                        new ReturnStatement(new com.declarative.music.parser.production.expression.VariableReference("a", POS), POS)
+//                ), POS),
+//                POS
+//        );
+//        var stmt = new Declaration(new InferenceType(POS), "fun", func);
+//        stmt.accept(tested);
+//        var functionCall = new FunctionCall("fun", List.of(new IntLiteral(1, POS)), POS);
+//        //when
+//        assertThatThrownBy(() -> functionCall.accept(tested))
+//                .hasMessageStartingWith("INTERPRETATION ERROR wrong return type expected Double got Integer");
+//    }
+    //endregion
+
+    //region Types
+//    @Test
+//    void shouldCheckLambdaTypes() {
+//        // given
+//        var type = new LambdaType(List.of(
+//                new SimpleType(Types.Int, POS),
+//                new SimpleType(Types.Double, POS)
+//        ), new SimpleType(Types.Int, POS), POS);
+//        var lambda = new LambdaExpression(new Parameters(List.of(
+//                new Parameter(new SimpleType(Types.Int, POS), "a"),
+//                new Parameter(new SimpleType(Types.Int, POS), "b"))),
+//                new SimpleType(Types.Int, POS), new Block(List.of(), POS), POS);
+//        var stmt = new Declaration(type, "a", lambda);
+//        // when
+//        assertThatThrownBy(() -> stmt.accept(tested))
+//                .hasMessageStartingWith("SEMANTIC ERROR cannot assign value to variable of different type");
+//    }
     //endregion
 
     @Test

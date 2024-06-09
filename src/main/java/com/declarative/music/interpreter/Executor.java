@@ -135,8 +135,7 @@ public class Executor implements Visitor {
                     .register(IndexTree.class, IndexTree.class, (a, b) -> new IndexTree().appendToGroup(a.copy()).appendToGroup(b.copy()), IndexTree.class)
             ),
             Map.entry(OrExpression.class.getSimpleName(), new OperationRegistry()
-                    .register(Boolean.class, Boolean.class, (a, b) -> a || b, Boolean.class))
-    );
+                    .register(Boolean.class, Boolean.class, (a, b) -> a || b, Boolean.class)));
 
     record BuiltInFunction(Parameters parameters, Consumer<Map<String, Variant<?>>> code) {
     }
@@ -201,6 +200,7 @@ public class Executor implements Visitor {
     //region Program
     @Override
     public void visit(final Program program) {
+        program.accept(new TypeChecker(new ContextManager(manager.getGlobalFrame().copy())));
         program.statements().forEach(stmt -> stmt.accept(this));
     }
     //endregion
@@ -629,7 +629,7 @@ public class Executor implements Visitor {
     public void visit(final InlineFuncCall inlineFuncCall) {
         if (builtinFunctions.containsKey(inlineFuncCall.name())) {
             var func = builtinFunctions.get(inlineFuncCall.name());
-            var arguments = getInlineArguments(func.parameters.parameters(), inlineFuncCall.arguments());
+            var arguments = getInlineArguments(moveCurrentValue(), func.parameters.parameters(), inlineFuncCall.arguments());
             func.code.accept(arguments);
             return;
         }
@@ -637,8 +637,7 @@ public class Executor implements Visitor {
         var stmts = lambda.expression();
         var params = stmts.parameters().parameters();
         var callArguments = inlineFuncCall.arguments();
-        // TODO common logic with other calls
-        final var arguments = getInlineArguments(params, callArguments);
+        var arguments = getInlineArguments(moveCurrentValue(), params, callArguments);
         manager.enterNewFrame();
         arguments.forEach(manager::insert);
         stmts.instructions().accept(this);
@@ -646,22 +645,46 @@ public class Executor implements Visitor {
         returned = false;
     }
 
-    private HashMap<String, Variant<?>> getInlineArguments(final List<Parameter> params, final List<Expression> callArguments) {
-        var arguments = new HashMap<String, Variant<?>>();
-        for (int i = 0; i < params.size(); i++) {
-            arguments.put(params.get(i).name(), currentValue);
-            if (i < callArguments.size()) {
-                callArguments.get(i).accept(this);
-            }
+    private void validateType(Class<?> referenceType, Variant<?> valueVariant, String place) {
+        if (referenceType == InferenceType.class) {
+            return;
         }
+        if (referenceType != valueVariant.valueType()) {
+            throw new RuntimeException("INTERPRETATION ERROR wrong %s type expected %s got %s"
+                    .formatted(place, referenceType.getSimpleName(), valueVariant.valueType().getSimpleName()));
+        }
+    }
+
+    private HashMap<String, Variant<?>> getInlineArguments(Variant<?> precalculatedValue, final List<Parameter> params, final List<Expression> callArguments) {
+        var arguments = new HashMap<String, Variant<?>>();
+        params.getFirst().type().accept(this);
+
+        validateType(currentValue.castTo(Class.class), precalculatedValue, "argument");
+        arguments.put(params.getFirst().name(), precalculatedValue);
+
+        if (params.size() - 1 != callArguments.size()) {
+            throw new RuntimeException("INTERPRETATION ERROR wrong number of arguments expected %s got %s"
+                    .formatted(params.size(), callArguments.size() + 1));
+        }
+
+        arguments.putAll(getArguments(new Parameters(params.stream().skip(1).toList()), callArguments));
         return arguments;
     }
 
     private HashMap<String, Variant<?>> getArguments(final Parameters parameters, final List<Expression> args) {
+        if (parameters.parameters().size() != args.size()) {
+            throw new RuntimeException("INTERPRETATION ERROR wrong number of arguments expected %s got %s"
+                    .formatted(parameters.parameters().size(), args.size()));
+        }
         var arguments = new HashMap<String, Variant<?>>();
         zip(parameters.parameters(), args)
                 .forEach(entry -> {
+                    entry.getKey().type().accept(this);
+                    var paramType = moveCurrentValue().castTo(Class.class);
                     entry.getValue().accept(this);
+
+                    validateType(paramType, currentValue, "argument");
+
                     arguments.put(entry.getKey().name(), currentValue);
                     currentValue = null;
                 });
@@ -678,6 +701,10 @@ public class Executor implements Visitor {
         manager.leaveNewScope();
         manager.leaveFrame();
         returned = false;
+        var returnedValue = moveCurrentValue();
+        clousure.expression().returnType().accept(this);
+//        validateType(moveCurrentValue().castTo(Class.class), returnedValue, "return");
+        currentValue = returnedValue;
     }
     //endregion
 
@@ -803,6 +830,7 @@ public class Executor implements Visitor {
             case Int -> Integer.class;
             case Double -> Double.class;
             case String -> String.class;
+            case Void -> InferenceType.class;
             case null, default -> throw new UnsupportedOperationException("Unknown type");
         };
         currentValue = new Variant<>(valueType, Class.class);
@@ -810,11 +838,12 @@ public class Executor implements Visitor {
 
     @Override
     public void visit(final LambdaType lambdaType) {
+        currentValue = new Variant<>(lambdaType, LambdaType.class);
     }
 
     @Override
     public void visit(final InferenceType inferenceType) {
-
+        currentValue = new Variant<>(InferenceType.class, Class.class);
     }
 
     @Override
