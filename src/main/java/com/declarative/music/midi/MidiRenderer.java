@@ -1,25 +1,15 @@
 package com.declarative.music.midi;
 
+import com.declarative.music.interpreter.MidiMapper;
+import com.declarative.music.interpreter.values.music.MusicTree;
+
+import javax.sound.midi.*;
 import java.io.File;
 import java.io.IOException;
 
-import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.MetaMessage;
-import javax.sound.midi.MidiEvent;
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.Sequence;
-import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Track;
 
-import com.declarative.music.interpreter.MidiMapper;
-import com.declarative.music.interpreter.tree.Node;
-import com.declarative.music.interpreter.values.music.Note;
-
-
-public class MidiRenderer
-{
-    public static void renderAndSaveMidi(Node<Note> musicTree, String path, int bpm) throws InvalidMidiDataException, IOException
-    {
+public class MidiRenderer {
+    public static void renderAndSaveMidi(MusicTree musicTree, String path, int bpm) throws InvalidMidiDataException, IOException {
         var res = MidiMapper.mapToEventStamps(musicTree);
         final int ticksPerQuarterNote = 480;
         final Sequence sequence = new Sequence(Sequence.PPQ, ticksPerQuarterNote);
@@ -33,11 +23,9 @@ public class MidiRenderer
         tempoTrack.add(tempoEvent);
         final var track = sequence.createTrack();
 
-        for (final var noteBlock : res.entrySet())
-        {
+        for (final var noteBlock : res.entrySet()) {
             long currentTick = noteBlock.getKey() * ticksPerQuarterNote / 2;
-            for (var note : noteBlock.getValue())
-            {
+            for (var note : noteBlock.getValue()) {
                 var midiNote = MidiNote.from(note);
                 final var pitch = getPitch(midiNote);
                 final var ticks = getTicks(midiNote, ticksPerQuarterNote);
@@ -56,15 +44,12 @@ public class MidiRenderer
         MidiSystem.write(sequence, 1, new File(path));
     }
 
-    private static int getPitch(final MidiNote note)
-    {
+    private static int getPitch(final MidiNote note) {
         return 12 * (note.octave() + 1) + note.pitch().ordinal();
     }
 
-    private static int getTicks(final MidiNote note, final int quoter)
-    {
-        return switch (note.duration())
-        {
+    private static int getTicks(final MidiNote note, final int quoter) {
+        return switch (note.duration()) {
             case q -> quoter;
             case e -> quoter / 2;
         };

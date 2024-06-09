@@ -1,53 +1,42 @@
 package com.declarative.music.interpreter;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-
 import com.declarative.music.interpreter.tree.GroupNode;
 import com.declarative.music.interpreter.tree.Node;
 import com.declarative.music.interpreter.tree.SequenceNode;
+import com.declarative.music.interpreter.tree.SimpleNode;
+import com.declarative.music.interpreter.values.music.MusicTree;
 import com.declarative.music.interpreter.values.music.Note;
-import com.declarative.music.interpreter.values.music.NoteNode;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
+import java.util.*;
+
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class MidiMapper
-{
-    public static Map<Integer, List<Note>> mapToEventStamps(Node<Note> musicTree)
-    {
+public class MidiMapper {
+    public static Map<Integer, List<Note>> mapToEventStamps(MusicTree musicTree) {
         TreeMap<Integer, List<Note>> orderedMap = new TreeMap<>();
-        traverseTree(musicTree, orderedMap, 0);
+        traverseTree(musicTree.getRoot(), orderedMap, 0);
         return orderedMap;
     }
 
-    private static int traverseTree(Node<Note> node, TreeMap<Integer, List<Note>> map, int startTime)
-    {
-        if (node instanceof final NoteNode noteNode)
-        {
-            var note = noteNode.getValue();
+    private static int traverseTree(Node<Note> node, TreeMap<Integer, List<Note>> map, int startTime) {
+        if (node instanceof final SimpleNode<Note> noteNode) {
+            var note = enrichNoteWithModifier(noteNode);
             map.computeIfAbsent(startTime, k -> new ArrayList<>()).add(note);
             return calcDuration(note);
         }
-        if (node instanceof GroupNode<Note>)
-        {
+        if (node instanceof GroupNode<Note>) {
             int maxDur = 0;
-            for (Node<Note> sibling : node.getSiblings())
-            {
+            for (Node<Note> sibling : node.getSiblings()) {
                 var dur = traverseTree(sibling, map, startTime);
                 maxDur = Math.max(dur, maxDur);
             }
             return maxDur;
         }
-        if (node instanceof SequenceNode<Note>)
-        {
+        if (node instanceof SequenceNode<Note>) {
             var time = startTime;
-            for (Node<Note> child : node.getChildren())
-            {
+            for (Node<Note> child : node.getChildren()) {
                 var duration = traverseTree(child, map, time);
                 time += duration;
             }
@@ -57,10 +46,21 @@ public class MidiMapper
         throw new UnsupportedOperationException("Unspupported midi node");
     }
 
-    private static int calcDuration(Note note)
-    {
-        return switch (note.getDuration())
-        {
+    private static Note enrichNoteWithModifier(SimpleNode<Note> node) {
+        var modifier = node.getModifier();
+        var note = node.getValue();
+        if (modifier == null) {
+            return node.getValue();
+        }
+        return new Note(
+                Optional.ofNullable(note.getPitch()).orElse(modifier.getPitch()),
+                Optional.ofNullable(note.getOctave()).orElse(modifier.getOctave()),
+                Optional.ofNullable(note.getDuration()).orElse(modifier.getRythm())
+        );
+    }
+
+    private static int calcDuration(Note note) {
+        return switch (note.getDuration()) {
             case e -> 1;
             case q -> 2;
             case null, default -> 0;
