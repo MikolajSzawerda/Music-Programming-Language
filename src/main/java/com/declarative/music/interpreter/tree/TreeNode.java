@@ -1,5 +1,6 @@
 package com.declarative.music.interpreter.tree;
 
+import com.declarative.music.interpreter.tree.modifier.ModifierVisitor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import java.util.function.Function;
 @NoArgsConstructor
 public class TreeNode<T, V extends TreeNode<T, V>> implements Node<T> {
     private Node<T> root;
+    private ModifierVisitor<T> modifier;
 
     private V self() {
         return (V) this;
@@ -111,5 +113,29 @@ public class TreeNode<T, V extends TreeNode<T, V>> implements Node<T> {
     @Override
     public List<Node<T>> getChildren() {
         return null;
+    }
+
+    @Override
+    public ModifierVisitor<T> modifier() {
+        return modifier;
+    }
+
+    @Override
+    public void setModifier(ModifierVisitor<T> visitor) {
+        this.modifier = visitor;
+        root.setModifier(visitor);
+    }
+
+    @Override
+    public TreeNode<T, V> getModified() {
+        if (modifier() == null) {
+            return this;
+        }
+        return this.accept(modifier());
+    }
+
+    @Override
+    public TreeNode<T, V> accept(ModifierVisitor<T> visitor) {
+        return new TreeNode<T, V>(root.accept(visitor));
     }
 }

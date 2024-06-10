@@ -68,7 +68,9 @@ public class TypeChecker implements Visitor {
                             return new PhraseType();
                         }
                         throw new UnsupportedOperationException("Unsupported array type for convolution");
-                    }, TypeCheck.class))
+                    }, TypeCheck.class)
+                    .register(TemplateType.class, NoteType.class, (a, b) -> new PhraseType(), TypeCheck.class)
+            )
     );
 
     record BuiltInFunction(Parameters parameters, Type returnType) {

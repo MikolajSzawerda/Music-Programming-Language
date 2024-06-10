@@ -10,8 +10,7 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode
 @AllArgsConstructor
-public class Note
-{
+public class Note {
     private Pitch pitch;
     private Integer octave;
     private Rythm duration;

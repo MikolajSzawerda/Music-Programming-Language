@@ -1,15 +1,26 @@
 package com.declarative.music.interpreter.tree;
 
-import java.util.List;
-
-import com.declarative.music.interpreter.values.music.NoteModifier;
-
+import com.declarative.music.interpreter.tree.modifier.ModifierVisitor;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 
 @RequiredArgsConstructor
-public abstract class AbstractNode<T> implements Node<T>
-{
+public abstract class AbstractNode<T> implements Node<T> {
     public final List<Node<T>> nodes;
-    public NoteModifier modifier;
+    private ModifierVisitor<T> modifier;
+
+    @Override
+    public ModifierVisitor<T> modifier() {
+        return modifier;
+    }
+
+    @Override
+    public void setModifier(ModifierVisitor<T> visitor) {
+        this.modifier = visitor;
+        for (var node : nodes) {
+            node.setModifier(modifier);
+        }
+    }
 }

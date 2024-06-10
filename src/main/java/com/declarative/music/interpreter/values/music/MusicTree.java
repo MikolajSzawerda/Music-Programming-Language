@@ -17,4 +17,10 @@ public class MusicTree extends TreeNode<Note, MusicTree> {
         var newRoot = super.map((node) -> new SimpleNode<>(node.getValue()));
         return new MusicTree(newRoot);
     }
+
+    @Override
+    public MusicTree getModified() {
+        var tree = super.getModified();
+        return new MusicTree(tree.getRoot());
+    }
 }

@@ -1,6 +1,5 @@
 package com.declarative.music.midi;
 
-import com.declarative.music.interpreter.MidiMapper;
 import com.declarative.music.interpreter.values.music.MusicTree;
 
 import javax.sound.midi.*;
@@ -10,7 +9,7 @@ import java.io.IOException;
 
 public class MidiRenderer {
     public static void renderAndSaveMidi(MusicTree musicTree, String path, int bpm) throws InvalidMidiDataException, IOException {
-        var res = MidiMapper.mapToEventStamps(musicTree);
+        var res = MidiMapper.mapToEventStamps(musicTree.getModified());
         final int ticksPerQuarterNote = 480;
         final Sequence sequence = new Sequence(Sequence.PPQ, ticksPerQuarterNote);
         final Track tempoTrack = sequence.createTrack();

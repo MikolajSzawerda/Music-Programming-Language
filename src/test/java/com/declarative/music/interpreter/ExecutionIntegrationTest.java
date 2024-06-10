@@ -366,6 +366,25 @@ public class ExecutionIntegrationTest {
     }
 
     @Test
+    void shouldHanldePipeExpression_WithMusicTree() throws ParsingException, IOException {
+        // given
+        final var code = """
+                let temp = 0 | 1 & 2;
+                let notes = [C, E, G];
+                                
+                let a = temp >> notes |> print;
+                """;
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        var interpreter = new Executor();
+
+        // when
+        parser.parserProgram().accept(interpreter);
+
+        // then
+    }
+
+    @Test
     void shouldHanldeComplexMusicTree() throws ParsingException, IOException {
         // given
         final var code = """

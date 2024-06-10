@@ -1,10 +1,15 @@
 package com.declarative.music.interpreter;
 
+import com.declarative.music.interpreter.tree.Node;
 import com.declarative.music.interpreter.tree.SimpleNode;
+import com.declarative.music.interpreter.tree.modifier.NoteModifier;
 import com.declarative.music.interpreter.values.LambdaClousure;
 import com.declarative.music.interpreter.values.OperationRegistry;
 import com.declarative.music.interpreter.values.Variant;
-import com.declarative.music.interpreter.values.music.*;
+import com.declarative.music.interpreter.values.music.MusicTree;
+import com.declarative.music.interpreter.values.music.Note;
+import com.declarative.music.interpreter.values.music.Pitch;
+import com.declarative.music.interpreter.values.music.Rythm;
 import com.declarative.music.interpreter.values.template.IndexTree;
 import com.declarative.music.midi.MidiRenderer;
 import com.declarative.music.parser.production.*;
@@ -173,16 +178,16 @@ public class Executor implements Visitor {
                 var index = arguments.get("value").castTo(Integer.class);
                 var transposedNode = tree.map((node) -> {
                     var currentNote = node.getValue();
-                    var pitch = currentNote.getPitch() == null ? node.modifier.getPitch() : currentNote.getPitch();
-                    var duration = currentNote.getDuration() == null ? node.modifier.getRythm() : currentNote.getDuration();
-                    var octave = currentNote.getOctave() == null ? node.modifier.getOctave() : currentNote.getOctave();
+                    var pitch = currentNote.getPitch() == null ? ((NoteModifier) node.modifier()).getPitch() : currentNote.getPitch();
+                    var duration = currentNote.getDuration() == null ? ((NoteModifier) node.modifier()).getRythm() : currentNote.getDuration();
+                    var octave = currentNote.getOctave() == null ? ((NoteModifier) node.modifier()).getOctave() : currentNote.getOctave();
                     var note = new Note(
                             pitch,
                             octave + index,
                             duration
                     );
                     var newNode = new SimpleNode<>(note);
-                    newNode.modifier = node.modifier;
+                    newNode.setModifier(node.modifier());
                     return newNode;
                 });
                 currentValue = new Variant<>(new MusicTree(transposedNode), MusicTree.class);
@@ -745,15 +750,17 @@ public class Executor implements Visitor {
             currentValue = null;
         }
         var updateValues = ((List<Variant<?>>) notes).stream()
-                .map(val -> val.castTo(Note.class))
-                .map(note -> {
-                    var node = new SimpleNode<>(note);
-                    node.modifier = NoteModifier.builder()
-                            .withRythm(Optional.ofNullable(results.get("dur")).map(v -> v.castTo(Note.class).getDuration()).orElse(null))
-                            .withOctave(Optional.ofNullable(results.get("oct")).map(v -> v.castTo(Integer.class)).orElse(4))
-                            .build();
-                    return new MusicTree().appendToSequence(node);
+                .map(val -> {
+                    if (val.valueType() == Note.class) {
+                        return new Variant<>(new MusicTree(new SimpleNode<>((Note) val.value())), MusicTree.class);
+                    }
+                    return val;
                 })
+                .map(val -> val.castTo(MusicTree.class))
+                .peek(note -> note.setModifier(NoteModifier.builder()
+                        .withRythm(Optional.ofNullable(results.get("dur")).map(v -> v.castTo(Note.class).getDuration()).orElse(null))
+                        .withOctave(Optional.ofNullable(results.get("oct")).map(v -> v.castTo(Integer.class)).orElse(4))
+                        .build()))
                 .map(val -> new Variant<>(val, MusicTree.class))
                 .toList();
         currentValue = new Variant<>(updateValues, List.class);
@@ -772,11 +779,15 @@ public class Executor implements Visitor {
         convolutionExpression.right().accept(this);
         var musicIterable = currentValue.castTo(List.class);
         var transformed = left.map((indexNode) -> {
-            var element = (Variant<MusicTree>) musicIterable.get(indexNode.getValue());
-            var note = element.castTo(MusicTree.class).getRoot();
+            var element = (Variant<Node>) musicIterable.get(indexNode.getValue());
+            if (element.value() instanceof Note noteElement) {
+                return new SimpleNode<>(noteElement);
+
+            }
+            var note = element.castTo(MusicTree.class).getRoot().getModified();
             var oldNode = (SimpleNode<Note>) note;
             var node = new SimpleNode<>(oldNode.getValue());
-            node.modifier = oldNode.modifier;
+            node.setModifier(oldNode.modifier());
             return node;
         });
         currentValue = new Variant<>(new MusicTree(transformed), MusicTree.class);

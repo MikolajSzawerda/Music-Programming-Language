@@ -1,4 +1,4 @@
-package com.declarative.music.interpreter;
+package com.declarative.music.midi;
 
 import com.declarative.music.interpreter.tree.GroupNode;
 import com.declarative.music.interpreter.tree.Node;
@@ -10,7 +10,10 @@ import com.declarative.music.interpreter.values.music.Rythm;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -23,7 +26,7 @@ public class MidiMapper {
 
     private static int traverseTree(Node<Note> node, TreeMap<Integer, List<Note>> map, int startTime) {
         if (node instanceof final SimpleNode<Note> noteNode) {
-            var note = enrichNoteWithModifier(noteNode);
+            var note = noteNode.getModified().getValue();
             map.computeIfAbsent(startTime, k -> new ArrayList<>()).add(note);
             return Rythm.values().length - note.getDuration().ordinal() + 1;
         }
@@ -45,26 +48,5 @@ public class MidiMapper {
         }
 
         throw new UnsupportedOperationException("Unspupported midi node");
-    }
-
-    private static Note enrichNoteWithModifier(SimpleNode<Note> node) {
-        var modifier = node.getModifier();
-        var note = node.getValue();
-        if (modifier == null) {
-            return node.getValue();
-        }
-        return new Note(
-                Optional.ofNullable(note.getPitch()).orElse(modifier.getPitch()),
-                Optional.ofNullable(note.getOctave()).orElse(modifier.getOctave()),
-                Optional.ofNullable(note.getDuration()).orElse(modifier.getRythm())
-        );
-    }
-
-    private static int calcDuration(Note note) {
-        return switch (note.getDuration()) {
-            case e -> 1;
-            case q -> 2;
-            case null, default -> 0;
-        };
     }
 }

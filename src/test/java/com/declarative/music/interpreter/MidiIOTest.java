@@ -18,7 +18,10 @@ public class MidiIOTest {
                 let temp = 0 & 1 |2 | 0 & 2 |0;
                 let temp2 = 2 & 0 & 1 | 0 | 2 | 0 |0;
                 let b = temp | temp & temp2 | temp & temp2;
-                b >> a |> export "song.mid";
+                let musicA = b>>a;
+                let musicB = b >>a |> transpose 2;
+                let musicC = musicA | musicB;
+                musicC |> export "src/test/resources/song.mid";
                 """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);

@@ -1,7 +1,15 @@
-let template = 0 | 1 & 2 |0 |3;
-let notes = [C, E, G, F]{dur=q, oct=2};
-let treeA = template >> notes;
-treeA |>export "test2.mid";
+Int a = 10;
+let b = with(Int a)->Int{
+    if(a==1){
+        Int a = 20;
+        for(Int i in 1->20){
+            a += 1;
+        }
+        return a;
+    }
+    return a+1;
+};
 
-//[([E, G, D] |> mel), ([C, D, F] |> mel)]{dur=w, oct=4} |> harm;
+print(b(1));
+print(a);
 
