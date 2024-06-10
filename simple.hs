@@ -37,3 +37,22 @@ for(Int i in g){
 Phrase jk = (C, 4) q as Phrase;
 print(g);
 print("Head: "+(kkl |> head) as String);
+
+let example_fun = with(Int external)->Int{
+    if(true){
+        Int a = 0;
+        for(Int i in [1,2,3]){
+            a += 1;
+            if(i>=2){
+            external = a;
+                return a;
+            }
+        }
+        print("Num iter: "+ a as String);
+    }
+    external = 20;
+    return -1;
+};
+Int ext = 1;
+print(example_fun(ext));
+print(ext);
