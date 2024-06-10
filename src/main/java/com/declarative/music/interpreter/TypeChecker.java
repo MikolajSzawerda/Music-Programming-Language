@@ -84,11 +84,18 @@ public class TypeChecker implements Visitor {
                     new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "array"),
                     new Parameter(new SimpleType(Types.Int, null), "index")
             )), new com.declarative.music.parser.production.type.InferenceType(null)),
+            "head", new BuiltInFunction(new Parameters(List.of(
+                    new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "array"),
+                    new Parameter(new SimpleType(Types.Int, null), "index")
+            )), new com.declarative.music.parser.production.type.InferenceType(null)),
             "transpose", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "tree"),
                     new Parameter(new SimpleType(Types.Int, null), "index")
             )), new SimpleType(Types.Phrase, null)),
             "mel", new BuiltInFunction(new Parameters(List.of(
+                    new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "array")
+            )), new SimpleType(Types.Phrase, null)),
+            "harm", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "array")
             )), new SimpleType(Types.Phrase, null)),
             "song", new BuiltInFunction(new Parameters(List.of(
@@ -222,7 +229,7 @@ public class TypeChecker implements Visitor {
         var rightType = moveCurrentValue();
         declaration.type().accept(this);
         if (!rightType.value().isCompatible(currentValue.value())) {
-            throw new RuntimeException("SEMANTIC ERROR cannot assign value to variable of different type");
+            throw new RuntimeException("SEMANTIC ERROR cannot assign value to variable of different type %s".formatted(declaration.position()));
         }
         manager.insert(declaration.name(), rightType);
     }
@@ -327,13 +334,13 @@ public class TypeChecker implements Visitor {
 
     @Override
     public void visit(MinusUnaryExpression expression) {
-
+        expression.value().accept(this);
     }
 
 
     @Override
     public void visit(PlusUnaryExpression plusUnaryExpression) {
-
+        plusUnaryExpression.value().accept(this);
     }
 
     @Override
@@ -343,12 +350,11 @@ public class TypeChecker implements Visitor {
 
     @Override
     public void visit(ListComprehension listComprehension) {
-
     }
 
     @Override
     public void visit(RangeExpression rangeExpression) {
-
+        currentValue = new Variant<>(new ArrayType(new IntType()), TypeCheck.class);
     }
 
     @Override
@@ -401,22 +407,37 @@ public class TypeChecker implements Visitor {
 
     @Override
     public void visit(AndExpression andExpression) {
-
+        andExpression.left().accept(this);
+        var left = moveCurrentValue();
+        andExpression.right().accept(this);
+        if (!currentValue.value().isCompatible(left.value())) {
+            throw new RuntimeException("SEMANTIC ERROR different types on left and right of binary operator");
+        }
     }
 
     @Override
     public void visit(EqExpression eqExpression) {
-
+        eqExpression.left().accept(this);
+        var left = moveCurrentValue();
+        eqExpression.right().accept(this);
+        if (!currentValue.value().isCompatible(left.value())) {
+            throw new RuntimeException("SEMANTIC ERROR different types on left and right of binary operator");
+        }
     }
 
     @Override
     public void visit(OrExpression orExpression) {
-
+        orExpression.left().accept(this);
+        var left = moveCurrentValue();
+        orExpression.right().accept(this);
+        if (!currentValue.value().isCompatible(left.value())) {
+            throw new RuntimeException("SEMANTIC ERROR different types on left and right of binary operator");
+        }
     }
 
     @Override
     public void visit(CastExpresion castExpresion) {
-
+        castExpresion.type().accept(this);
     }
 
     @Override
@@ -431,7 +452,7 @@ public class TypeChecker implements Visitor {
         var left = moveCurrentValue();
         sequenceExpression.right().accept(this);
         if (!currentValue.value().isCompatible(left.value())) {
-            throw new RuntimeException("SEMANTIC ERROR different types on left and right of binary operator");
+            throw new RuntimeException("SEMANTIC ERROR different types on left and right of binary operator %s".formatted(sequenceExpression.left().position()));
         }
         currentValue = (Variant<TypeCheck>) REGISTRY.get(sequenceExpression.getClass().getSimpleName())
                 .apply(sequenceExpression.getClass().getSimpleName(), left, currentValue);
@@ -458,32 +479,57 @@ public class TypeChecker implements Visitor {
 
     @Override
     public void visit(GreaterEqExpression greaterEqExpression) {
-
+        greaterEqExpression.left().accept(this);
+        var left = moveCurrentValue();
+        greaterEqExpression.right().accept(this);
+        if (!currentValue.value().isCompatible(left.value())) {
+            throw new RuntimeException("SEMANTIC ERROR different types on left and right of binary operator");
+        }
     }
 
     @Override
     public void visit(GreaterExpression greaterExpression) {
-
+        greaterExpression.left().accept(this);
+        var left = moveCurrentValue();
+        greaterExpression.right().accept(this);
+        if (!currentValue.value().isCompatible(left.value())) {
+            throw new RuntimeException("SEMANTIC ERROR different types on left and right of binary operator");
+        }
     }
 
     @Override
     public void visit(LessEqExpression lessEqExpression) {
-
+        lessEqExpression.left().accept(this);
+        var left = moveCurrentValue();
+        lessEqExpression.right().accept(this);
+        if (!currentValue.value().isCompatible(left.value())) {
+            throw new RuntimeException("SEMANTIC ERROR different types on left and right of binary operator");
+        }
     }
 
     @Override
     public void visit(LessExpression lessExpression) {
-
+        lessExpression.left().accept(this);
+        var left = moveCurrentValue();
+        lessExpression.right().accept(this);
+        if (!currentValue.value().isCompatible(left.value())) {
+            throw new RuntimeException("SEMANTIC ERROR different types on left and right of binary operator");
+        }
     }
 
     @Override
     public void visit(NegateExpression negateExpression) {
-
+        negateExpression.expression().accept(this);
     }
 
     @Override
     public void visit(NotEqExpression notEqExpression) {
-
+        notEqExpression.left().accept(this);
+        var left = moveCurrentValue();
+        notEqExpression.right().accept(this);
+        if (!currentValue.value().isCompatible(left.value())) {
+            throw new RuntimeException("SEMANTIC ERROR different types on left and right of binary operator");
+        }
     }
 
 

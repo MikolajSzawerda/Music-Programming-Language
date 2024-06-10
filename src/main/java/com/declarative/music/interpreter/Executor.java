@@ -156,6 +156,12 @@ public class Executor implements Visitor {
                 var iterable = arguments.get("array").castTo(List.class);
                 currentValue = (Variant<?>) iterable.get(index);
             }),
+            "head", new BuiltInFunction(new Parameters(List.of(
+                    new Parameter(new InferenceType(null), "array")
+            )), (arguments) -> {
+                var iterable = arguments.get("array").castTo(List.class);
+                currentValue = (Variant<?>) iterable.getFirst();
+            }),
             "mel", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new InferenceType(null), "array")
             )), (arguments) -> {
@@ -164,6 +170,17 @@ public class Executor implements Visitor {
                 for (var item : iterable) {
                     var node = (Variant<MusicTree>) item;
                     sequence.appendToSequence(node.value());
+                }
+                currentValue = new Variant<>(sequence, MusicTree.class);
+            }),
+            "harm", new BuiltInFunction(new Parameters(List.of(
+                    new Parameter(new InferenceType(null), "array")
+            )), (arguments) -> {
+                var iterable = arguments.get("array").castTo(List.class);
+                var sequence = new MusicTree();
+                for (var item : iterable) {
+                    var node = (Variant<MusicTree>) item;
+                    sequence.appendToGroup(node.value());
                 }
                 currentValue = new Variant<>(sequence, MusicTree.class);
             }),
@@ -809,6 +826,10 @@ public class Executor implements Visitor {
         var key = value.valueType().getSimpleName() + "," + currentValue.castTo(Class.class).getSimpleName();
         currentValue = switch (key) {
             case "Integer,Double" -> new Variant<>(Double.valueOf(value.castTo(Integer.class)), Double.class);
+            case "Integer,IndexTree" ->
+                    new Variant<>(new IndexTree(new SimpleNode<>(value.castTo(Integer.class))), IndexTree.class);
+            case "Note,MusicTree" ->
+                    new Variant<>(new MusicTree(new SimpleNode<>(value.castTo(Note.class))), MusicTree.class);
             case "Integer,Integer", "Double,Double", "String,String" -> value;
             case "Double,Integer" -> new Variant<>(value.castTo(Double.class).intValue(), Integer.class);
             case "String,Integer" -> new Variant<>(Integer.valueOf(value.castTo(String.class)), Integer.class);
@@ -877,6 +898,8 @@ public class Executor implements Visitor {
             case Double -> Double.class;
             case String -> String.class;
             case Void -> InferenceType.class;
+            case Template -> IndexTree.class;
+            case Phrase -> MusicTree.class;
             case null, default -> throw new UnsupportedOperationException("Unknown type");
         };
         currentValue = new Variant<>(valueType, Class.class);
