@@ -1,8 +1,22 @@
 package com.declarative.music.parser;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+
 import com.declarative.music.lexer.LexerImpl;
 import com.declarative.music.lexer.token.Position;
-import com.declarative.music.parser.production.*;
+import com.declarative.music.parser.exception.ParsingException;
+import com.declarative.music.parser.production.Block;
+import com.declarative.music.parser.production.Declaration;
+import com.declarative.music.parser.production.IfStatement;
+import com.declarative.music.parser.production.Parameter;
+import com.declarative.music.parser.production.Parameters;
+import com.declarative.music.parser.production.Program;
 import com.declarative.music.parser.production.expression.VariableReference;
 import com.declarative.music.parser.production.expression.arithmetic.AddExpression;
 import com.declarative.music.parser.production.expression.arithmetic.MinusUnaryExpression;
@@ -21,36 +35,38 @@ import com.declarative.music.parser.production.expression.relation.AndExpression
 import com.declarative.music.parser.production.expression.relation.EqExpression;
 import com.declarative.music.parser.production.expression.relation.OrExpression;
 import com.declarative.music.parser.production.literal.IntLiteral;
-import com.declarative.music.parser.production.type.*;
-import org.junit.jupiter.api.Test;
+import com.declarative.music.parser.production.type.ArrayType;
+import com.declarative.music.parser.production.type.InferenceType;
+import com.declarative.music.parser.production.type.LambdaType;
+import com.declarative.music.parser.production.type.SimpleType;
+import com.declarative.music.parser.production.type.Types;
 
-import java.io.StringReader;
-import java.util.List;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-
-public class ParsingIntegrationTest {
-    private static Position pos(final int column) {
+public class ParsingIntegrationTest
+{
+    private static Position pos(final int column)
+    {
         return new Position(0, column);
     }
 
     @Test
-    void shouldParseLambdaExpressionWithPipe() throws Exception {
+    void shouldParseLambdaExpressionWithPipe() throws Exception
+    {
         final var code = "with(Int a, []Int c, lam(Int)->Void d) -> Void {Int b;} |> call;";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(
-                List.of(
-                        new PipeExpression(
-                                new LambdaExpression(new Parameters(List.of(
-                                        new Parameter(new SimpleType(Types.Int, pos(5)), "a"),
-                                        new Parameter(new ArrayType(new SimpleType(Types.Int, pos(14)), pos(12)), "c"),
-                                        new Parameter(new LambdaType(List.of(new SimpleType(Types.Int, pos(25))), new SimpleType(Types.Void, pos(31)), pos(21)), "d")
-                                )
-                                ), new SimpleType(Types.Void, pos(42)),
-                                        new Block(List.of(new Declaration(new SimpleType(Types.Int, pos(48)), "b", null)), pos(47)), pos(0)),
-                                new InlineFuncCall("call", List.of(), pos(59)))
-                ));
+            List.of(
+                new PipeExpression(
+                    new LambdaExpression(new Parameters(List.of(
+                        new Parameter(new SimpleType(Types.Int, pos(5)), "a"),
+                        new Parameter(new ArrayType(new SimpleType(Types.Int, pos(14)), pos(12)), "c"),
+                        new Parameter(new LambdaType(List.of(new SimpleType(Types.Int, pos(25))), new SimpleType(Types.Void, pos(31)), pos(21)), "d")
+                    )
+                    ), new SimpleType(Types.Void, pos(42)),
+                        new Block(List.of(new Declaration(new SimpleType(Types.Int, pos(48)), "b", null)), pos(47)), pos(0)),
+                    new InlineFuncCall("call", List.of(), pos(59)))
+            ));
 
         final var program = parser.parserProgram();
 
@@ -58,19 +74,20 @@ public class ParsingIntegrationTest {
     }
 
     @Test
-    void shouldParseAndAndOrExpression() throws Exception {
+    void shouldParseAndAndOrExpression() throws Exception
+    {
         final var code = "1==2 || 3==4 && 5==6 || 7==8;";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
+            new OrExpression(
                 new OrExpression(
-                        new OrExpression(
-                                new EqExpression(new IntLiteral(1, pos(0)), new IntLiteral(2, pos(3))),
-                                new AndExpression(
-                                        new EqExpression(new IntLiteral(3, pos(8)), new IntLiteral(4, pos(11))),
-                                        new EqExpression(new IntLiteral(5, pos(16)), new IntLiteral(6, pos(19)))
-                                )),
-                        new EqExpression(new IntLiteral(7, pos(24)), new IntLiteral(8, pos(27))))
+                    new EqExpression(new IntLiteral(1, pos(0)), new IntLiteral(2, pos(3))),
+                    new AndExpression(
+                        new EqExpression(new IntLiteral(3, pos(8)), new IntLiteral(4, pos(11))),
+                        new EqExpression(new IntLiteral(5, pos(16)), new IntLiteral(6, pos(19)))
+                    )),
+                new EqExpression(new IntLiteral(7, pos(24)), new IntLiteral(8, pos(27))))
         )
         );
 
@@ -80,14 +97,15 @@ public class ParsingIntegrationTest {
     }
 
     @Test
-    void shouldParseIfStatementWithPipe() throws Exception {
+    void shouldParseIfStatementWithPipe() throws Exception
+    {
         final var code = "if((1|>mel) || (2 |> mel)){}";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
-                new IfStatement(new OrExpression(new PipeExpression(new IntLiteral(1, pos(4)), new InlineFuncCall("mel", List.of(), pos(7))),
-                        new PipeExpression(new IntLiteral(2, pos(16)), new InlineFuncCall("mel", List.of(), pos(21)))
-                ), new Block(List.of(), pos(26)), pos(0))
+            new IfStatement(new OrExpression(new PipeExpression(new IntLiteral(1, pos(4)), new InlineFuncCall("mel", List.of(), pos(7))),
+                new PipeExpression(new IntLiteral(2, pos(16)), new InlineFuncCall("mel", List.of(), pos(21)))
+            ), new Block(List.of(), pos(26)), pos(0))
         ));
 
         final var program = parser.parserProgram();
@@ -96,17 +114,18 @@ public class ParsingIntegrationTest {
     }
 
     @Test
-    void shouldParsePipeExpression() throws Exception {
+    void shouldParsePipeExpression() throws Exception
+    {
         final var code = "1+2 |> twice -1 |> add a(), b+1;";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
+            new PipeExpression(
                 new PipeExpression(
-                        new PipeExpression(
-                                new AddExpression(new IntLiteral(1, pos(0)), new IntLiteral(2, pos(2))),
-                                new InlineFuncCall("twice", List.of(new MinusUnaryExpression(new IntLiteral(1, pos(14)))), pos(7))),
-                        new InlineFuncCall("add", List.of(new FunctionCall("a", List.of(), pos(23)),
-                                new AddExpression(new VariableReference("b", pos(28)), new IntLiteral(1, pos(30)))), pos(19)))
+                    new AddExpression(new IntLiteral(1, pos(0)), new IntLiteral(2, pos(2))),
+                    new InlineFuncCall("twice", List.of(new MinusUnaryExpression(new IntLiteral(1, pos(14)))), pos(7))),
+                new InlineFuncCall("add", List.of(new FunctionCall("a", List.of(), pos(23)),
+                    new AddExpression(new VariableReference("b", pos(28)), new IntLiteral(1, pos(30)))), pos(19)))
         ));
 
         final var program = parser.parserProgram();
@@ -115,16 +134,19 @@ public class ParsingIntegrationTest {
     }
 
     @Test
-    void shouldParsePipeExpression_WithPipeAsInlineArgument() throws Exception {
+    void shouldParsePipeExpression_WithPipeAsInlineArgument() throws Exception
+    {
         final var code = "a |> twice (2 |> twice) |> twice;";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
-                new PipeExpression(
-                        new PipeExpression(new VariableReference("a", pos(0)),
-                                new InlineFuncCall("twice", List.of(new PipeExpression(new IntLiteral(2, pos(12)), new InlineFuncCall("twice", List.of(), pos(17)))), pos(5))
-                        ), new InlineFuncCall("twice", List.of(), pos(27))
-                )
+            new PipeExpression(
+                new PipeExpression(new VariableReference("a", pos(0)),
+                    new InlineFuncCall("twice",
+                        List.of(new PipeExpression(new IntLiteral(2, pos(12)), new InlineFuncCall("twice", List.of(), pos(17)))),
+                        pos(5))
+                ), new InlineFuncCall("twice", List.of(), pos(27))
+            )
         ));
 
         final var program = parser.parserProgram();
@@ -133,27 +155,28 @@ public class ParsingIntegrationTest {
     }
 
     @Test
-    void shouldParseNoteSequenceAssigment() throws Exception {
+    void shouldParseNoteSequenceAssigment() throws Exception
+    {
         final var code = "let a = [E, (G, 2), D]{oct=4} |> mel;";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
-                new Declaration(new InferenceType(pos(0)), "a",
-                        new PipeExpression(
-                                new ModifierExpression(
-                                        new ArrayExpression(
-                                                List.of(
-                                                        new NoteExpression("E", null, null, pos(9)),
-                                                        new NoteExpression("G", new IntLiteral(2, pos(16)), null, pos(12)),
-                                                        new NoteExpression("D", null, null, pos(20))
-                                                ), pos(8)
-                                        ),
-                                        new Modifier(List.of(
-                                                new ModifierItem("oct", new IntLiteral(4, pos(27)))
-                                        ))
-                                        , pos(8)),
-                                new InlineFuncCall("mel", List.of(), pos(33))
+            new Declaration(new InferenceType(pos(0)), "a",
+                new PipeExpression(
+                    new ModifierExpression(
+                        new ArrayExpression(
+                            List.of(
+                                new NoteExpression("E", null, null, pos(9)),
+                                new NoteExpression("G", new IntLiteral(2, pos(16)), null, pos(12)),
+                                new NoteExpression("D", null, null, pos(20))
+                            ), pos(8)
+                        ),
+                        new Modifier(List.of(
+                            new ModifierItem("oct", new IntLiteral(4, pos(27)))
                         ))
+                        , pos(8)),
+                    new InlineFuncCall("mel", List.of(), pos(33))
+                ))
         ));
 
         final var program = parser.parserProgram();
@@ -162,26 +185,27 @@ public class ParsingIntegrationTest {
     }
 
     @Test
-    void shouldParseNoteExpressionAsStatement() throws Exception {
+    void shouldParseNoteExpressionAsStatement() throws Exception
+    {
         final var code = "[E, (G, 2), D]{oct=4} |> mel;";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
-                new PipeExpression(
-                        new ModifierExpression(
-                                new ArrayExpression(
-                                        List.of(
-                                                new NoteExpression("E", null, null, pos(1)),
-                                                new NoteExpression("G", new IntLiteral(2, pos(8)), null, pos(4)),
-                                                new NoteExpression("D", null, null, pos(12))
-                                        ), pos(0)
-                                ),
-                                new Modifier(List.of(
-                                        new ModifierItem("oct", new IntLiteral(4, pos(19)))
-                                ))
-                                , pos(0)),
-                        new InlineFuncCall("mel", List.of(), pos(25))
-                )
+            new PipeExpression(
+                new ModifierExpression(
+                    new ArrayExpression(
+                        List.of(
+                            new NoteExpression("E", null, null, pos(1)),
+                            new NoteExpression("G", new IntLiteral(2, pos(8)), null, pos(4)),
+                            new NoteExpression("D", null, null, pos(12))
+                        ), pos(0)
+                    ),
+                    new Modifier(List.of(
+                        new ModifierItem("oct", new IntLiteral(4, pos(19)))
+                    ))
+                    , pos(0)),
+                new InlineFuncCall("mel", List.of(), pos(25))
+            )
         ));
 
         final var program = parser.parserProgram();
@@ -190,9 +214,10 @@ public class ParsingIntegrationTest {
     }
 
     @Test
-    void shouldParse() throws Exception {
+    void shouldParse() throws Exception
+    {
         final var code =
-                "1+3*4^7-1+3/6*12;";
+            "1+3*4^7-1+3/6*12;";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
 
@@ -201,17 +226,18 @@ public class ParsingIntegrationTest {
     }
 
     @Test
-    void shouldParseMusicTree() throws Exception {
+    void shouldParseMusicTree() throws Exception
+    {
         final var code = "(C | (E, 4) q | G) & E;";
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
         final var expected = new Program(List.of(
-                new ParallerExpression(
-                        new SequenceExpression(
-                                new SequenceExpression(
-                                        new NoteExpression("C", null, null, pos(1)), new NoteExpression("E", new IntLiteral(4, pos(9)), "q", pos(5))
-                                ), new NoteExpression("G", null, null, pos(16)))
-                        , new NoteExpression("E", null, null, pos(21)))
+            new ParallerExpression(
+                new SequenceExpression(
+                    new SequenceExpression(
+                        new NoteExpression("C", null, null, pos(1)), new NoteExpression("E", new IntLiteral(4, pos(9)), "q", pos(5))
+                    ), new NoteExpression("G", null, null, pos(16)))
+                , new NoteExpression("E", null, null, pos(21)))
         ));
 
         final var program = parser.parserProgram();
@@ -219,5 +245,14 @@ public class ParsingIntegrationTest {
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
     }
 
+    @Test
+    void demo() throws ParsingException, IOException
+    {
+        final var code = "C | E | G | D | F | B;";
+        final var lexer = new LexerImpl(new StringReader(code));
+        final var parser = new Parser(lexer);
+        final var program = parser.parserProgram();
+        assertThat(program).isNotNull();
+    }
 
 }

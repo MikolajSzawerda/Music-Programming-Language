@@ -7,6 +7,13 @@
 - silne statyczne typowanie
 - obiekty są mutowalne i przekazywane przez referencję
 
+## Instrukcja użytkownika
+
+```shell
+./gradlew clean build
+java -jar build/libs/music-programming-language.jar -f simple.hs
+```
+
 ### Funkcje
 
 - reprezentacja zapisu nutowego(w postaci drzewiastej)
@@ -29,15 +36,8 @@
 let a = [E, G, D]{oct=4} |> mel;
 
 let b = a |> 
-        repeat 2.0 as Int |>
         transpose -1 |>
-        concat a |>
-        harm |>
-        track Guitar;
-
-let c = "song.mid" |>
-        open Track 0 |>
-        head+100; //shoud be parsed as head(x, 100)
+        harm;
         
 (Int, Int)->Int NWD;
 
@@ -48,7 +48,7 @@ NWD = with(Int a, Int b)->Int {
     return a;
 };
     
-let randGen = with(Scale scale, Rythm rythm) -> Phrase {
+let randGen = with(Phrase music) -> Phrase {
     if(scale |> isEmpty || rythm |> isEmpty){
         "Provided scale or rythm is empty" |> panic;
     }
@@ -66,7 +66,7 @@ let randGen = with(Scale scale, Rythm rythm) -> Phrase {
 }
     
 [a |> track Piano, b, markov(["song1.mid", "song2.mid"], 1)((C, 4) q), [C, E, G] |> randGen [q, w, h] |> track BagPipe] |>
-    song 120, 60 |>
+    song 120, "Guitar" |>
     export "demo2.mid";
     
 let x1 = [0, 1, 2] |> concat [3,4] |>len+2;//panic
@@ -162,16 +162,12 @@ rythm_lit           := (dl|l|w|h|q|e|s|t)(_(d|t));
 
 ### Zapis utworu w postaci drzewa
 
-| Typ liniowy | Interpretacja                     |
-|-------------|-----------------------------------|
-| Scale       | Uporządkowana lista wysokości nut |
-| Rythm       | Uporządkowana lista długości nut  |
-| []T         | Lista elementów typu T            |
+| Typ liniowy | Interpretacja          |
+|-------------|------------------------|
+| []T         | Lista elementów typu T |
 
 | Typ drzewiasty | Interpretacja                                |                                
 |----------------|----------------------------------------------|
-| Progression    | Wysokość nut drzewo elementów Scale          |
-| Groove         | Długości nut drzewo elementów Rythm          |
 | Phrase         | Nuty(wysokość, długość)                      |                      
 | Template       | Indeksy elementu z branej liniowej struktury |
 
@@ -185,64 +181,45 @@ rythm_lit           := (dl|l|w|h|q|e|s|t)(_(d|t));
   szablonu
   gdzie węzłami są elementy z liniowej struktury o indeksach z danego węzła szablonu z nałożonymi modyfikatorami(mutacją
   pól) z szablonu
-- operacja złożenia `*` Progression z Groove przechodzi równocześnie oba drzewa i tworzy Phrase o wysokościach z
-  Progression i długościach z Groove
 
 ### Zapis i odczyt pliku midi
 
-- funkcja `open(String filename, Type t, [Int trackNumber]` czyta podany plik midi i parsuje go do podanego typu
-  muzycznego
-- funkcja `export(Song s|Track t, String fileName)` zapisuje obiekt piosenki lub ścieżki do pliku midi - typy `Song`
-  oraz `Track`
-  posiadają pola tempo i długość, przejście przez drzewo BFS
+- funkcja `open(String filename, [Int trackNumber]` czyta podany plik midi i parsuje go do drzewa muzycznego
+- funkcja `export(MusicTree t, String fileName)` zapisuje obiekt do pliku MIDI
 
 ### Funkcje wbudowane
 
 ```
 mel([]T)                        := tworzy z listy sekwencję |
 harm([]T)                       := tworzy z listy drzewo &
-concat(T, [])                   := dołącza do listy element
-isEmpty/len/head/tail/repeat    := operacje na listach
+len/head                        := operacje na listach
 panic(String msg)               := rzuca wyjątkiem
-transpose/speed                 := operacje muzyczne
+transpose                       := operacje muzyczne
+song(Phrase,Int,String)         := tworzy piosenkę do exportu
 at([]T, Int)                    := zwraca element z listy
 ```
 
 ### Operatory
 
-| Operator | Interpretacja                             |
-|----------|-------------------------------------------|
-| a->b     | tworzy listę o zakresie od a do b         |
-| a>>b     | nałożenie templat a na b                  |
-| a*b      | mnożenie, lub złożenie                    |
-| a        | \|>b b1,b2,...     pipe b(a, b1, b2, ...) |
+| Operator          | Interpretacja                     |
+|-------------------|-----------------------------------|
+| a->b              | tworzy listę o zakresie od a do b |
+| a>>b              | nałożenie templat a na b          |
+| a*b               | mnożenie                          |
+| a  \|>b b1,b2,... | pipe b(a, b1, b2, ...)            |
 
 ### Dostępne modyfikatory dla typów
 
-| Typ         | Modyfikatory                     |
-|-------------|----------------------------------|
-| Scale       | oct                              |
-| Rythm       | dur                              |
-| Progression | oct                              |
-| Groove      | dur                              |
-| Phrase      | oct, dur                         |
-| Track       | oct, dur, instrument, tempo, len |
-| Song        | tempo, len                       |
+| Typ    | Modyfikatory      |
+|--------|-------------------|
+| Phrase | oct, dur          |
+| Song   | instrument, tempo |
 
 oct - oktawa, dur długość nuty, tempo - BPM, len - długość w sekundach
 
 ### Rzutowanie
 
-Język zapewnia składnię `x as Type`, która realizuje rzutowanie, po za oczywistymi konwersjami dostępne są
-
-| old         | new              |
-|-------------|------------------|
-| Scale       | Phrase(dur=NULL) |
-| Progression | Phrase(dur=NULL) |
-| Rythm       | Groove           |
-| Scale       | Progression      |
-| Phrase      | Progression      |
-| Phrase      | Groove           |
+Język zapewnia składnię `x as Type`, która realizuje rzutowanie
 
 ### Obsługa błędów
 

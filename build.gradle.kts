@@ -40,7 +40,10 @@ tasks.jar {
     manifest {
         attributes["Main-Class"] = application.mainClass.get()
     }
+//    from({
+//        configurations.runtimeClasspath.get().filter { it.exists() }.map { if (it.isDirectory) it else zipTree(it) }
+//    })
     from({
-        configurations.runtimeClasspath.get().filter { it.exists() }.map { if (it.isDirectory) it else zipTree(it) }
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
     })
 }
