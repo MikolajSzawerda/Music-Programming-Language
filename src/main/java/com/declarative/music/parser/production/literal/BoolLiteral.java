@@ -5,7 +5,7 @@ import com.declarative.music.lexer.token.Position;
 import com.declarative.music.parser.production.expression.Expression;
 
 
-public record BoolLiteral(boolean value, Position position) implements Expression {
+public record BoolLiteral(Boolean value, Position position) implements Expression {
     @Override
     public void accept(final Visitor visitor) {
         visitor.visit(this);

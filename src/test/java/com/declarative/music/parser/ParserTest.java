@@ -20,13 +20,12 @@ import com.declarative.music.parser.production.expression.lambda.LambdaExpressio
 import com.declarative.music.parser.production.expression.modifier.Modifier;
 import com.declarative.music.parser.production.expression.modifier.ModifierExpression;
 import com.declarative.music.parser.production.expression.modifier.ModifierItem;
+import com.declarative.music.parser.production.expression.music.ConvolutionExpression;
 import com.declarative.music.parser.production.expression.music.NoteExpression;
 import com.declarative.music.parser.production.expression.music.SequenceExpression;
 import com.declarative.music.parser.production.expression.pipe.InlineFuncCall;
 import com.declarative.music.parser.production.expression.pipe.PipeExpression;
-import com.declarative.music.parser.production.expression.relation.AndExpression;
 import com.declarative.music.parser.production.expression.relation.*;
-import com.declarative.music.parser.production.expression.relation.NegateExpression;
 import com.declarative.music.parser.production.literal.BoolLiteral;
 import com.declarative.music.parser.production.literal.FloatLiteral;
 import com.declarative.music.parser.production.literal.IntLiteral;
@@ -62,7 +61,6 @@ class ParserTest {
                 Arguments.of(OperatorEnum.O_MOD_ASSIGN, (TriFunction<String, Expression, Position, Statement>) ModuloAssignStatement::new)
         );
     }
-
 
     private static Stream<Arguments> provideRelationExpression() {
         return Stream.of(
@@ -160,7 +158,6 @@ class ParserTest {
         );
     }
 
-
     public static Stream<Arguments> provideWrongIfStatements() {
         return Stream.of(
                 Arguments.of(List.of(
@@ -194,7 +191,6 @@ class ParserTest {
                 ))
         );
     }
-
 
     public static Stream<Arguments> provideExpression() {
         return Stream.of(
@@ -336,7 +332,9 @@ class ParserTest {
 
     @ParameterizedTest
     @MethodSource("provideAssigmentWithExpressionStatement")
-    void shouldParseAssigmentExpression(final OperatorEnum assignOperator, final TriFunction<String, Expression, Position, Statement> statementFactory) throws ParsingException, IOException {
+    void shouldParseAssigmentExpression(final OperatorEnum assignOperator,
+                                        final TriFunction<String, Expression, Position, Statement> statementFactory)
+            throws ParsingException, IOException {
         final var variableName = "a";
         final var variableValue = 10;
         final var tokens = List.of(
@@ -410,7 +408,6 @@ class ParserTest {
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
     }
 
-
     @ParameterizedTest
     @MethodSource("provideNoteExpressions")
     void shouldParseNoteExpression(final List<Token> noteExpression, final NoteExpression expectedValue) throws Exception {
@@ -436,7 +433,6 @@ class ParserTest {
 
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
     }
-
 
     @Test
     void shouldParseNoteSequence() throws Exception {
@@ -483,7 +479,6 @@ class ParserTest {
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
     }
 
-
     @ParameterizedTest
     @MethodSource("provideDeclarationTypes")
     void shouldParseVarDeclaration(final List<Token> typeToken, final Type expectedType) throws Exception {
@@ -528,7 +523,6 @@ class ParserTest {
                 .hasMessageStartingWith("SYNTAX ERROR expected expression when parsing binary operator");
     }
 
-
     @Test
     void shouldParseNestedExpression() throws Exception {
         //1+(2+3);
@@ -550,7 +544,6 @@ class ParserTest {
 
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
     }
-
 
     @Test
     void shouldParseNestedLeftExpression() throws Exception {
@@ -575,10 +568,10 @@ class ParserTest {
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
     }
 
-
     @ParameterizedTest
     @MethodSource("provideRelationExpression")
-    void shouldParseRelationExpression(final OperatorEnum relationOperator, final BiFunction<Expression, Expression, Expression> factory) throws Exception {
+    void shouldParseRelationExpression(final OperatorEnum relationOperator, final BiFunction<Expression, Expression, Expression> factory)
+            throws Exception {
         final var tokens = List.of(
                 new Token(TokenType.T_INT_NUMBER, pos(0), 1),
                 new Token(TokenType.T_OPERATOR, pos(1), relationOperator),
@@ -816,7 +809,6 @@ class ParserTest {
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
     }
 
-
     @Test
     void shouldParseIfStatement() throws Exception {
         final var tokens = List.of(
@@ -838,7 +830,6 @@ class ParserTest {
 
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
     }
-
 
     @Test
     void shouldParseIfElseIfElseStatement() throws Exception {
@@ -1056,7 +1047,6 @@ class ParserTest {
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
     }
 
-
     @Test
     void shouldThrow_WhenNothingAfterPipeOperator() {
         final var tokens = List.of(
@@ -1068,7 +1058,6 @@ class ParserTest {
         assertThatThrownBy(parser::parserProgram)
                 .hasMessageStartingWith("SYNTAX ERROR missing inline call after pipe operator");
     }
-
 
     @ParameterizedTest
     @MethodSource("provideExpression")
@@ -1083,7 +1072,6 @@ class ParserTest {
                 new Token(TokenType.T_COMMA, pos(5), null),
                 new Token(TokenType.T_IDENTIFIER, pos(6), "c"),
                 new Token(TokenType.T_OPERATOR, pos(7), OperatorEnum.O_ASSIGN)
-
 
         ));
         tokens.addAll(expressionTokens);
@@ -1307,6 +1295,30 @@ class ParserTest {
     }
 
     @Test
+    void shouldParseConvolutionWithArray() throws Exception {
+        final var tokens = List.of(
+                new Token(TokenType.T_IDENTIFIER, pos(1), "a"),
+                new Token(TokenType.T_OPERATOR, pos(1), OperatorEnum.O_DOUBLE_GR),
+                new Token(TokenType.T_L_QAD_PARENTHESIS, pos(1), null),
+                new Token(TokenType.T_INT_NUMBER, pos(1), 2),
+                new Token(TokenType.T_R_QAD_PARENTHESIS, pos(1), null)
+        );
+        final var parser = new Parser(new LexerMock(tokens));
+        final var expected = new Program(List.of(
+                new ConvolutionExpression(
+                        new VariableReference("a", pos(1)),
+                        new ArrayExpression(List.of(
+                                new IntLiteral(2, pos(1))
+                        ), pos(1))
+                )
+        ));
+
+        final var program = parser.parserProgram();
+
+        assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
+    }
+
+    @Test
     void shouldParseMultipleStatements() throws Exception {
         //Int a;a+=2;
         final var tokens = List.of(
@@ -1328,7 +1340,6 @@ class ParserTest {
 
         assertThat(program).isEqualToComparingFieldByFieldRecursively(expected);
     }
-
 
     @FunctionalInterface
     public interface TriFunction<T, U, V, R> {
