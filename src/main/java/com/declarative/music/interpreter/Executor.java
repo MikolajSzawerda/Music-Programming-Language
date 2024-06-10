@@ -142,27 +142,43 @@ public class Executor implements Visitor {
     record BuiltInFunction(Parameters parameters, Consumer<Map<String, Variant<?>>> code) {
     }
 
-    private final Map<String, BuiltInFunction> builtinFunctions = Map.of(
-            "print", new BuiltInFunction(new Parameters(List.of(
+    private final Map<String, BuiltInFunction> builtinFunctions = Map.ofEntries(
+            Map.entry("print", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new InferenceType(null), "value")
             )), (arguments) -> {
                 System.out.println(arguments.get("value").value().toString());
-            }),
-            "at", new BuiltInFunction(new Parameters(List.of(
+            })),
+            Map.entry("at", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new InferenceType(null), "array"),
                     new Parameter(new SimpleType(Types.Int, null), "index")
             )), (arguments) -> {
                 var index = arguments.get("index").castTo(Integer.class);
                 var iterable = arguments.get("array").castTo(List.class);
                 currentValue = (Variant<?>) iterable.get(index);
-            }),
-            "head", new BuiltInFunction(new Parameters(List.of(
+            })),
+            Map.entry("rand", new BuiltInFunction(new Parameters(List.of(
+            )), (arguments) -> {
+                currentValue = new Variant<>(new Random().nextInt(4000000), Integer.class);
+            })),
+            Map.entry("panic", new BuiltInFunction(new Parameters(List.of(
+                    new Parameter(new SimpleType(Types.String, null), "msg")
+            )), (arguments) -> {
+                var msg = arguments.get("msg").castTo(String.class);
+                throw new RuntimeException("Error: " + msg);
+            })),
+            Map.entry("head", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new InferenceType(null), "array")
             )), (arguments) -> {
                 var iterable = arguments.get("array").castTo(List.class);
                 currentValue = (Variant<?>) iterable.getFirst();
-            }),
-            "mel", new BuiltInFunction(new Parameters(List.of(
+            })),
+            Map.entry("len", new BuiltInFunction(new Parameters(List.of(
+                    new Parameter(new InferenceType(null), "array")
+            )), (arguments) -> {
+                var iterable = arguments.get("array").castTo(List.class);
+                currentValue = new Variant<>(iterable.size(), Integer.class);
+            })),
+            Map.entry("mel", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new InferenceType(null), "array")
             )), (arguments) -> {
                 var iterable = arguments.get("array").castTo(List.class);
@@ -172,8 +188,8 @@ public class Executor implements Visitor {
                     sequence.appendToSequence(node.value());
                 }
                 currentValue = new Variant<>(sequence, MusicTree.class);
-            }),
-            "harm", new BuiltInFunction(new Parameters(List.of(
+            })),
+            Map.entry("harm", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new InferenceType(null), "array")
             )), (arguments) -> {
                 var iterable = arguments.get("array").castTo(List.class);
@@ -183,8 +199,8 @@ public class Executor implements Visitor {
                     sequence.appendToGroup(node.value());
                 }
                 currentValue = new Variant<>(sequence, MusicTree.class);
-            }),
-            "song", new BuiltInFunction(new Parameters(List.of(
+            })),
+            Map.entry("song", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new InferenceType(null), "tree"),
                     new Parameter(new SimpleType(Types.Int, null), "bpm"),
                     new Parameter(new SimpleType(Types.String, null), "instrument")
@@ -193,8 +209,8 @@ public class Executor implements Visitor {
                 var bpm = arguments.get("bpm").castTo(Integer.class);
                 var instrument = arguments.get("instrument").castTo(String.class);
                 currentValue = new Variant<>(new Song(tree, bpm, instrument), Song.class);
-            }),
-            "transpose", new BuiltInFunction(new Parameters(List.of(
+            })),
+            Map.entry("transpose", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new InferenceType(null), "tree"),
                     new Parameter(new SimpleType(Types.Int, null), "value")
             )), (arguments) -> {
@@ -215,8 +231,8 @@ public class Executor implements Visitor {
                     return newNode;
                 });
                 currentValue = new Variant<>(new MusicTree(transposedNode), MusicTree.class);
-            }),
-            "export", new BuiltInFunction(new Parameters(List.of(
+            })),
+            Map.entry("export", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new InferenceType(null), "song"),
                     new Parameter(new SimpleType(Types.String, null), "fileName")
             )), (arguments) -> {
@@ -228,7 +244,7 @@ public class Executor implements Visitor {
                     throw new RuntimeException(e);
                 }
                 currentValue = null;
-            })
+            }))
     );
 
     @Override

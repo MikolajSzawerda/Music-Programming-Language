@@ -36,15 +36,8 @@ java -jar build/libs/music-programming-language.jar -f simple.hs
 let a = [E, G, D]{oct=4} |> mel;
 
 let b = a |> 
-        repeat 2.0 as Int |>
         transpose -1 |>
-        concat a |>
-        harm |>
-        track Guitar;
-
-let c = "song.mid" |>
-        open Track 0 |>
-        head+100; //shoud be parsed as head(x, 100)
+        harm;
         
 (Int, Int)->Int NWD;
 
@@ -55,7 +48,7 @@ NWD = with(Int a, Int b)->Int {
     return a;
 };
     
-let randGen = with(Scale scale, Rythm rythm) -> Phrase {
+let randGen = with(Phrase music) -> Phrase {
     if(scale |> isEmpty || rythm |> isEmpty){
         "Provided scale or rythm is empty" |> panic;
     }
@@ -199,10 +192,10 @@ rythm_lit           := (dl|l|w|h|q|e|s|t)(_(d|t));
 ```
 mel([]T)                        := tworzy z listy sekwencję |
 harm([]T)                       := tworzy z listy drzewo &
-concat(T, [])                   := dołącza do listy element
-isEmpty/len/head/tail/repeat    := operacje na listach
+len/head                        := operacje na listach
 panic(String msg)               := rzuca wyjątkiem
-transpose/speed                 := operacje muzyczne
+transpose                       := operacje muzyczne
+song(Phrase,Int,String)         := tworzy piosenkę do exportu
 at([]T, Int)                    := zwraca element z listy
 ```
 

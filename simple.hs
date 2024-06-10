@@ -56,3 +56,16 @@ let example_fun = with(Int external)->Int{
 Int ext = 1;
 print(example_fun(ext));
 print(ext);
+
+let funfun = with(Int a)->Int{
+    return a+2;
+};
+print([funfun(x) <| x kkl]);
+
+let notes2 = [C, E, G#]{dur=e, oct=2};
+let tkl = 0 | 1 & 2 | 2 | 1;
+
+print(notes2 |> len);
+print(rand()%10);
+
+"Hello" |> panic;

@@ -31,6 +31,7 @@ import com.declarative.music.parser.production.type.Type;
 import com.declarative.music.parser.production.type.Types;
 import lombok.Getter;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -76,7 +77,7 @@ public class TypeChecker implements Visitor {
     record BuiltInFunction(Parameters parameters, Type returnType) {
     }
 
-    private final Map<String, BuiltInFunction> builtinFunctions = Map.of(
+    private final Map<String, BuiltInFunction> builtinFunctions = new HashMap<>(Map.of(
             "print", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "value")
             )), new SimpleType(Types.Void, null)),
@@ -84,6 +85,11 @@ public class TypeChecker implements Visitor {
                     new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "array"),
                     new Parameter(new SimpleType(Types.Int, null), "index")
             )), new com.declarative.music.parser.production.type.InferenceType(null)),
+            "len", new BuiltInFunction(new Parameters(List.of(
+                    new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "array")
+            )), new SimpleType(Types.Int, null)),
+            "rand", new BuiltInFunction(new Parameters(List.of(
+            )), new SimpleType(Types.Int, null)),
             "head", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "array"),
                     new Parameter(new SimpleType(Types.Int, null), "index")
@@ -107,10 +113,13 @@ public class TypeChecker implements Visitor {
                     new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "midiTree"),
                     new Parameter(new SimpleType(Types.String, null), "fileName")
             )), new SimpleType(Types.Void, null))
-    );
+    ));
 
     public TypeChecker(ContextManager manager) {
         this.manager = manager;
+        builtinFunctions.put("panic", new BuiltInFunction(new Parameters(List.of(
+                new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "array")
+        )), new SimpleType(Types.Void, null)));
     }
 
     private Variant<TypeCheck> moveCurrentValue() {
