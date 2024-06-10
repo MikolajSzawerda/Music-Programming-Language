@@ -6,10 +6,7 @@ import com.declarative.music.interpreter.tree.modifier.NoteModifier;
 import com.declarative.music.interpreter.values.LambdaClousure;
 import com.declarative.music.interpreter.values.OperationRegistry;
 import com.declarative.music.interpreter.values.Variant;
-import com.declarative.music.interpreter.values.music.MusicTree;
-import com.declarative.music.interpreter.values.music.Note;
-import com.declarative.music.interpreter.values.music.Pitch;
-import com.declarative.music.interpreter.values.music.Rythm;
+import com.declarative.music.interpreter.values.music.*;
 import com.declarative.music.interpreter.values.template.IndexTree;
 import com.declarative.music.midi.MidiRenderer;
 import com.declarative.music.parser.production.*;
@@ -170,6 +167,16 @@ public class Executor implements Visitor {
                 }
                 currentValue = new Variant<>(sequence, MusicTree.class);
             }),
+            "song", new BuiltInFunction(new Parameters(List.of(
+                    new Parameter(new InferenceType(null), "tree"),
+                    new Parameter(new SimpleType(Types.Int, null), "bpm"),
+                    new Parameter(new SimpleType(Types.String, null), "instrument")
+            )), (arguments) -> {
+                var tree = arguments.get("tree").castTo(MusicTree.class);
+                var bpm = arguments.get("bpm").castTo(Integer.class);
+                var instrument = arguments.get("instrument").castTo(String.class);
+                currentValue = new Variant<>(new Song(tree, bpm, instrument), Song.class);
+            }),
             "transpose", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new InferenceType(null), "tree"),
                     new Parameter(new SimpleType(Types.Int, null), "value")
@@ -193,13 +200,13 @@ public class Executor implements Visitor {
                 currentValue = new Variant<>(new MusicTree(transposedNode), MusicTree.class);
             }),
             "export", new BuiltInFunction(new Parameters(List.of(
-                    new Parameter(new InferenceType(null), "midiTree"),
+                    new Parameter(new InferenceType(null), "song"),
                     new Parameter(new SimpleType(Types.String, null), "fileName")
             )), (arguments) -> {
-                var index = (MusicTree) arguments.get("midiTree").castTo(MusicTree.class);
+                var song = arguments.get("song").castTo(Song.class);
                 var fileName = arguments.get("fileName").castTo(String.class);
                 try {
-                    MidiRenderer.renderAndSaveMidi(index, fileName, 120);
+                    MidiRenderer.renderAndSaveMidi(song.getSong(), fileName, song.getBPM(), song.getInstrument());
                 } catch (InvalidMidiDataException | IOException e) {
                     throw new RuntimeException(e);
                 }

@@ -91,6 +91,11 @@ public class TypeChecker implements Visitor {
             "mel", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "array")
             )), new SimpleType(Types.Phrase, null)),
+            "song", new BuiltInFunction(new Parameters(List.of(
+                    new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "tree"),
+                    new Parameter(new SimpleType(Types.Int, null), "bpm"),
+                    new Parameter(new SimpleType(Types.String, null), "instrument")
+            )), new SimpleType(Types.Song, null)),
             "export", new BuiltInFunction(new Parameters(List.of(
                     new Parameter(new com.declarative.music.parser.production.type.InferenceType(null), "midiTree"),
                     new Parameter(new SimpleType(Types.String, null), "fileName")
@@ -491,6 +496,7 @@ public class TypeChecker implements Visitor {
             case Bool -> new BooleanType();
             case Phrase -> new PhraseType();
             case Template -> new TemplateType();
+            case Song -> new SongType();
             case Void -> new com.declarative.music.interpreter.type.InferenceType(); //TODO change this
             default -> throw new IllegalStateException("Unexpected value: " + simpleType.type());
         }, TypeCheck.class);

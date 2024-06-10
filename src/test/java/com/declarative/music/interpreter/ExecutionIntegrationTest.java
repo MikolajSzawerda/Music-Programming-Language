@@ -314,7 +314,6 @@ public class ExecutionIntegrationTest {
         parser.parserProgram().accept(interpreter);
     }
 
-    //TODO here is very bad bug!!!!
     @Test
     void shouldHanldeConvolutionOperator() throws ParsingException, IOException {
         // given

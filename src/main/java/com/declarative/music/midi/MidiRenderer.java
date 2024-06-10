@@ -8,7 +8,7 @@ import java.io.IOException;
 
 
 public class MidiRenderer {
-    public static void renderAndSaveMidi(MusicTree musicTree, String path, int bpm) throws InvalidMidiDataException, IOException {
+    public static void renderAndSaveMidi(MusicTree musicTree, String path, int bpm, String instrument) throws InvalidMidiDataException, IOException {
         var res = MidiMapper.mapToEventStamps(musicTree.getModified());
         final int ticksPerQuarterNote = 480;
         final Sequence sequence = new Sequence(Sequence.PPQ, ticksPerQuarterNote);
@@ -21,6 +21,16 @@ public class MidiRenderer {
         final MidiEvent tempoEvent = new MidiEvent(tempoMeta, 0);
         tempoTrack.add(tempoEvent);
         final var track = sequence.createTrack();
+
+        var instrumentId = switch (instrument) {
+            case "Guitar" -> 29;
+            case "DistortionGuitar" -> 30;
+            default -> 0;
+        };
+        final ShortMessage programChange = new ShortMessage();
+        programChange.setMessage(ShortMessage.PROGRAM_CHANGE, 0, instrumentId, 0);
+        track.add(new MidiEvent(programChange, 0));
+
         long currentTick = 0;
         long maxTick = 0;
         for (final var noteBlock : res.entrySet()) {

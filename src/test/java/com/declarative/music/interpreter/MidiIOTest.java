@@ -20,8 +20,7 @@ public class MidiIOTest {
                 let b = temp | temp & temp2 | temp & temp2;
                 let musicA = b>>a;
                 let musicB = b >>a |> transpose 2;
-                let musicC = musicA | musicB;
-                musicC |> export "src/test/resources/song.mid";
+                musicA | musicB |> song 125, "Guitar" |> export "src/test/resources/song.mid";
                 """;
         final var lexer = new LexerImpl(new StringReader(code));
         final var parser = new Parser(lexer);
